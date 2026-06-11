@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import BetForm from './BetForm'
 import { Lock } from 'lucide-react'
 import { getFlagUrl } from '@/lib/flags'
+import LiveRefresh from '@/components/LiveRefresh'
 
 const PHASE_LABEL: Record<string, string> = {
   group: 'Phase de groupes', round_of_16: '8e de finale',
@@ -110,6 +111,7 @@ export default async function MatchPage({
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 animate-fade-up">
+      {match.status === 'live' && <LiveRefresh intervalMs={30000} />}
 
       {/* Match header */}
       <div className="relative overflow-hidden rounded-2xl" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
@@ -179,10 +181,22 @@ export default async function MatchPage({
 
           <p className="text-[11px] text-center mt-4" style={{ color: 'var(--muted)' }}>{kickoff}</p>
 
-          {match.status === 'finished' && match.final_score_home !== null && (
+          {(match.status === 'finished' || match.status === 'live') && match.final_score_home !== null && (
             <div className="mt-5 text-center">
-              <p className="text-[9px] tracking-[.2em] uppercase mb-2" style={{ color: 'var(--muted)' }}>Score final</p>
-              <div className="font-display" style={{ fontSize: 'clamp(3rem, 12vw, 5rem)', color: '#F0B429', letterSpacing: '.08em', lineHeight: 1 }}>
+              {match.status === 'live' ? (
+                <div className="inline-flex items-center gap-1.5 mb-2">
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22C55E' }} />
+                  <p className="text-[9px] tracking-[.2em] uppercase font-bold" style={{ color: '#22C55E' }}>EN DIRECT</p>
+                </div>
+              ) : (
+                <p className="text-[9px] tracking-[.2em] uppercase mb-2" style={{ color: 'var(--muted)' }}>Score final</p>
+              )}
+              <div className="font-display" style={{
+                fontSize: 'clamp(3rem, 12vw, 5rem)',
+                color: match.status === 'live' ? '#22C55E' : '#F0B429',
+                letterSpacing: '.08em',
+                lineHeight: 1,
+              }}>
                 {match.final_score_home} – {match.final_score_away}
               </div>
             </div>

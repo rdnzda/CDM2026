@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getFlagUrl } from '@/lib/flags'
+import LiveRefresh from '@/components/LiveRefresh'
 
 const PHASE_LABEL: Record<string, string> = {
   group: 'Groupes', round_of_16: '8es', quarter: 'Quarts', semi: 'Demies', final: 'Finale',
@@ -26,6 +27,8 @@ export default async function MatchsPage() {
     .in('status', ['upcoming', 'live', 'finished'])
     .order('kickoff_at', { ascending: true })
 
+  const hasLiveMatches = (matches ?? []).some((m: any) => m.status === 'live')
+
   const grouped = (matches ?? []).reduce<Record<string, typeof matches>>((acc, m) => {
     const d = new Date(m!.kickoff_at).toLocaleDateString('fr-FR', {
       weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris',
@@ -37,6 +40,7 @@ export default async function MatchsPage() {
 
   return (
     <div className="space-y-10 animate-fade-up">
+      {hasLiveMatches && <LiveRefresh intervalMs={30000} />}
       <div className="flex items-baseline gap-4">
         <h1 className="font-display text-5xl" style={{ color: 'var(--text)', letterSpacing: '.05em' }}>MATCHS</h1>
         <span className="text-sm" style={{ color: 'var(--muted)' }}>{matches?.length ?? 0} rencontres</span>
@@ -97,8 +101,9 @@ export default async function MatchsPage() {
                     </p>
 
                     <div className="flex items-center gap-2 pl-0.5">
-                      {isDone && match.final_score_home !== null ? (
-                        <span className="font-display text-lg leading-none" style={{ color: 'var(--text)' }}>
+                      {(isDone || isLive) && match.final_score_home !== null ? (
+                        <span className="font-display text-lg leading-none flex items-center gap-1.5" style={{ color: isLive ? '#22C55E' : 'var(--text)' }}>
+                          {isLive && <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />}
                           {match.final_score_home} – {match.final_score_away}
                         </span>
                       ) : hasOdds ? (
@@ -132,11 +137,12 @@ export default async function MatchsPage() {
                       {match.home_team}
                     </p>
 
-                    {isDone && match.final_score_home !== null ? (
+                    {(isDone || isLive) && match.final_score_home !== null ? (
                       <div className="shrink-0 flex items-center gap-2">
-                        <span className="font-display text-2xl" style={{ color: 'var(--text)' }}>{match.final_score_home}</span>
+                        {isLive && <span className="w-2 h-2 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />}
+                        <span className="font-display text-2xl" style={{ color: isLive ? '#22C55E' : 'var(--text)' }}>{match.final_score_home}</span>
                         <span className="font-display text-lg" style={{ color: 'var(--muted)' }}>–</span>
-                        <span className="font-display text-2xl" style={{ color: 'var(--text)' }}>{match.final_score_away}</span>
+                        <span className="font-display text-2xl" style={{ color: isLive ? '#22C55E' : 'var(--text)' }}>{match.final_score_away}</span>
                       </div>
                     ) : (
                       <div className="shrink-0 flex items-center gap-1">
