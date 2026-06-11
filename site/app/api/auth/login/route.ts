@@ -7,7 +7,7 @@ export async function GET() {
     provider: 'discord',
     options: {
       scopes: 'identify',
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? `https://${process.env.VERCEL_URL}`}/api/auth/callback`,
     },
   })
   if (error || !data.url) return NextResponse.json({ error: 'Auth failed' }, { status: 500 })
