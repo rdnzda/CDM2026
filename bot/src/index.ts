@@ -1,6 +1,8 @@
 import 'dotenv/config'
 import { Client, GatewayIntentBits, Collection, REST, Routes } from 'discord.js'
 
+import { startResultsPoller } from './services/notifications'
+
 // Commands
 import * as paris      from './commands/paris'
 import * as combo      from './commands/combo'
@@ -23,6 +25,7 @@ for (const cmd of commands) commandCollection.set(cmd.data.name, cmd)
 
 client.once('ready', () => {
   console.log(`✅ Bot connecté en tant que ${client.user?.tag}`)
+  startResultsPoller(client)
 })
 
 client.on('interactionCreate', async interaction => {
