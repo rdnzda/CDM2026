@@ -126,8 +126,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       )
       .setFooter({ text: 'Les paris se ferment au coup d\'envoi de chaque match · Bonne chance à tous ! 🍀' })
 
-    await channel.send({ embeds: [embedMain, embedRules] })
-    return interaction.editReply('✅ Annonce officielle envoyée dans le canal général !')
+    if (!channel.isTextBased()) return interaction.editReply('❌ Ce canal ne supporte pas les messages.')
+
+    try {
+      await channel.send({ embeds: [embedMain, embedRules] })
+    } catch (err: any) {
+      return interaction.editReply(`❌ Impossible d'envoyer dans ce canal : \`${err?.message ?? err}\``)
+    }
+    return interaction.editReply('✅ Annonce officielle envoyée !')
   }
 
   const targetUser = interaction.options.getUser('utilisateur', true)
