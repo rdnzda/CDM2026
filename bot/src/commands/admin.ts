@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, TextChannel } from 'discord.js'
 import { supabase } from '../services/supabase'
+import { forcePostMatchResults } from '../services/notifications'
 
 const ADMIN_ID = '574503884987564044'
 
@@ -23,6 +24,15 @@ export const data = new SlashCommandBuilder()
       .addChannelOption(o =>
         o.setName('canal')
           .setDescription('Canal cible (défaut : canal général configuré)')
+          .setRequired(false)
+      )
+  )
+  .addSubcommand(sub =>
+    sub.setName('post-results')
+      .setDescription('Force l\'envoi du résultat d\'un match dans le salon résultats')
+      .addStringOption(o =>
+        o.setName('match-id')
+          .setDescription('ID du match (laisse vide pour le dernier match terminé)')
           .setRequired(false)
       )
   )
@@ -134,6 +144,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return interaction.editReply(`❌ Impossible d'envoyer dans ce canal : \`${err?.message ?? err}\``)
     }
     return interaction.editReply('✅ Annonce officielle envoyée !')
+  }
+
+  if (sub === 'post-results') {
+    const matchId = interaction.options.getString('match-id') ?? undefined
+    const result  = await forcePostMatchResults(interaction.client, matchId)
+    return interaction.editReply(result)
   }
 
   const targetUser = interaction.options.getUser('utilisateur', true)
