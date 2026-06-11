@@ -68,7 +68,7 @@ export default async function MatchsPage() {
               <a
                 key={match.id}
                 href={`/matchs/${match.id}`}
-                className="hover-bg-3 group relative flex items-center gap-4 p-5 rounded-2xl overflow-hidden"
+                className="hover-bg-3 group relative flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl overflow-hidden"
                 style={{
                   background: 'var(--bg-2)',
                   border: `1px solid ${isLive ? 'rgba(34,197,94,.3)' : 'var(--border)'}`,
@@ -81,7 +81,7 @@ export default async function MatchsPage() {
                 )}
 
                 {/* Time */}
-                <div className="shrink-0 text-center w-14">
+                <div className="shrink-0 text-center w-10 sm:w-14">
                   <p className="font-mono text-xs" style={{ color: 'var(--muted)' }}>
                     {new Date(match.kickoff_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })}
                   </p>
@@ -94,7 +94,45 @@ export default async function MatchsPage() {
 
                 {/* Teams */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-6">
+
+                  {/* ── Mobile: vertical stack ── */}
+                  <div className="flex flex-col gap-1 sm:hidden">
+                    <p className="font-semibold text-sm leading-tight flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
+                      {getFlagUrl(match.home_team) && <img src={getFlagUrl(match.home_team)!} alt="" width={18} height={13} className="shrink-0 rounded-sm" />}
+                      <span className="truncate">{match.home_team}</span>
+                    </p>
+
+                    <div className="flex items-center gap-2 pl-0.5">
+                      {isDone && match.final_score_home !== null ? (
+                        <span className="font-display text-lg leading-none" style={{ color: 'var(--text)' }}>
+                          {match.final_score_home} – {match.final_score_away}
+                        </span>
+                      ) : hasOdds ? (
+                        <div className="flex items-center gap-3">
+                          {[
+                            { l: '1', v: match.odds_home },
+                            { l: 'X', v: match.odds_draw },
+                            { l: '2', v: match.odds_away },
+                          ].map(o => o.v && (
+                            <div key={o.l} className="flex items-baseline gap-1">
+                              <span className="text-[9px]" style={{ color: 'var(--muted)' }}>{o.l}</span>
+                              <span className="font-mono text-xs font-semibold" style={{ color: '#F0B429' }}>×{Number(o.v).toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="font-display text-sm" style={{ color: 'var(--border-2)' }}>VS</span>
+                      )}
+                    </div>
+
+                    <p className="font-semibold text-sm leading-tight flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
+                      {getFlagUrl(match.away_team) && <img src={getFlagUrl(match.away_team)!} alt="" width={18} height={13} className="shrink-0 rounded-sm" />}
+                      <span className="truncate">{match.away_team}</span>
+                    </p>
+                  </div>
+
+                  {/* ── Desktop: horizontal layout ── */}
+                  <div className="hidden sm:flex items-center justify-between gap-6">
                     <p className="flex-1 font-semibold text-base leading-tight truncate flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
                       {getFlagUrl(match.home_team) && <img src={getFlagUrl(match.home_team)!} alt="" width={20} height={15} className="shrink-0 rounded-sm" />}
                       {match.home_team}
