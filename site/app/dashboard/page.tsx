@@ -43,6 +43,7 @@ export default async function DashboardPage() {
 
   const [
     { data: pendingBets },
+    { data: pendingCombos },
     { data: wildcards },
     { data: boosts },
     { data: achievements },
@@ -52,6 +53,7 @@ export default async function DashboardPage() {
     { data: todayClaim },
   ] = await Promise.all([
     service.from('bets').select('*, matches(home_team, away_team, kickoff_at)').eq('user_id', dbUser.id).eq('status', 'pending').order('created_at', { ascending: false }).limit(8),
+    service.from('combos').select('*, combo_legs(*, matches(home_team, away_team))').eq('user_id', dbUser.id).eq('status', 'pending').order('created_at', { ascending: false }).limit(4),
     service.from('user_wildcards').select('*').eq('user_id', dbUser.id).eq('used', false),
     service.from('user_boosts').select('*').eq('user_id', dbUser.id).eq('used', false),
     service.from('user_achievements').select('*, achievements(*)').eq('user_id', dbUser.id),
@@ -199,14 +201,16 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* Pending bets */}
+      {/* Pending bets + combos */}
       <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-5">
         <h2 className="font-semibold mb-4 flex items-center gap-2">
           <Clock className="w-4 h-4 text-slate-400" />Paris en cours
         </h2>
-        {pendingBets?.length ? (
+
+        {(pendingBets?.length || pendingCombos?.length) ? (
           <div className="space-y-2">
-            {pendingBets.map((bet: any) => {
+            {/* Simple bets */}
+            {pendingBets?.map((bet: any) => {
               const match = bet.matches as any
               return (
                 <div key={bet.id} className="flex items-center justify-between bg-slate-700/40 hover:bg-slate-700/60 rounded-xl px-4 py-3 transition-colors">
@@ -217,6 +221,30 @@ export default async function DashboardPage() {
                   <div className="text-right shrink-0 ml-4">
                     <p className="text-amber-400 font-semibold text-sm">{bet.stake.toLocaleString('fr-FR')} pts</p>
                     <p className="text-slate-500 text-xs">@ ×{Number(bet.odds_at_bet_time).toFixed(2)}</p>
+                  </div>
+                </div>
+              )
+            })}
+
+            {/* Combos */}
+            {pendingCombos?.map((combo: any) => {
+              const legs = (combo.combo_legs ?? []) as any[]
+              const matchNames = legs.map((l: any) => `${l.matches.home_team} vs ${l.matches.away_team}`).join(' · ')
+              return (
+                <div key={combo.id} className="bg-slate-700/40 hover:bg-slate-700/60 rounded-xl px-4 py-3 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm flex items-center gap-1.5">
+                        <span className="bg-purple-900/50 text-purple-300 text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0">
+                          COMBINÉ {legs.length}
+                        </span>
+                        <span className="text-slate-400 text-xs truncate">{matchNames}</span>
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0 ml-4">
+                      <p className="text-amber-400 font-semibold text-sm">{combo.stake.toLocaleString('fr-FR')} pts</p>
+                      <p className="text-slate-500 text-xs">× {Number(combo.total_odds).toFixed(2)} → {combo.potential_win.toLocaleString('fr-FR')} pts</p>
+                    </div>
                   </div>
                 </div>
               )
