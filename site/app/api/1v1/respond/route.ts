@@ -26,6 +26,13 @@ export async function POST(request: NextRequest) {
   if (!challenge) return NextResponse.json({ error: 'Défi introuvable ou déjà traité.' }, { status: 404 })
   if (new Date(challenge.expires_at) < new Date()) {
     await service.from('challenges').update({ status: 'expired' }).eq('id', challengeId)
+    // Unfreeze challenger's stake on expiry
+    const { data: challenger } = await service.from('users').select('frozen_points').eq('id', challenge.challenger_id).single()
+    if (challenger) {
+      await service.from('users')
+        .update({ frozen_points: Math.max(0, challenger.frozen_points - challenge.stake) })
+        .eq('id', challenge.challenger_id)
+    }
     return NextResponse.json({ error: 'Ce défi a expiré.' }, { status: 400 })
   }
 

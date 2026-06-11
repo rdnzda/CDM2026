@@ -231,6 +231,24 @@ Deno.serve(async () => {
       }
     }
 
+    // ── Cleanup expired challenges (unfreeze challenger's stake) ──
+    const { data: expiredChallenges } = await supabase
+      .from('challenges')
+      .select('id, challenger_id, stake')
+      .eq('status', 'pending')
+      .lt('expires_at', new Date().toISOString())
+
+    for (const ch of expiredChallenges ?? []) {
+      await supabase.from('challenges').update({ status: 'expired' }).eq('id', ch.id)
+      const { data: challenger } = await supabase
+        .from('users').select('frozen_points').eq('id', ch.challenger_id).single()
+      if (challenger) {
+        await supabase.from('users')
+          .update({ frozen_points: Math.max(0, challenger.frozen_points - ch.stake) })
+          .eq('id', ch.challenger_id)
+      }
+    }
+
     if (BOT_WEBHOOK && totalResolved > 0) {
       await fetch(BOT_WEBHOOK, {
         method: 'POST',
