@@ -36,6 +36,7 @@ export async function notifyDailyChallenge(client: Client, match: any, challenge
 // Start 2 min before now to catch anything resolved while the bot was starting
 let lastBetCheck   = new Date(Date.now() - 2 * 60 * 1000)
 let lastComboCheck = new Date(Date.now() - 2 * 60 * 1000)
+let lastDuelCheck  = new Date(Date.now() - 2 * 60 * 1000)
 
 async function postResolvedBets(client: Client) {
   const channelId = process.env.DISCORD_RESULTS_CHANNEL_ID
@@ -133,6 +134,54 @@ async function postResolvedCombos(client: Client) {
   }
 }
 
+async function postResolvedDuels(client: Client) {
+  const channelId = process.env.DISCORD_RESULTS_CHANNEL_ID
+  if (!channelId) return
+  const channel = client.channels.cache.get(channelId) as TextChannel | undefined
+  if (!channel) return
+
+  const since = lastDuelCheck.toISOString()
+  lastDuelCheck = new Date()
+
+  const { data: duels } = await supabase
+    .from('challenges')
+    .select(`
+      stake, winner_id, finished_at,
+      challenger:users!challenges_challenger_id_fkey(id, discord_id, username, avatar_url),
+      opponent:users!challenges_opponent_id_fkey(id, discord_id, username, avatar_url)
+    `)
+    .eq('status', 'finished')
+    .gt('finished_at', since)
+    .not('finished_at', 'is', null)
+    .order('finished_at', { ascending: true })
+
+  for (const duel of duels ?? []) {
+    const challenger = duel.challenger as any
+    const opponent   = duel.opponent   as any
+    const winnerIsChallenger = duel.winner_id === challenger.id
+    const winner = winnerIsChallenger ? challenger : opponent
+    const loser  = winnerIsChallenger ? opponent   : challenger
+
+    const embed = new EmbedBuilder()
+      .setColor(0xF0B429)
+      .setTitle('⚔️ Résultat du duel 1v1')
+      .addFields(
+        { name: '🏆 Vainqueur', value: `<@${winner.discord_id}> **${winner.username}**`, inline: true },
+        { name: '💀 Perdant',   value: `<@${loser.discord_id}> **${loser.username}**`,   inline: true },
+        { name: '💰 Mise',      value: formatPoints(duel.stake),                          inline: true },
+        { name: '📈 Gain net',  value: `**+${formatPoints(duel.stake)}**`,                inline: true },
+        { name: '📉 Perte',     value: `-${formatPoints(duel.stake)}`,                   inline: true },
+      )
+      .setFooter({ text: 'Duel 1v1 · /defi lancer pour en lancer un nouveau' })
+      .setTimestamp(new Date(duel.finished_at))
+
+    await channel.send({
+      content: `<@${winner.discord_id}> <@${loser.discord_id}>`,
+      embeds:  [embed],
+    })
+  }
+}
+
 export function startResultsPoller(client: Client) {
   const INTERVAL = 90_000 // 90 secondes
 
@@ -141,6 +190,7 @@ export function startResultsPoller(client: Client) {
       await Promise.all([
         postResolvedBets(client),
         postResolvedCombos(client),
+        postResolvedDuels(client),
       ])
     } catch (err) {
       console.error('Erreur poller résultats:', err)
