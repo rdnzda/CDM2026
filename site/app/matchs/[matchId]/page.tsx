@@ -181,7 +181,7 @@ export default async function MatchPage({
 
           <p className="text-[11px] text-center mt-4" style={{ color: 'var(--muted)' }}>{kickoff}</p>
 
-          {(match.status === 'finished' || match.status === 'live') && match.final_score_home !== null && (
+          {(match.status === 'finished' && match.final_score_home !== null) || match.status === 'live' ? (
             <div className="mt-5 text-center">
               {match.status === 'live' ? (
                 <div className="inline-flex items-center gap-1.5 mb-2">
@@ -197,10 +197,10 @@ export default async function MatchPage({
                 letterSpacing: '.08em',
                 lineHeight: 1,
               }}>
-                {match.final_score_home} – {match.final_score_away}
+                {match.final_score_home ?? 0} – {match.final_score_away ?? 0}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
