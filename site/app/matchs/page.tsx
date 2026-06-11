@@ -79,24 +79,11 @@ export default async function MatchsPage() {
                   <div className="absolute left-0 top-0 bottom-0 w-0.5" style={{ background: '#F0B429' }} />
                 )}
 
-                {/* Time + LED */}
+                {/* Time */}
                 <div className="shrink-0 text-center w-10 sm:w-14">
                   <p className="font-mono text-xs" style={{ color: 'var(--muted)' }}>
                     {new Date(match.kickoff_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })}
                   </p>
-                  <div className="flex justify-center mt-1.5">
-                    {isLive ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#22C55E' }}>
-                        <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22C55E' }} />LIVE
-                      </span>
-                    ) : isDone ? (
-                      <span className="w-2 h-2 rounded-full" style={{ background: 'var(--border-2)' }} title="Match terminé" />
-                    ) : !locked ? (
-                      <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#22C55E' }} title="Paris ouverts" />
-                    ) : (
-                      <span className="w-2 h-2 rounded-full" style={{ background: '#EF4444' }} title="Paris fermés" />
-                    )}
-                  </div>
                 </div>
 
                 {/* Teams */}
@@ -175,11 +162,28 @@ export default async function MatchsPage() {
                   </div>
                 </div>
 
-                {/* Phase badge */}
+                {/* Phase badge + LED */}
                 <div className="shrink-0 flex flex-col items-end gap-1.5">
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: phaseC.bg, color: phaseC.text }}>
                     {PHASE_LABEL[match.phase] ?? match.phase}
                   </span>
+                  {isLive ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,.12)', color: '#22C55E' }}>
+                      <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />LIVE
+                    </span>
+                  ) : isDone ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(100,116,139,.1)', color: 'var(--muted)' }}>
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--border-2)' }} />FIN
+                    </span>
+                  ) : !locked ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,.12)', color: '#22C55E' }}>
+                      <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />OUVERT
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(239,68,68,.1)', color: '#EF4444' }}>
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#EF4444' }} />FERMÉ
+                    </span>
+                  )}
                 </div>
               </a>
             )
