@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { Lock } from 'lucide-react'
 import { getFlagUrl } from '@/lib/flags'
 
 const PHASE_LABEL: Record<string, string> = {
@@ -80,16 +79,24 @@ export default async function MatchsPage() {
                   <div className="absolute left-0 top-0 bottom-0 w-0.5" style={{ background: '#F0B429' }} />
                 )}
 
-                {/* Time */}
+                {/* Time + LED */}
                 <div className="shrink-0 text-center w-10 sm:w-14">
                   <p className="font-mono text-xs" style={{ color: 'var(--muted)' }}>
                     {new Date(match.kickoff_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })}
                   </p>
-                  {isLive && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold mt-0.5" style={{ color: '#22C55E' }}>
-                      <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />LIVE
-                    </span>
-                  )}
+                  <div className="flex justify-center mt-1.5">
+                    {isLive ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#22C55E' }}>
+                        <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22C55E' }} />LIVE
+                      </span>
+                    ) : isDone ? (
+                      <span className="w-2 h-2 rounded-full" style={{ background: 'var(--border-2)' }} title="Match terminé" />
+                    ) : !locked ? (
+                      <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#22C55E' }} title="Paris ouverts" />
+                    ) : (
+                      <span className="w-2 h-2 rounded-full" style={{ background: '#EF4444' }} title="Paris fermés" />
+                    )}
+                  </div>
                 </div>
 
                 {/* Teams */}
@@ -173,7 +180,6 @@ export default async function MatchsPage() {
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: phaseC.bg, color: phaseC.text }}>
                     {PHASE_LABEL[match.phase] ?? match.phase}
                   </span>
-                  {locked && !isDone && <Lock className="w-3 h-3" style={{ color: 'var(--muted)' }} />}
                 </div>
               </a>
             )
