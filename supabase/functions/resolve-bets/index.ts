@@ -68,6 +68,9 @@ Deno.serve(async () => {
       const hasPendingWork = (pendingBets?.length ?? 0) > 0 || (pendingComboLegs?.length ?? 0) > 0
       if (!hasPendingWork) continue
 
+      // Guard: never resolve bets if score not yet available (free-tier API lag)
+      if (match.final_score_home == null) continue
+
       // Ensure match special results are populated
       if (match.result_btts == null && match.footballdata_match_id) {
         const detail   = await fetchMatchDetail(match.footballdata_match_id)
