@@ -41,10 +41,14 @@ export async function notifyDailyChallenge(client: Client, match: any, challenge
 
 // ─── Auto-posting: polls for resolved bets & combos ─────────────────────────
 
-// Start 2 min before now to catch anything resolved while the bot was starting
-let lastBetCheck   = new Date(Date.now() - 2 * 60 * 1000)
-let lastComboCheck = new Date(Date.now() - 2 * 60 * 1000)
-let lastDuelCheck  = new Date(Date.now() - 2 * 60 * 1000)
+// On startup look back 6h to catch anything resolved while bot was offline
+// Announced IDs prevent double-posting within the same session
+let lastBetCheck   = new Date(Date.now() - 6 * 60 * 60 * 1000)
+let lastComboCheck = new Date(Date.now() - 6 * 60 * 60 * 1000)
+let lastDuelCheck  = new Date(Date.now() - 6 * 60 * 60 * 1000)
+const announcedBetIds   = new Set<string>()
+const announcedComboIds = new Set<string>()
+const announcedDuelIds  = new Set<string>()
 
 async function postResolvedBets(client: Client) {
   const channelId = process.env.DISCORD_RESULTS_CHANNEL_ID
@@ -64,6 +68,8 @@ async function postResolvedBets(client: Client) {
     .order('resolved_at', { ascending: true })
 
   for (const bet of bets ?? []) {
+    if (announcedBetIds.has(bet.id)) continue
+    announcedBetIds.add(bet.id)
     const user  = bet.users  as any
     const match = bet.matches as any
     const won   = bet.status === 'won'
@@ -113,6 +119,8 @@ async function postResolvedCombos(client: Client) {
     .order('resolved_at', { ascending: true })
 
   for (const combo of combos ?? []) {
+    if (announcedComboIds.has(combo.id)) continue
+    announcedComboIds.add(combo.id)
     const user = combo.users as any
     const won  = combo.status === 'won'
 
@@ -154,7 +162,7 @@ async function postResolvedDuels(client: Client) {
   const { data: duels } = await supabase
     .from('challenges')
     .select(`
-      stake, winner_id, finished_at,
+      id, stake, winner_id, finished_at,
       challenger:users!challenges_challenger_id_fkey(id, discord_id, username, avatar_url),
       opponent:users!challenges_opponent_id_fkey(id, discord_id, username, avatar_url)
     `)
@@ -164,6 +172,8 @@ async function postResolvedDuels(client: Client) {
     .order('finished_at', { ascending: true })
 
   for (const duel of duels ?? []) {
+    if (announcedDuelIds.has(duel.id)) continue
+    announcedDuelIds.add(duel.id)
     const challenger = duel.challenger as any
     const opponent   = duel.opponent   as any
     const winnerIsChallenger = duel.winner_id === challenger.id
