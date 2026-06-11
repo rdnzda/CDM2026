@@ -1,6 +1,14 @@
-import { Client, TextChannel, EmbedBuilder } from 'discord.js'
+import { Client, TextChannel, EmbedBuilder, Colors } from 'discord.js'
 import { supabase } from './supabase'
 import { formatMatch, formatPoints, formatOdds, formatBetType } from '../utils/formatters'
+
+const PHASE_LABEL: Record<string, string> = {
+  group: 'Phase de groupes', round_of_16: '8e de finale',
+  quarter: 'Quart de finale', semi: 'Demi-finale', final: 'Finale',
+}
+
+// Track already-announced finished matches (resets on restart, safe)
+const announcedMatchIds = new Set<string>()
 
 // ─── One-off helpers ────────────────────────────────────────────────────────
 
@@ -182,6 +190,88 @@ async function postResolvedDuels(client: Client) {
   }
 }
 
+async function postMatchResults(client: Client) {
+  const channelId = process.env.DISCORD_RESULTS_CHANNEL_ID
+  if (!channelId) return
+  const channel = await client.channels.fetch(channelId).catch(() => null) as TextChannel | null
+  if (!channel) return
+
+  const { data: finishedMatches } = await supabase
+    .from('matches')
+    .select('*')
+    .eq('status', 'finished')
+    .not('final_score_home', 'is', null)
+
+  for (const match of finishedMatches ?? []) {
+    if (announcedMatchIds.has(match.id)) continue
+
+    // Wait until all bets on this match are resolved
+    const { count: pendingCount } = await supabase
+      .from('bets')
+      .select('id', { count: 'exact', head: true })
+      .eq('match_id', match.id)
+      .eq('status', 'pending')
+    if ((pendingCount ?? 0) > 0) continue
+
+    announcedMatchIds.add(match.id)
+
+    // Fetch resolved bets for this match
+    const { data: bets } = await supabase
+      .from('bets')
+      .select('status, stake, points_won, users(username)')
+      .eq('match_id', match.id)
+      .in('status', ['won', 'lost', 'refunded'])
+
+    const wonBets  = (bets ?? []).filter(b => b.status === 'won')
+    const lostBets = (bets ?? []).filter(b => b.status === 'lost')
+    const biggestWin = wonBets.reduce((max: any, b: any) => (!max || b.points_won > max.points_won ? b : max), null)
+
+    const resultLine = match.result === 'home'
+      ? `**${match.home_team}** gagne`
+      : match.result === 'away'
+      ? `**${match.away_team}** gagne`
+      : 'Match nul'
+
+    const embed = new EmbedBuilder()
+      .setColor(0xF0B429)
+      .setTitle(`⚽ ${match.home_team} ${match.final_score_home} – ${match.final_score_away} ${match.away_team}`)
+      .setDescription(`${resultLine} · ${PHASE_LABEL[match.phase] ?? match.phase}`)
+      .addFields(
+        { name: '✅ Paris gagnants', value: `${wonBets.length}`,  inline: true },
+        { name: '❌ Paris perdants', value: `${lostBets.length}`, inline: true },
+        {
+          name:   '🏆 Meilleur gain',
+          value:  biggestWin
+            ? `**${(biggestWin.users as any)?.username}** +${formatPoints(biggestWin.points_won)}`
+            : 'Aucun',
+          inline: false,
+        },
+      )
+      .setTimestamp()
+
+    await channel.send({ embeds: [embed] })
+
+    // Post updated leaderboard
+    const { data: leaderboard } = await supabase
+      .from('leaderboard_points')
+      .select('*')
+      .limit(8)
+
+    if (leaderboard?.length) {
+      const lines = leaderboard.map((r: any, i: number) => {
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`
+        return `${medal} **${r.username}** — ${formatPoints(r.total_points)}`
+      })
+      const lbEmbed = new EmbedBuilder()
+        .setColor(Colors.Gold)
+        .setTitle('🏆 Classement mis à jour')
+        .setDescription(lines.join('\n'))
+        .setTimestamp()
+      await channel.send({ embeds: [lbEmbed] })
+    }
+  }
+}
+
 export function startResultsPoller(client: Client) {
   const INTERVAL = 90_000 // 90 secondes
 
@@ -191,6 +281,7 @@ export function startResultsPoller(client: Client) {
         postResolvedBets(client),
         postResolvedCombos(client),
         postResolvedDuels(client),
+        postMatchResults(client),
       ])
     } catch (err) {
       console.error('Erreur poller résultats:', err)
