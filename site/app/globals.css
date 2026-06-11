@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg:        #07101E;
+  --bg-2:      #0D1A2E;
+  --bg-3:      #122038;
+  --border:    #1A2F4A;
+  --border-2:  #243D5C;
+  --gold:      #F0B429;
+  --gold-dim:  rgba(240,180,41,.12);
+  --gold-glow: rgba(240,180,41,.06);
+  --text:      #D8E6F3;
+  --muted:     #4A6280;
+  --green:     #22C55E;
+  --red:       #EF4444;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Figtree', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Diagonal stripes background texture */
+.bg-stripes {
+  background-image: repeating-linear-gradient(
+    -55deg,
+    transparent,
+    transparent 40px,
+    rgba(255,255,255,.018) 40px,
+    rgba(255,255,255,.018) 41px
+  );
+}
+
+/* Gold left-border card accent */
+.card-gold {
+  border-left: 2px solid var(--gold);
+}
+
+/* Display font */
+.font-display {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: .04em;
+}
+
+/* Mono font */
+.font-mono-alt {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Odds pill */
+.odds-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: .8rem;
+  color: var(--gold);
+  background: var(--gold-dim);
+  border: 1px solid rgba(240,180,41,.2);
+  padding: .2rem .55rem;
+  border-radius: 4px;
+}
+
+/* Hover utilities for server components (no JS needed) */
+.hover-gold-border { transition: border-color .15s, background .15s; }
+.hover-gold-border:hover { border-color: rgba(240,180,41,.3) !important; }
+
+.hover-gold-bg:hover { background: rgba(240,180,41,.05) !important; }
+
+.hover-bg-3:hover { background: var(--bg-3) !important; border-color: rgba(240,180,41,.25) !important; }
+
+.btn-gold { transition: background .15s; }
+.btn-gold:hover { background: #FFD060 !important; }
+
+.btn-discord { transition: background .15s; }
+.btn-discord:hover { background: #4752C4 !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-2); }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* Page fade-in */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up .35s ease both; }
+.delay-1 { animation-delay: .08s; }
+.delay-2 { animation-delay: .16s; }
+.delay-3 { animation-delay: .24s; }
+
+/* Gold shimmer on hover */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.shimmer:hover {
+  background: linear-gradient(90deg, var(--gold) 0%, #FFD97D 50%, var(--gold) 100%);
+  background-size: 200% auto;
+  animation: shimmer 1.2s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
