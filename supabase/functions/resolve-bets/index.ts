@@ -141,13 +141,18 @@ Deno.serve(async () => {
           resolved_at: new Date().toISOString(),
         }).eq('id', bet.id)
 
-        // FIX: include total_bets increment
-        await supabase.from('users').update({
-          total_points:  bet.users.total_points + pointsWon - bet.stake,
-          frozen_points: Math.max(0, bet.users.frozen_points - bet.stake),
-          bets_won:      status === 'won' ? bet.users.bets_won + 1 : bet.users.bets_won,
-          total_bets:    bet.users.total_bets + 1,
-        }).eq('id', bet.user_id)
+        // Always fetch fresh user state to avoid overwrite bug when same user has multiple bets on same match
+        const { data: freshUser } = await supabase
+          .from('users').select('total_points, frozen_points, bets_won, total_bets')
+          .eq('id', bet.user_id).single()
+        if (freshUser) {
+          await supabase.from('users').update({
+            total_points:  freshUser.total_points + pointsWon - bet.stake,
+            frozen_points: Math.max(0, freshUser.frozen_points - bet.stake),
+            bets_won:      status === 'won' ? freshUser.bets_won + 1 : freshUser.bets_won,
+            total_bets:    freshUser.total_bets + 1,
+          }).eq('id', bet.user_id)
+        }
 
         totalResolved++
       }
