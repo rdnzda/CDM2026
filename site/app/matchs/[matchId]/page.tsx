@@ -181,23 +181,27 @@ export default async function MatchPage({
 
           <p className="text-[11px] text-center mt-4" style={{ color: 'var(--muted)' }}>{kickoff}</p>
 
-          {(match.status === 'finished' && match.final_score_home !== null) || match.status === 'live' ? (
+          {match.status === 'live' ? (
             <div className="mt-5 text-center">
-              {match.status === 'live' ? (
-                <div className="inline-flex items-center gap-1.5 mb-2">
-                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22C55E' }} />
-                  <p className="text-[9px] tracking-[.2em] uppercase font-bold" style={{ color: '#22C55E' }}>EN DIRECT</p>
+              <div className="inline-flex items-center gap-1.5 mb-3">
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22C55E' }} />
+                <p className="text-[9px] tracking-[.2em] uppercase font-bold" style={{ color: '#22C55E' }}>EN DIRECT</p>
+              </div>
+              {match.final_score_home !== null ? (
+                <div className="font-display" style={{ fontSize: 'clamp(3rem, 12vw, 5rem)', color: '#22C55E', letterSpacing: '.08em', lineHeight: 1 }}>
+                  {match.final_score_home} – {match.final_score_away}
                 </div>
               ) : (
-                <p className="text-[9px] tracking-[.2em] uppercase mb-2" style={{ color: 'var(--muted)' }}>Score final</p>
+                <div className="font-display" style={{ fontSize: 'clamp(2rem, 8vw, 3.5rem)', color: 'var(--muted)', letterSpacing: '.08em', lineHeight: 1 }}>
+                  ? – ?
+                </div>
               )}
-              <div className="font-display" style={{
-                fontSize: 'clamp(3rem, 12vw, 5rem)',
-                color: match.status === 'live' ? '#22C55E' : '#F0B429',
-                letterSpacing: '.08em',
-                lineHeight: 1,
-              }}>
-                {match.final_score_home ?? 0} – {match.final_score_away ?? 0}
+            </div>
+          ) : match.status === 'finished' && match.final_score_home !== null ? (
+            <div className="mt-5 text-center">
+              <p className="text-[9px] tracking-[.2em] uppercase mb-2" style={{ color: 'var(--muted)' }}>Score final</p>
+              <div className="font-display" style={{ fontSize: 'clamp(3rem, 12vw, 5rem)', color: '#F0B429', letterSpacing: '.08em', lineHeight: 1 }}>
+                {match.final_score_home} – {match.final_score_away}
               </div>
             </div>
           ) : null}

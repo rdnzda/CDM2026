@@ -183,9 +183,12 @@ function detectPhase(stage: string): string {
   return 'group'
 }
 
-function mapStatus(status: string): string {
+function mapStatus(status: string, kickoffUtc: string): string {
   if (['FINISHED', 'AWARDED'].includes(status))       return 'finished'
   if (['IN_PLAY', 'PAUSED', 'LIVE'].includes(status)) return 'live'
+  // Free-tier workaround: football-data.org stays TIMED during live play
+  const elapsedMin = (Date.now() - new Date(kickoffUtc).getTime()) / 60000
+  if (elapsedMin >= 0 && elapsedMin < 115) return 'live'
   return 'upcoming'
 }
 
@@ -233,7 +236,7 @@ Deno.serve(async () => {
 
     for (const m of matches) {
       const phase      = detectPhase(m.stage)
-      const status     = mapStatus(m.status)
+      const status     = mapStatus(m.status, m.utcDate)
       const isKnockout = phase !== 'group'
 
       // football-data.org returns "GROUP_A", "GROUP_B", etc. — keep just the letter

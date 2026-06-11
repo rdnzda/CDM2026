@@ -101,10 +101,10 @@ export default async function MatchsPage() {
                     </p>
 
                     <div className="flex items-center gap-2 pl-0.5">
-                      {(isDone && match.final_score_home !== null) || isLive ? (
+                      {(isDone || isLive) && match.final_score_home !== null ? (
                         <span className="font-display text-lg leading-none flex items-center gap-1.5" style={{ color: isLive ? '#22C55E' : 'var(--text)' }}>
                           {isLive && <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />}
-                          {match.final_score_home ?? 0} – {match.final_score_away ?? 0}
+                          {match.final_score_home} – {match.final_score_away}
                         </span>
                       ) : hasOdds ? (
                         <div className="flex items-center gap-3">
@@ -137,12 +137,12 @@ export default async function MatchsPage() {
                       {match.home_team}
                     </p>
 
-                    {(isDone && match.final_score_home !== null) || isLive ? (
+                    {(isDone || isLive) && match.final_score_home !== null ? (
                       <div className="shrink-0 flex items-center gap-2">
                         {isLive && <span className="w-2 h-2 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />}
-                        <span className="font-display text-2xl" style={{ color: isLive ? '#22C55E' : 'var(--text)' }}>{match.final_score_home ?? 0}</span>
+                        <span className="font-display text-2xl" style={{ color: isLive ? '#22C55E' : 'var(--text)' }}>{match.final_score_home}</span>
                         <span className="font-display text-lg" style={{ color: 'var(--muted)' }}>–</span>
-                        <span className="font-display text-2xl" style={{ color: isLive ? '#22C55E' : 'var(--text)' }}>{match.final_score_away ?? 0}</span>
+                        <span className="font-display text-2xl" style={{ color: isLive ? '#22C55E' : 'var(--text)' }}>{match.final_score_away}</span>
                       </div>
                     ) : (
                       <div className="shrink-0 flex items-center gap-1">
