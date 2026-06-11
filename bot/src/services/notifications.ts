@@ -7,7 +7,7 @@ import { formatMatch, formatPoints, formatOdds, formatBetType } from '../utils/f
 export async function notifyBetResult(client: Client, bet: any, match: any, won: boolean, pointsWon: number) {
   const channelId = process.env.DISCORD_RESULTS_CHANNEL_ID
   if (!channelId) return
-  const channel = client.channels.cache.get(channelId) as TextChannel | undefined
+  const channel = await client.channels.fetch(channelId).catch(() => null) as TextChannel | null
   if (!channel) return
 
   const emoji = won ? '✅' : '❌'
@@ -20,7 +20,7 @@ export async function notifyBetResult(client: Client, bet: any, match: any, won:
 export async function notifyDailyChallenge(client: Client, match: any, challengeType: string) {
   const channelId = process.env.DISCORD_GENERAL_CHANNEL_ID
   if (!channelId) return
-  const channel = client.channels.cache.get(channelId) as TextChannel | undefined
+  const channel = await client.channels.fetch(channelId).catch(() => null) as TextChannel | null
   if (!channel) return
 
   await channel.send(
@@ -41,7 +41,7 @@ let lastDuelCheck  = new Date(Date.now() - 2 * 60 * 1000)
 async function postResolvedBets(client: Client) {
   const channelId = process.env.DISCORD_RESULTS_CHANNEL_ID
   if (!channelId) return
-  const channel = client.channels.cache.get(channelId) as TextChannel | undefined
+  const channel = await client.channels.fetch(channelId).catch(() => null) as TextChannel | null
   if (!channel) return
 
   const since = lastBetCheck.toISOString()
@@ -90,7 +90,7 @@ async function postResolvedBets(client: Client) {
 async function postResolvedCombos(client: Client) {
   const channelId = process.env.DISCORD_RESULTS_CHANNEL_ID
   if (!channelId) return
-  const channel = client.channels.cache.get(channelId) as TextChannel | undefined
+  const channel = await client.channels.fetch(channelId).catch(() => null) as TextChannel | null
   if (!channel) return
 
   const since = lastComboCheck.toISOString()
@@ -137,7 +137,7 @@ async function postResolvedCombos(client: Client) {
 async function postResolvedDuels(client: Client) {
   const channelId = process.env.DISCORD_RESULTS_CHANNEL_ID
   if (!channelId) return
-  const channel = client.channels.cache.get(channelId) as TextChannel | undefined
+  const channel = await client.channels.fetch(channelId).catch(() => null) as TextChannel | null
   if (!channel) return
 
   const since = lastDuelCheck.toISOString()

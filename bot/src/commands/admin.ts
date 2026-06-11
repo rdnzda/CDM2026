@@ -40,8 +40,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const picked    = interaction.options.getChannel('canal')
     const channelId = picked?.id ?? process.env.DISCORD_GENERAL_CHANNEL_ID
     if (!channelId) return interaction.editReply('❌ Précise un canal ou configure `DISCORD_GENERAL_CHANNEL_ID`.')
-    const channel = interaction.client.channels.cache.get(channelId) as TextChannel | undefined
-    if (!channel) return interaction.editReply('❌ Canal introuvable dans le cache.')
+    const channel = await interaction.client.channels.fetch(channelId).catch(() => null) as TextChannel | null
+    if (!channel) return interaction.editReply('❌ Canal introuvable ou bot sans accès.')
 
     const embedMain = new EmbedBuilder()
       .setColor(0xF0B429)
