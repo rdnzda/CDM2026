@@ -272,6 +272,7 @@ Deno.serve(async () => {
         matchData.result_red_card  = redCards.length > 0
         matchData.result_best_half = htHome + htAway > shHome + shAway ? 'home'
                                    : htHome + htAway < shHome + shAway ? 'away' : 'equal'
+        matchData.result_et        = ['EXTRA_TIME', 'PENALTY_SHOOTOUT'].includes(m.score.duration ?? '')
         matchData.scorers          = scorers
       }
 

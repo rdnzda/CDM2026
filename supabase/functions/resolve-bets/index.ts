@@ -5,7 +5,7 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 const FD_KEY      = Deno.env.get('FOOTBALL_DATA_API_KEY')!
-const BOT_WEBHOOK = Deno.env.get('BOT_RESOLVE_WEBHOOK') // optional webhook to notify bot
+const BOT_WEBHOOK = Deno.env.get('BOT_RESOLVE_WEBHOOK')
 
 async function fetchMatchDetail(matchId: number) {
   const res = await fetch(`https://api.football-data.org/v4/matches/${matchId}`, {
@@ -32,22 +32,17 @@ function isBetWon(bet: any, match: any): boolean {
   }
 }
 
-// Returns 'full' | 'partial' | 'lost' for result_combo bets
 function resolveResultCombo(bet: any, match: any): 'full' | 'partial' | 'lost' {
   if (bet.prediction_result !== match.result) return 'lost'
-
   const hasScore  = bet.prediction_score_home != null
   const hasScorer = bet.prediction_scorer != null
-
   const scoreCorrect  = !hasScore  || (bet.prediction_score_home === match.final_score_home && bet.prediction_score_away === match.final_score_away)
   const scorerCorrect = !hasScorer || match.scorers?.some((s: string) => s.toLowerCase().includes((bet.prediction_scorer ?? '').toLowerCase()))
-
   return scoreCorrect && scorerCorrect ? 'full' : 'partial'
 }
 
 Deno.serve(async () => {
   try {
-    // Find finished matches with pending bets
     const { data: finishedMatches } = await supabase
       .from('matches')
       .select('*')
@@ -58,16 +53,22 @@ Deno.serve(async () => {
     let totalResolved = 0
 
     for (const match of finishedMatches) {
-      // Fetch pending bets for this match
       const { data: pendingBets } = await supabase
         .from('bets')
         .select('*, users(*)')
         .eq('match_id', match.id)
         .eq('status', 'pending')
 
-      if (!pendingBets?.length) continue
+      const { data: pendingComboLegs } = await supabase
+        .from('combo_legs')
+        .select('*, combos(id, user_id, stake, potential_win, status)')
+        .eq('match_id', match.id)
+        .eq('status', 'pending')
 
-      // Fetch match detail if we don't have special results yet
+      const hasPendingWork = (pendingBets?.length ?? 0) > 0 || (pendingComboLegs?.length ?? 0) > 0
+      if (!hasPendingWork) continue
+
+      // Ensure match special results are populated
       if (match.result_btts == null && match.footballdata_match_id) {
         const detail   = await fetchMatchDetail(match.footballdata_match_id)
         const goals    = detail.goals || []
@@ -79,20 +80,24 @@ Deno.serve(async () => {
         const redCards = bookings.filter((b: any) => b.card === 'RED_CARD' || b.card === 'YELLOW_RED_CARD')
         const scorers  = goals.filter((g: any) => g.type !== 'OWN').map((g: any) => g.scorer?.name).filter(Boolean)
 
+        // FIX: result_et from score.duration (REGULAR | EXTRA_TIME | PENALTY_SHOOTOUT)
+        const resultEt = ['EXTRA_TIME', 'PENALTY_SHOOTOUT'].includes(detail.score?.duration ?? '')
+
         await supabase.from('matches').update({
           result_btts:      match.final_score_home > 0 && match.final_score_away > 0,
           result_over25:    (match.final_score_home + match.final_score_away) > 2.5,
           result_red_card:  redCards.length > 0,
           result_best_half: htHome + htAway > shHome + shAway ? 'home' : htHome + htAway < shHome + shAway ? 'away' : 'equal',
+          result_et:        resultEt,
           scorers,
         }).eq('id', match.id)
 
-        // Refresh match data
         const { data: updated } = await supabase.from('matches').select('*').eq('id', match.id).single()
         if (updated) Object.assign(match, updated)
       }
 
-      for (const bet of pendingBets) {
+      // ── Resolve simple bets ──
+      for (const bet of (pendingBets ?? [])) {
         let status: string
         let pointsWon = 0
 
@@ -102,7 +107,6 @@ Deno.serve(async () => {
             status = 'won'
             pointsWon = calcPoints(bet.odds_at_bet_time, bet.stake, bet.phase_multiplier, bet.boost_multiplier || 1.0, bet.wildcard_used === 'double')
           } else if (outcome === 'partial' && bet.base_odds) {
-            // Result correct but bonus(es) missed — pay out base odds only
             status = 'won'
             pointsWon = calcPoints(bet.base_odds, bet.stake, bet.phase_multiplier, bet.boost_multiplier || 1.0, bet.wildcard_used === 'double')
           } else {
@@ -116,42 +120,40 @@ Deno.serve(async () => {
           }
         }
 
-        // Insurance wildcard: refund if exact_score lost by 1 goal
-        if (status === 'lost' && (
+        // FIX: insurance wildcard — use |diff_home| + |diff_away| not |(diff_home + diff_away)|
+        if (
+          status === 'lost' &&
           bet.wildcard_used === 'insurance' &&
           bet.bet_type === 'exact_score' &&
-          Math.abs((match.final_score_home - bet.prediction_score_home) + (match.final_score_away - bet.prediction_score_away)) === 1
+          Math.abs(match.final_score_home - bet.prediction_score_home) +
+          Math.abs(match.final_score_away - bet.prediction_score_away) === 1
         ) {
           status = 'refunded'
           pointsWon = bet.stake
         }
 
-        // Update bet
         await supabase.from('bets').update({
           status,
           points_won:  pointsWon,
           resolved_at: new Date().toISOString(),
         }).eq('id', bet.id)
 
-        // Update user points
-        const pointsDelta = pointsWon - (status === 'lost' ? 0 : 0) // stake already frozen
+        // FIX: include total_bets increment
         await supabase.from('users').update({
           total_points:  bet.users.total_points + pointsWon - bet.stake,
           frozen_points: Math.max(0, bet.users.frozen_points - bet.stake),
           bets_won:      status === 'won' ? bet.users.bets_won + 1 : bet.users.bets_won,
+          total_bets:    bet.users.total_bets + 1,
         }).eq('id', bet.user_id)
 
         totalResolved++
       }
 
-      // Check combo legs for this match
-      const { data: comboLegs } = await supabase
-        .from('combo_legs')
-        .select('*, combos(*)')
-        .eq('match_id', match.id)
-        .eq('status', 'pending')
+      // ── Resolve combo legs ──
+      for (const leg of (pendingComboLegs ?? [])) {
+        const combo = leg.combos as any
+        if (!combo || combo.status !== 'pending') continue
 
-      for (const leg of (comboLegs || [])) {
         const won = isBetWon(leg, match)
         await supabase.from('combo_legs').update({
           status:      won ? 'won' : 'lost',
@@ -159,13 +161,76 @@ Deno.serve(async () => {
         }).eq('id', leg.id)
 
         if (!won) {
-          // Mark combo as lost
-          await supabase.from('combos').update({ status: 'lost', resolved_at: new Date().toISOString() }).eq('id', leg.combo_id)
+          // Leg lost → combo lost immediately
+          if (combo.status === 'pending') {
+            await supabase.from('combos').update({
+              status:      'lost',
+              resolved_at: new Date().toISOString(),
+            }).eq('id', leg.combo_id)
+
+            // FIX: unfreeze stake + decrement total_points + increment total_bets
+            const { data: user } = await supabase
+              .from('users')
+              .select('total_points, frozen_points, total_bets')
+              .eq('id', combo.user_id)
+              .single()
+
+            if (user) {
+              await supabase.from('users').update({
+                total_points:  user.total_points - combo.stake,
+                frozen_points: Math.max(0, user.frozen_points - combo.stake),
+                total_bets:    user.total_bets + 1,
+              }).eq('id', combo.user_id)
+            }
+            totalResolved++
+          }
+        } else {
+          // Leg won → check if ALL legs of this combo are now won
+          const { data: allLegs } = await supabase
+            .from('combo_legs')
+            .select('id, status')
+            .eq('combo_id', leg.combo_id)
+
+          // Re-fetch combo to check its current status (may have been updated by another leg in same run)
+          const { data: freshCombo } = await supabase
+            .from('combos')
+            .select('status, stake, potential_win, user_id')
+            .eq('id', leg.combo_id)
+            .single()
+
+          if (!freshCombo || freshCombo.status !== 'pending') continue
+
+          const allWon = allLegs?.every(l => l.status === 'won')
+
+          if (allWon) {
+            // FIX: pay out the combo win
+            const { data: user } = await supabase
+              .from('users')
+              .select('total_points, frozen_points, bets_won, total_bets')
+              .eq('id', freshCombo.user_id)
+              .single()
+
+            if (user) {
+              await supabase.from('combos').update({
+                status:      'won',
+                resolved_at: new Date().toISOString(),
+                points_won:  freshCombo.potential_win,
+              }).eq('id', leg.combo_id)
+
+              await supabase.from('users').update({
+                total_points:  user.total_points + freshCombo.potential_win - freshCombo.stake,
+                frozen_points: Math.max(0, user.frozen_points - freshCombo.stake),
+                bets_won:      user.bets_won + 1,
+                total_bets:    user.total_bets + 1,
+              }).eq('id', freshCombo.user_id)
+
+              totalResolved++
+            }
+          }
         }
       }
     }
 
-    // Notify bot webhook if configured
     if (BOT_WEBHOOK && totalResolved > 0) {
       await fetch(BOT_WEBHOOK, {
         method: 'POST',
