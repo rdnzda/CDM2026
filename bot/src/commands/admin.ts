@@ -19,7 +19,12 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand(sub =>
     sub.setName('announce')
-      .setDescription('Envoie l\'annonce officielle CDM 2026 dans le canal général')
+      .setDescription('Envoie l\'annonce officielle CDM 2026')
+      .addChannelOption(o =>
+        o.setName('canal')
+          .setDescription('Canal cible (défaut : canal général configuré)')
+          .setRequired(false)
+      )
   )
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -32,10 +37,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const sub = interaction.options.getSubcommand()
 
   if (sub === 'announce') {
-    const channelId = process.env.DISCORD_GENERAL_CHANNEL_ID
-    if (!channelId) return interaction.editReply('❌ `DISCORD_GENERAL_CHANNEL_ID` non configuré.')
+    const picked    = interaction.options.getChannel('canal')
+    const channelId = picked?.id ?? process.env.DISCORD_GENERAL_CHANNEL_ID
+    if (!channelId) return interaction.editReply('❌ Précise un canal ou configure `DISCORD_GENERAL_CHANNEL_ID`.')
     const channel = interaction.client.channels.cache.get(channelId) as TextChannel | undefined
-    if (!channel) return interaction.editReply('❌ Canal général introuvable dans le cache.')
+    if (!channel) return interaction.editReply('❌ Canal introuvable dans le cache.')
 
     const embedMain = new EmbedBuilder()
       .setColor(0xF0B429)
