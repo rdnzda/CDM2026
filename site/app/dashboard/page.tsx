@@ -1,6 +1,22 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Coins, CheckCircle2, Clock, BarChart2, Zap, Sparkles, Award } from 'lucide-react'
+import { Coins, CheckCircle2, Clock, BarChart2, Zap, Sparkles, Award, TrendingUp } from 'lucide-react'
+import PointsLineChart from '@/components/PointsLineChart'
+import { buildCumulative, WC_START } from '@/lib/wc-dates'
+import DailyClaimButton from './DailyClaimButton'
+
+function todayParis(): string {
+  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' })
+}
+
+function dailyPoints(): number {
+  const d = new Date()
+  if (d >= new Date('2026-07-18')) return 500
+  if (d >= new Date('2026-07-14')) return 300
+  if (d >= new Date('2026-07-08')) return 250
+  if (d >= new Date('2026-07-02')) return 200
+  return 150
+}
 
 const BET_TYPE_LABELS: Record<string, string> = {
   result: 'Résultat', exact_score: 'Score exact', scorer: 'Buteur',
@@ -23,12 +39,37 @@ export default async function DashboardPage() {
   const winrate = dbUser.total_bets > 0 ? Math.round(dbUser.bets_won * 100 / dbUser.total_bets) : 0
   const progressPct = Math.min(100, Math.round((dbUser.total_points / 50000) * 100))
 
-  const [{ data: pendingBets }, { data: wildcards }, { data: boosts }, { data: achievements }] = await Promise.all([
+  const today = todayParis()
+
+  const [
+    { data: pendingBets },
+    { data: wildcards },
+    { data: boosts },
+    { data: achievements },
+    { data: resolvedBets },
+    { data: resolvedCombos },
+    { data: finishedChallenges },
+    { data: todayClaim },
+  ] = await Promise.all([
     service.from('bets').select('*, matches(home_team, away_team, kickoff_at)').eq('user_id', dbUser.id).eq('status', 'pending').order('created_at', { ascending: false }).limit(8),
     service.from('user_wildcards').select('*').eq('user_id', dbUser.id).eq('used', false),
     service.from('user_boosts').select('*').eq('user_id', dbUser.id).eq('used', false),
     service.from('user_achievements').select('*, achievements(*)').eq('user_id', dbUser.id),
+    service.from('bets').select('resolved_at, stake, points_won').eq('user_id', dbUser.id).in('status', ['won', 'lost', 'refunded']).gte('resolved_at', WC_START).not('resolved_at', 'is', null),
+    service.from('combos').select('resolved_at, stake, points_won').eq('user_id', dbUser.id).in('status', ['won', 'lost', 'refunded']).gte('resolved_at', WC_START).not('resolved_at', 'is', null),
+    service.from('challenges').select('finished_at, stake, winner_id').eq('status', 'finished').or(`challenger_id.eq.${dbUser.id},opponent_id.eq.${dbUser.id}`).gte('finished_at', WC_START).not('finished_at', 'is', null),
+    service.from('daily_claims').select('id').eq('user_id', dbUser.id).eq('claim_date', today).maybeSingle(),
   ])
+
+  const chartData = buildCumulative(
+    [...(resolvedBets ?? []), ...(resolvedCombos ?? [])],
+    (finishedChallenges ?? []).map(ch => ({
+      finished_at: ch.finished_at,
+      stake:       ch.stake,
+      is_winner:   ch.winner_id === dbUser.id,
+    })),
+    dbUser.total_points,
+  )
 
   const WILDCARD_LABELS: Record<string, string> = { double: '×2 Double', insurance: 'Assurance', last_minute: 'Dernière Minute' }
   const WILDCARD_COLORS: Record<string, string> = {
@@ -74,6 +115,9 @@ export default async function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Daily claim */}
+      <DailyClaimButton alreadyClaimed={!!todayClaim} points={dailyPoints()} />
 
       {/* Progress bar */}
       <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-4">
@@ -137,6 +181,23 @@ export default async function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Daily progression chart */}
+      <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-5">
+        <h2 className="font-semibold mb-4 flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-amber-400" />
+          Progression Coupe du Monde
+        </h2>
+        {chartData.length >= 2 ? (
+          <PointsLineChart
+            series={[{ name: dbUser.username, color: '#F0B429', data: chartData }]}
+          />
+        ) : (
+          <p className="text-center py-6 text-sm" style={{ color: 'var(--muted)' }}>
+            Les données de progression apparaîtront dès les premiers matchs résolus.
+          </p>
+        )}
+      </div>
 
       {/* Pending bets */}
       <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-5">

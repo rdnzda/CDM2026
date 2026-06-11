@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js'
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, TextChannel } from 'discord.js'
 import { supabase } from '../services/supabase'
 
 const ADMIN_ID = '574503884987564044'
@@ -17,6 +17,10 @@ export const data = new SlashCommandBuilder()
       .addUserOption(o => o.setName('utilisateur').setDescription('Utilisateur').setRequired(true))
       .addIntegerOption(o => o.setName('points').setDescription('Nouveau solde').setRequired(true).setMinValue(0))
   )
+  .addSubcommand(sub =>
+    sub.setName('announce')
+      .setDescription('Envoie l\'annonce officielle CDM 2026 dans le canal général')
+  )
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (interaction.user.id !== ADMIN_ID) {
@@ -25,7 +29,101 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply({ ephemeral: true })
 
-  const sub        = interaction.options.getSubcommand()
+  const sub = interaction.options.getSubcommand()
+
+  if (sub === 'announce') {
+    const channelId = process.env.DISCORD_GENERAL_CHANNEL_ID
+    if (!channelId) return interaction.editReply('❌ `DISCORD_GENERAL_CHANNEL_ID` non configuré.')
+    const channel = interaction.client.channels.cache.get(channelId) as TextChannel | undefined
+    if (!channel) return interaction.editReply('❌ Canal général introuvable dans le cache.')
+
+    const embedMain = new EmbedBuilder()
+      .setColor(0xF0B429)
+      .setTitle('🏆  CDM 2026 — Pronostics Officiels')
+      .setDescription(
+        '> La Coupe du Monde 2026 commence aujourd\'hui ! Rejoignez la compétition de pronostics, grimpez au classement et prouvez que vous êtes le meilleur pronostiqueur ⚽🔥\n\n' +
+        '🌐 **Site officiel** : https://cdm-2026-phi.vercel.app'
+      )
+      .addFields(
+        {
+          name: '🚀 Démarrer en 30 secondes',
+          value:
+            '**1.** Rendez-vous sur le site\n' +
+            '**2.** Connectez-vous avec votre compte **Discord**\n' +
+            '**3.** Récupérez vos **10 000 pts** de départ\n' +
+            '**4.** Pariez, combinez, défiez — et grimpez au classement !',
+          inline: false,
+        },
+        {
+          name: '💻 Commandes disponibles',
+          value:
+            '`/paris` — Parier sur un match (résultat, score exact, buteur…)\n' +
+            '`/combo` — Créer un combiné 2-10 matchs\n' +
+            '`/defi` — Lancer un duel 1v1 contre un ami\n' +
+            '`/matchs` — Voir les prochains matchs et leurs cotes\n' +
+            '`/classement` — Classement général des joueurs\n' +
+            '`/profil` — Vos statistiques personnelles\n' +
+            '`/tournoi` — Pronostiquer le vainqueur et le podium\n' +
+            '`/award` — Pronostiquer les récompenses individuelles\n' +
+            '`/quotidien` — Défi du jour (bonus quotidien)\n' +
+            '`/boost` — Activer un boost sur votre prochain pari',
+          inline: false,
+        },
+      )
+      .setFooter({ text: 'Connexion via Discord OAuth · Données en temps réel' })
+      .setTimestamp()
+
+    const embedRules = new EmbedBuilder()
+      .setColor(0x1D4ED8)
+      .setTitle('📋 Règles & Système de points')
+      .addFields(
+        {
+          name: '📐 Formule de gain',
+          value: '```\nGain = Cote × Mise × Phase × Boost\n```',
+          inline: false,
+        },
+        {
+          name: '🌍 Multiplicateurs de phase',
+          value:
+            '`Phase de groupes` → **×1.0**\n' +
+            '`Huitièmes de finale` → **×1.5**\n' +
+            '`Quarts de finale` → **×2.0**\n' +
+            '`Demi-finales` → **×2.5**\n' +
+            '`Finale` → **×3.0**',
+          inline: true,
+        },
+        {
+          name: '💰 Limites de mise',
+          value:
+            'Minimum : **100 pts**\n' +
+            'Simple : max **2 000 pts**\n' +
+            'Combiné : max **1 000 pts**\n' +
+            'Duel 1v1 : max **20 %** du solde\n' +
+            'Capital de départ : **10 000 pts**',
+          inline: true,
+        },
+        {
+          name: '⚡ Wildcards — 3 par compétition',
+          value:
+            '**×2 Double** — Multiplie vos gains par 2\n' +
+            '**Assurance** — Remboursé si score exact raté d\'1 but\n' +
+            '**Dernière Minute** — Pariez jusqu\'à la 10ᵉ minute de jeu',
+          inline: false,
+        },
+        {
+          name: '🔥 Boosts — rechargés à chaque phase',
+          value:
+            '3× **Boost ×1.5** disponibles par phase\n' +
+            '1× **Boost ×2.0 Score exact** disponible par phase',
+          inline: false,
+        },
+      )
+      .setFooter({ text: 'Les paris se ferment au coup d\'envoi de chaque match · Bonne chance à tous ! 🍀' })
+
+    await channel.send({ embeds: [embedMain, embedRules] })
+    return interaction.editReply('✅ Annonce officielle envoyée dans le canal général !')
+  }
+
   const targetUser = interaction.options.getUser('utilisateur', true)
 
   const { data: user } = await supabase
