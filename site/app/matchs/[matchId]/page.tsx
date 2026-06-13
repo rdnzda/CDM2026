@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import BetForm from './BetForm'
+import BetDistribution from './BetDistribution'
 import { Lock } from 'lucide-react'
 import { getFlagUrl } from '@/lib/flags'
 import LiveRefresh from '@/components/LiveRefresh'
@@ -62,10 +63,22 @@ export default async function MatchPage({
     .eq('match_id', match.id)
     .eq('status', 'pending')
 
-  const [{ data: exactScoreOdds }, { data: matchScorerOdds }] = await Promise.all([
+  const [{ data: exactScoreOdds }, { data: matchScorerOdds }, { data: betDistRaw }] = await Promise.all([
     supabase.from('odds_exact_score').select('*').eq('match_id', match.id).order('odds', { ascending: true }).limit(30),
     supabase.from('odds_scorers').select('*').eq('match_id', match.id).order('odds', { ascending: true }).limit(50),
+    service.from('bets').select('prediction_result, stake').eq('match_id', match.id).not('prediction_result', 'is', null),
   ])
+
+  const betDist = {
+    home: { count: 0, stake: 0 },
+    draw: { count: 0, stake: 0 },
+    away: { count: 0, stake: 0 },
+  }
+  for (const b of betDistRaw ?? []) {
+    const k = b.prediction_result as 'home' | 'draw' | 'away'
+    if (k in betDist) { betDist[k].count++; betDist[k].stake += b.stake }
+  }
+  const betDistTotal = betDist.home.count + betDist.draw.count + betDist.away.count
 
   let scorerOdds = matchScorerOdds ?? []
   if (scorerOdds.length === 0) {
@@ -118,7 +131,9 @@ export default async function MatchPage({
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 animate-fade-up">
-      {match.status === 'live' && <LiveRefresh intervalMs={30000} />}
+      {(match.status === 'live' || (match.status === 'upcoming' && betDistTotal > 0)) && (
+        <LiveRefresh intervalMs={match.status === 'live' ? 30000 : 60000} />
+      )}
 
       {/* Match header */}
       <div className="relative overflow-hidden rounded-2xl" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
@@ -233,6 +248,16 @@ export default async function MatchPage({
           </a>
         ))}
       </div>
+
+      {/* Bet distribution — always visible when there are result bets */}
+      {betDistTotal > 0 && (
+        <BetDistribution
+          home={match.home_team}
+          away={match.away_team}
+          dist={betDist}
+          isLive={match.status === 'live'}
+        />
+      )}
 
       {/* Tab content */}
       {activeTab === 'parier' ? (
