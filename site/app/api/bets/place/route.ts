@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   if (!authUser) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
 
   const body = await request.json()
-  const { matchId, betType, stake, predictionResult, predictionScoreHome, predictionScoreAway, predictionScorer, predictionBool, predictionHalf } = body
+  const { matchId, betType, stake, predictionResult, predictionScoreHome, predictionScoreAway, predictionScorer, predictionBool, predictionHalf, boostId } = body
 
   if (!matchId || !betType || !stake) return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
   if (stake < 100 || stake > 2000) return NextResponse.json({ error: 'Mise entre 100 et 2000 pts' }, { status: 400 })
@@ -90,8 +90,28 @@ export async function POST(request: NextRequest) {
 
   if (!oddsAtBetTime) return NextResponse.json({ error: 'Cote non disponible' }, { status: 400 })
 
-  const pointsIfWon = calcPoints(oddsAtBetTime, stake, match.phase_multiplier, 1.0, false)
-  const basePointsIfWon = baseOdds ? calcPoints(baseOdds, stake, match.phase_multiplier, 1.0, false) : null
+  // Validate and apply boost if provided
+  let boostMultiplier = 1.0
+  let boostUsed = false
+
+  if (boostId) {
+    const { data: boost } = await service.from('user_boosts').select('*').eq('id', boostId).single()
+    if (!boost) return NextResponse.json({ error: 'Boost introuvable' }, { status: 400 })
+    if (boost.user_id !== dbUser.id) return NextResponse.json({ error: 'Boost invalide' }, { status: 403 })
+    if (boost.used) return NextResponse.json({ error: 'Boost déjà utilisé' }, { status: 400 })
+    if (boost.phase !== match.phase) return NextResponse.json({ error: 'Ce boost ne s\'applique pas à cette phase' }, { status: 400 })
+    if (boost.boost_type === 'x20_exact') {
+      const hasScore = predictionScoreHome != null && predictionScoreAway != null
+      if (betType !== 'result_combo' || !hasScore) {
+        return NextResponse.json({ error: 'Le boost ×2.0 est réservé aux paris score exact' }, { status: 400 })
+      }
+    }
+    boostMultiplier = boost.boost_type === 'x15' ? 1.5 : 2.0
+    boostUsed = true
+  }
+
+  const pointsIfWon = calcPoints(oddsAtBetTime, stake, match.phase_multiplier, boostMultiplier, false)
+  const basePointsIfWon = baseOdds ? calcPoints(baseOdds, stake, match.phase_multiplier, boostMultiplier, false) : null
 
   const { data: bet, error } = await service.from('bets').insert({
     user_id:               dbUser.id,
@@ -107,7 +127,8 @@ export async function POST(request: NextRequest) {
     odds_at_bet_time:      oddsAtBetTime,
     base_odds:             baseOdds,
     phase_multiplier:      match.phase_multiplier,
-    boost_multiplier:      1.0,
+    boost_multiplier:      boostMultiplier,
+    boost_used:            boostUsed,
   }).select().single()
 
   if (error) {
@@ -116,6 +137,10 @@ export async function POST(request: NextRequest) {
   }
 
   await service.from('users').update({ frozen_points: dbUser.frozen_points + stake }).eq('id', dbUser.id)
+
+  if (boostId && boostUsed) {
+    await service.from('user_boosts').update({ used: true }).eq('id', boostId)
+  }
 
   return NextResponse.json({ bet, pointsIfWon, basePointsIfWon })
 }

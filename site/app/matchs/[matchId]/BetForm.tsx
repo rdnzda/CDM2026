@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { CheckCircle2, XCircle } from 'lucide-react'
+import { CheckCircle2, XCircle, Zap } from 'lucide-react'
 
 type Match = {
   id: string; home_team: string; away_team: string; phase_multiplier: number
@@ -12,6 +12,7 @@ type Match = {
 }
 type ExactOdd  = { id: string; score_home: number; score_away: number; odds: number }
 type ScorerOdd = { id: string; player_name: string; team: string; odds: number }
+type Boost     = { id: string; boost_type: 'x15' | 'x20_exact'; phase: string }
 type Tab = '1x2' | 'score' | 'buteur' | 'speciaux'
 
 function getResultFromScore(h: number, a: number): 'home' | 'draw' | 'away' {
@@ -20,16 +21,19 @@ function getResultFromScore(h: number, a: number): 'home' | 'draw' | 'away' {
   return 'draw'
 }
 
-export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthenticated, availablePoints }: {
+export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthenticated, availablePoints, userBoosts }: {
   match: Match; exactScoreOdds: ExactOdd[]; scorerOdds: ScorerOdd[]
-  isAuthenticated: boolean; availablePoints: number
+  isAuthenticated: boolean; availablePoints: number; userBoosts: Boost[]
 }) {
   const [predResult, setPredResult]         = useState<'home'|'draw'|'away'|null>(null)
   const [selectedScore, setSelectedScore]   = useState<{ h: number; a: number }|null>(null)
   const [selectedScorer, setSelectedScorer] = useState<string|null>(null)
   const [scorerQuery, setScorerQuery]       = useState('')
   const [scoreFilter, setScoreFilter]       = useState<'all'|'home'|'draw'|'away'>('all')
+  const [manualH, setManualH]               = useState(1)
+  const [manualA, setManualA]               = useState(0)
   const [stake, setStake]                   = useState(200)
+  const [selectedBoostId, setSelectedBoostId] = useState<string|null>(null)
   const [loading, setLoading]               = useState(false)
   const [feedback, setFeedback]             = useState<{ ok: boolean; msg: string }|null>(null)
   const [specialSel, setSpecialSel]         = useState<string|null>(null)
@@ -45,14 +49,16 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
     { k: 'et_yes',    l: 'Prolongations',bt: 'extra_time', pb: true,  odds: match.odds_et_yes    },
   ].filter(s => s.odds)
 
+  const hasBasicOdds = !!(match.odds_home || match.odds_draw || match.odds_away)
+
   const TABS: { id: Tab; label: string }[] = [
     { id: '1x2',      label: '1X2'      },
     { id: 'score',    label: 'Score'    },
     { id: 'buteur',   label: 'Buteur'   },
     { id: 'speciaux', label: 'Spéciaux' },
   ].filter(t =>
-    t.id === '1x2'      ? !!(match.odds_home || match.odds_draw || match.odds_away) :
-    t.id === 'score'    ? exactScoreOdds.length > 0 :
+    t.id === '1x2'      ? hasBasicOdds :
+    t.id === 'score'    ? hasBasicOdds :
     t.id === 'buteur'   ? true :
     specials.length > 0
   ) as { id: Tab; label: string }[]
@@ -72,22 +78,26 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
     ? scorerOdds.find(o => o.player_name === selectedScorer)?.odds ?? null
     : null
 
+  // hasBonus: score selected (regardless of exact odds existing) OR scorer selected
+  const hasBonus = !!(selectedScore || scorerOddsVal)
+
   let combinedOdds: number | null = baseOdds
   if (baseOdds) {
     if (scoreOdds) combinedOdds = scoreOdds
     if (scorerOddsVal) combinedOdds = (combinedOdds ?? baseOdds) * scorerOddsVal
   }
 
-  const hasBonus = !!(scoreOdds || scorerOddsVal)
-  const betType  = hasBonus ? 'result_combo' : 'result'
   const selSpecial = specials.find(s => s.k === specialSel)
+
+  const selectedBoost = userBoosts.find(b => b.id === selectedBoostId) ?? null
+  const boostMultiplier = selectedBoost?.boost_type === 'x15' ? 1.5 : selectedBoost?.boost_type === 'x20_exact' ? 2.0 : 1.0
 
   const activeOdds = activeTab === 'speciaux' ? (selSpecial?.odds ?? null) : combinedOdds
   const gain = activeOdds && stake >= 100
-    ? Math.round(Number(activeOdds) * stake * match.phase_multiplier)
+    ? Math.round(Number(activeOdds) * stake * match.phase_multiplier * boostMultiplier)
     : null
   const baseGain = baseOdds && stake >= 100
-    ? Math.round(baseOdds * stake * match.phase_multiplier)
+    ? Math.round(baseOdds * stake * match.phase_multiplier * boostMultiplier)
     : null
 
   const canBet = isAuthenticated && stake >= 100 && stake <= 2000 && stake <= availablePoints && (
@@ -116,20 +126,44 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
   function handleScoreClick(o: ExactOdd) {
     setSelectedScore({ h: o.score_home, a: o.score_away })
     setPredResult(getResultFromScore(o.score_home, o.score_away))
+    setManualH(o.score_home)
+    setManualA(o.score_away)
     setFeedback(null)
+  }
+
+  function handleManualScore(h: number, a: number) {
+    const ch = Math.max(0, Math.min(15, h))
+    const ca = Math.max(0, Math.min(15, a))
+    setManualH(ch)
+    setManualA(ca)
+    setSelectedScore({ h: ch, a: ca })
+    setPredResult(getResultFromScore(ch, ca))
+    setFeedback(null)
+  }
+
+  function clearBoostAndReset() {
+    setSelectedBoostId(null)
   }
 
   async function submitSpecial() {
     if (!selSpecial) return
     setSpecialLoading(true); setSpecialFeedback(null)
     try {
+      const payload: Record<string, unknown> = {
+        matchId: match.id, stake, betType: selSpecial.bt, predictionBool: selSpecial.pb,
+      }
+      if (selectedBoostId) payload.boostId = selectedBoostId
       const res = await fetch('/api/bets/place', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchId: match.id, stake, betType: selSpecial.bt, predictionBool: selSpecial.pb }),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!res.ok) setSpecialFeedback({ ok: false, msg: data.error ?? 'Erreur.' })
-      else { setSpecialFeedback({ ok: true, msg: `Pari placé — gain max : ${data.pointsIfWon?.toLocaleString('fr-FR')} pts` }); setSpecialSel(null) }
+      else {
+        setSpecialFeedback({ ok: true, msg: `Pari placé — gain max : ${data.pointsIfWon?.toLocaleString('fr-FR')} pts` })
+        setSpecialSel(null)
+        clearBoostAndReset()
+      }
     } catch { setSpecialFeedback({ ok: false, msg: 'Erreur réseau.' }) }
     finally { setSpecialLoading(false) }
   }
@@ -138,9 +172,12 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
     e.preventDefault()
     setFeedback(null)
     if (!predResult) return setFeedback({ ok: false, msg: 'Choisis un résultat.' })
-    const body: Record<string, unknown> = { matchId: match.id, stake, betType, predictionResult: predResult }
+    // Use result_combo whenever score or scorer is part of the bet
+    const bt = (selectedScore || (selectedScorer && predResult)) ? 'result_combo' : 'result'
+    const body: Record<string, unknown> = { matchId: match.id, stake, betType: bt, predictionResult: predResult }
     if (selectedScore) { body.predictionScoreHome = selectedScore.h; body.predictionScoreAway = selectedScore.a }
     if (selectedScorer) body.predictionScorer = selectedScorer
+    if (selectedBoostId) body.boostId = selectedBoostId
     setLoading(true)
     try {
       const res  = await fetch('/api/bets/place', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
@@ -149,6 +186,8 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
       else {
         setFeedback({ ok: true, msg: `Pari placé — gain max : ${data.pointsIfWon?.toLocaleString('fr-FR')} pts` })
         setPredResult(null); setSelectedScore(null); setSelectedScorer(null); setScorerQuery('')
+        setManualH(1); setManualA(0)
+        clearBoostAndReset()
       }
     } catch { setFeedback({ ok: false, msg: 'Erreur réseau.' }) }
     finally { setLoading(false) }
@@ -168,7 +207,56 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
     )
   }
 
-  // Shared stake block rendered inside each tab
+  // ── Shared blocks ──
+
+  const BoostBlock = () => {
+    if (userBoosts.length === 0) return null
+    const isExactScoreTab = activeTab === 'score' || (activeTab === '1x2' && !!selectedScore)
+    const visibleBoosts = userBoosts.filter(b =>
+      b.boost_type === 'x15' || isExactScoreTab
+    )
+    if (visibleBoosts.length === 0) return null
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Zap className="w-3 h-3" style={{ color: '#F0B429' }} />
+          <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
+            Bonus disponibles
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {visibleBoosts.map(b => {
+            const active = selectedBoostId === b.id
+            const label  = b.boost_type === 'x20_exact' ? '×2.0 Score exact' : '×1.5 Boost'
+            return (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => setSelectedBoostId(active ? null : b.id)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
+                style={{
+                  background: active ? 'rgba(240,180,41,.2)' : 'rgba(240,180,41,.07)',
+                  border: `1.5px solid ${active ? '#F0B429' : 'rgba(240,180,41,.3)'}`,
+                  color: active ? '#F0B429' : 'rgba(200,160,40,.9)',
+                }}
+              >
+                <Zap className="w-3 h-3" />
+                {label}
+              </button>
+            )
+          })}
+        </div>
+        {selectedBoost && (
+          <p className="text-[10px]" style={{ color: 'var(--muted)' }}>
+            {selectedBoost.boost_type === 'x20_exact'
+              ? 'Multiplie ×2.0 tes gains (score exact requis)'
+              : 'Multiplie ×1.5 tes gains potentiels'}
+          </p>
+        )}
+      </div>
+    )
+  }
+
   const StakeBlock = () => (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -222,6 +310,11 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
               résultat seul : +{baseGain.toLocaleString('fr-FR')}
             </p>
           )}
+          {boostMultiplier > 1 && (
+            <p className="text-[10px] mt-0.5 font-semibold" style={{ color: '#F0B429' }}>
+              boost ×{boostMultiplier} inclus
+            </p>
+          )}
         </div>
         <div className="text-right">
           <span className="font-display text-2xl" style={{ color, letterSpacing: '.04em' }}>
@@ -265,6 +358,79 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
       {l ? 'Envoi…' : label}
     </button>
   )
+
+  // Manual score picker for Score tab
+  const ManualScoreBlock = () => {
+    const resultLabel = manualH > manualA ? match.home_team
+      : manualH < manualA ? match.away_team : 'Match nul'
+    const activeOddsForScore = scoreOdds ?? (selectedScore ? (predResult === 'home' ? match.odds_home : predResult === 'away' ? match.odds_away : match.odds_draw) : null)
+    return (
+      <div className="rounded-xl p-4 space-y-3" style={{ background: 'var(--bg)', border: '1.5px solid var(--border)' }}>
+        <p className="text-[10px] font-semibold tracking-widest uppercase text-center" style={{ color: 'var(--muted)' }}>
+          {exactScoreOdds.length > 0 ? 'OU ENTRER UN SCORE' : 'SCORE PRÉDIT'}
+        </p>
+        <div className="flex items-center justify-center gap-6">
+          {/* Home */}
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide truncate max-w-[80px] text-center" style={{ color: 'var(--muted)' }}>
+              {match.home_team}
+            </p>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => handleManualScore(manualH - 1, manualA)}
+                className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-all"
+                style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>
+                −
+              </button>
+              <span className="font-display text-3xl w-8 text-center" style={{ color: '#F0B429', letterSpacing: '.04em' }}>
+                {manualH}
+              </span>
+              <button type="button" onClick={() => handleManualScore(manualH + 1, manualA)}
+                className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-all"
+                style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>
+                +
+              </button>
+            </div>
+          </div>
+
+          <span className="font-display text-2xl" style={{ color: 'var(--border-2)' }}>:</span>
+
+          {/* Away */}
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide truncate max-w-[80px] text-center" style={{ color: 'var(--muted)' }}>
+              {match.away_team}
+            </p>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => handleManualScore(manualH, manualA - 1)}
+                className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-all"
+                style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>
+                −
+              </button>
+              <span className="font-display text-3xl w-8 text-center" style={{ color: '#F0B429', letterSpacing: '.04em' }}>
+                {manualA}
+              </span>
+              <button type="button" onClick={() => handleManualScore(manualH, manualA + 1)}
+                className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-all"
+                style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-2">
+          <p className="text-xs font-semibold text-center" style={{ color: 'var(--muted)' }}>
+            {resultLabel}
+          </p>
+          {activeOddsForScore && (
+            <span className="font-mono text-xs font-bold" style={{ color: '#F0B429' }}>
+              ×{Number(activeOddsForScore).toFixed(2)}
+              {scoreOdds ? ' (score exact)' : ' (résultat)'}
+            </span>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
@@ -346,7 +512,8 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
               })}
             </div>
 
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }} className="space-y-4">
+              <BoostBlock />
               <StakeBlock />
             </div>
 
@@ -363,56 +530,65 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
         {/* ── SCORE ── */}
         {activeTab === 'score' && (
           <form onSubmit={submitMain} className="space-y-4">
-            <div className="flex gap-1.5">
-              {(['all', 'home', 'draw', 'away'] as const).map(f => (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => setScoreFilter(f)}
-                  className="px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all"
-                  style={{
-                    background: scoreFilter === f ? 'rgba(240,180,41,.15)' : 'var(--bg)',
-                    border: `1.5px solid ${scoreFilter === f ? '#F0B429' : 'var(--border)'}`,
-                    color: scoreFilter === f ? '#F0B429' : 'var(--muted)',
-                  }}
-                >
-                  {f === 'all' ? 'Tous' : f === 'home' ? '1' : f === 'draw' ? 'X' : '2'}
-                </button>
-              ))}
-            </div>
 
-            <div className="grid grid-cols-4 gap-1.5 max-h-52 overflow-y-auto pr-0.5">
-              {filteredScores.map(o => {
-                const isSel = selectedScore?.h === o.score_home && selectedScore?.a === o.score_away
-                return (
-                  <button
-                    key={o.id}
-                    type="button"
-                    onClick={() => handleScoreClick(o)}
-                    className="rounded-xl py-3 text-center transition-all"
-                    style={{
-                      background: isSel
-                        ? 'linear-gradient(160deg, rgba(240,180,41,.2) 0%, rgba(240,180,41,.06) 100%)'
-                        : 'var(--bg)',
-                      border: `1.5px solid ${isSel ? '#F0B429' : 'var(--border)'}`,
-                      transform: isSel ? 'scale(1.04)' : 'none',
-                    }}
-                  >
-                    <p className="font-mono font-bold text-sm" style={{ color: isSel ? '#F0B429' : 'var(--text)' }}>
-                      {o.score_home}–{o.score_away}
-                    </p>
-                    <p className="font-mono text-[10px] mt-0.5" style={{ color: isSel ? '#F0B429' : 'var(--muted)' }}>
-                      ×{o.odds.toFixed(2)}
-                    </p>
-                  </button>
-                )
-              })}
-            </div>
+            {/* Score grid when exact odds are available */}
+            {exactScoreOdds.length > 0 && (
+              <>
+                <div className="flex gap-1.5">
+                  {(['all', 'home', 'draw', 'away'] as const).map(f => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setScoreFilter(f)}
+                      className="px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all"
+                      style={{
+                        background: scoreFilter === f ? 'rgba(240,180,41,.15)' : 'var(--bg)',
+                        border: `1.5px solid ${scoreFilter === f ? '#F0B429' : 'var(--border)'}`,
+                        color: scoreFilter === f ? '#F0B429' : 'var(--muted)',
+                      }}
+                    >
+                      {f === 'all' ? 'Tous' : f === 'home' ? '1' : f === 'draw' ? 'X' : '2'}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto pr-0.5">
+                  {filteredScores.map(o => {
+                    const isSel = selectedScore?.h === o.score_home && selectedScore?.a === o.score_away
+                    return (
+                      <button
+                        key={o.id}
+                        type="button"
+                        onClick={() => handleScoreClick(o)}
+                        className="rounded-xl py-3 text-center transition-all"
+                        style={{
+                          background: isSel
+                            ? 'linear-gradient(160deg, rgba(240,180,41,.2) 0%, rgba(240,180,41,.06) 100%)'
+                            : 'var(--bg)',
+                          border: `1.5px solid ${isSel ? '#F0B429' : 'var(--border)'}`,
+                          transform: isSel ? 'scale(1.04)' : 'none',
+                        }}
+                      >
+                        <p className="font-mono font-bold text-sm" style={{ color: isSel ? '#F0B429' : 'var(--text)' }}>
+                          {o.score_home}–{o.score_away}
+                        </p>
+                        <p className="font-mono text-[10px] mt-0.5" style={{ color: isSel ? '#F0B429' : 'var(--muted)' }}>
+                          ×{o.odds.toFixed(2)}
+                        </p>
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Manual score picker — always shown */}
+            <ManualScoreBlock />
 
             {selectedScore && (
               <button
                 type="button"
-                onClick={() => { setSelectedScore(null); setPredResult(null) }}
+                onClick={() => { setSelectedScore(null); setPredResult(null); setManualH(1); setManualA(0) }}
                 className="text-[10px] w-full text-center py-0.5 opacity-50 hover:opacity-100 transition-opacity"
                 style={{ color: 'var(--muted)' }}
               >
@@ -420,7 +596,8 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
               </button>
             )}
 
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }} className="space-y-4">
+              <BoostBlock />
               <StakeBlock />
             </div>
             {selectedScore && <GainBlock />}
@@ -428,7 +605,12 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
             <SubmitButton
               disabled={!canBet}
               loading={loading}
-              label={scoreOdds ? `PARIER × ${scoreOdds.toFixed(2)}` : 'PARIER'}
+              label={
+                !selectedScore ? 'CHOISIR UN SCORE' :
+                scoreOdds ? `PARIER × ${scoreOdds.toFixed(2)}` :
+                combinedOdds ? `PARIER × ${combinedOdds.toFixed(2)}` :
+                'PARIER'
+              }
             />
           </form>
         )}
@@ -540,18 +722,46 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
               </div>
             )}
 
+            {/* Scorer cote summary */}
             {selectedScorer && (
-              <button
-                type="button"
-                onClick={() => { setSelectedScorer(null); setScorerQuery('') }}
-                className="text-[10px] w-full text-center py-0.5 opacity-50 hover:opacity-100 transition-opacity"
-                style={{ color: 'var(--muted)' }}
-              >
-                Retirer le buteur
-              </button>
+              <div className="rounded-xl px-3 py-2.5 space-y-1.5"
+                style={{ background: 'rgba(240,180,41,.06)', border: '1px solid rgba(240,180,41,.2)' }}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px]" style={{ color: 'var(--muted)' }}>Buteur sélectionné</p>
+                    <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{selectedScorer}</p>
+                  </div>
+                  <span className="font-mono font-bold text-lg" style={{ color: '#F0B429' }}>
+                    ×{scorerOddsVal?.toFixed(2) ?? '—'}
+                  </span>
+                </div>
+                {predResult && scorerOddsVal && baseOdds && (
+                  <div className="flex items-center gap-1.5 text-[10px]" style={{ color: 'var(--muted)' }}>
+                    <span>×{baseOdds.toFixed(2)} résultat</span>
+                    <span>×</span>
+                    <span>×{scorerOddsVal.toFixed(2)} buteur</span>
+                    <span>=</span>
+                    <span className="font-bold" style={{ color: '#F0B429' }}>×{combinedOdds?.toFixed(2)}</span>
+                  </div>
+                )}
+                {!predResult && (
+                  <p className="text-[10px]" style={{ color: 'var(--muted)' }}>
+                    Sélectionne un résultat pour voir la cote combinée
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { setSelectedScorer(null); setScorerQuery('') }}
+                  className="text-[10px] opacity-50 hover:opacity-100 transition-opacity"
+                  style={{ color: 'var(--muted)' }}
+                >
+                  Retirer le buteur
+                </button>
+              </div>
             )}
 
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }} className="space-y-4">
+              <BoostBlock />
               <StakeBlock />
             </div>
             {predResult && selectedScorer && <GainBlock />}
@@ -559,7 +769,7 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
             <SubmitButton
               disabled={!canBet}
               loading={loading}
-              label={combinedOdds ? `PARIER × ${combinedOdds.toFixed(2)}` : 'PARIER'}
+              label={combinedOdds && predResult && selectedScorer ? `PARIER × ${combinedOdds.toFixed(2)}` : 'PARIER'}
             />
           </form>
         )}
@@ -602,7 +812,8 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
               })}
             </div>
 
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }} className="space-y-4">
+              <BoostBlock />
               <StakeBlock />
             </div>
             {selSpecial && <GainBlock isSpecial />}

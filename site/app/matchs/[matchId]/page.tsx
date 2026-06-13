@@ -75,10 +75,17 @@ export default async function MatchPage({
   }
 
   let availablePoints = 0
+  let userBoosts: { id: string; boost_type: 'x15' | 'x20_exact'; phase: string }[] = []
   if (authUser) {
     const discordId = authUser.user_metadata?.provider_id ?? authUser.user_metadata?.sub
-    const { data: dbUser } = await service.from('users').select('total_points, frozen_points').eq('discord_id', discordId).single()
-    if (dbUser) availablePoints = dbUser.total_points - dbUser.frozen_points
+    const { data: dbUser } = await service.from('users').select('id, total_points, frozen_points').eq('discord_id', discordId).single()
+    if (dbUser) {
+      availablePoints = dbUser.total_points - dbUser.frozen_points
+      const { data: boosts } = await service
+        .from('user_boosts').select('id, boost_type, phase')
+        .eq('user_id', dbUser.id).eq('phase', match.phase).eq('used', false)
+      userBoosts = (boosts ?? []) as typeof userBoosts
+    }
   }
 
   // Fetch paris tab data only when needed
@@ -236,6 +243,7 @@ export default async function MatchPage({
             scorerOdds={scorerOdds ?? []}
             isAuthenticated={!!authUser}
             availablePoints={availablePoints}
+            userBoosts={userBoosts}
           />
         ) : (
           (match.odds_home || match.odds_draw || match.odds_away) ? (
