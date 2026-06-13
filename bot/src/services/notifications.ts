@@ -50,6 +50,31 @@ const announcedBetIds   = new Set<string>()
 const announcedComboIds = new Set<string>()
 const announcedDuelIds  = new Set<string>()
 
+// New bet announcements — no lookback on startup to avoid spamming old bets
+let lastNewBetCheck   = new Date()
+let lastNewComboCheck = new Date()
+const announcedNewBetIds   = new Set<string>()
+const announcedNewComboIds = new Set<string>()
+
+function fmtBetPred(bet: any, match: any): string {
+  const parts: string[] = []
+
+  if (bet.prediction_result === 'home')        parts.push(`🏠 **${match.home_team}** gagne`)
+  else if (bet.prediction_result === 'away')   parts.push(`✈️ **${match.away_team}** gagne`)
+  else if (bet.prediction_result === 'draw')   parts.push('🤝 Match nul')
+
+  if (bet.prediction_score_home != null && bet.prediction_score_away != null)
+    parts.push(`Score **${bet.prediction_score_home}-${bet.prediction_score_away}**`)
+
+  if (bet.prediction_scorer)                   parts.push(`⚽ ${bet.prediction_scorer} buteur`)
+  if (bet.bet_type === 'btts')                 parts.push(bet.prediction_bool ? '🎯 Les deux marquent' : '🛡️ BTTS Non')
+  if (bet.bet_type === 'over_under')           parts.push(bet.prediction_bool ? '📈 Over 2.5' : '📉 Under 2.5')
+  if (bet.bet_type === 'red_card')             parts.push(bet.prediction_bool ? '🟥 Carton rouge' : 'Pas de rouge')
+  if (bet.bet_type === 'extra_time')           parts.push(bet.prediction_bool ? '⏱️ Prolongations' : 'Pas de prolong.')
+
+  return parts.join(' · ') || '—'
+}
+
 async function postResolvedBets(client: Client) {
   const channelId = process.env.DISCORD_RESULTS_CHANNEL_ID
   if (!channelId) return
@@ -197,6 +222,89 @@ async function postResolvedDuels(client: Client) {
       content: `<@${winner.discord_id}> <@${loser.discord_id}>`,
       embeds:  [embed],
     })
+  }
+}
+
+async function postNewBets(client: Client) {
+  const channelId = process.env.DISCORD_BETS_CHANNEL_ID
+  if (!channelId) return
+  const channel = await client.channels.fetch(channelId).catch(() => null) as TextChannel | null
+  if (!channel) return
+
+  const since = lastNewBetCheck.toISOString()
+  lastNewBetCheck = new Date()
+
+  const { data: bets } = await supabase
+    .from('bets')
+    .select('id, created_at, bet_type, stake, odds_at_bet_time, boost_used, boost_multiplier, prediction_result, prediction_score_home, prediction_score_away, prediction_scorer, prediction_bool, users(discord_id, username, avatar_url), matches(home_team, away_team, phase_multiplier)')
+    .gt('created_at', since)
+    .order('created_at', { ascending: true })
+
+  for (const bet of bets ?? []) {
+    if (announcedNewBetIds.has(bet.id)) continue
+    announcedNewBetIds.add(bet.id)
+
+    const user  = bet.users  as any
+    const match = bet.matches as any
+    const potWin = Math.round(
+      bet.odds_at_bet_time * bet.stake * (match.phase_multiplier ?? 1) * (bet.boost_multiplier ?? 1)
+    )
+    const pred = fmtBetPred(bet, match)
+
+    const fields: any[] = [
+      { name: 'Cote',            value: formatOdds(bet.odds_at_bet_time), inline: true },
+      { name: 'Gain potentiel',  value: `**+${formatPoints(potWin)}**`,   inline: true },
+    ]
+    if (bet.boost_used) fields.push({ name: 'Boost', value: `×${bet.boost_multiplier} 🔥`, inline: true })
+
+    const embed = new EmbedBuilder()
+      .setColor(bet.boost_used ? 0xF97316 : 0xF0B429)
+      .setAuthor({ name: user.username, iconURL: user.avatar_url ?? undefined })
+      .setDescription(
+        `mise **${formatPoints(bet.stake)}** sur **${formatMatch(match)}**\n` +
+        pred
+      )
+      .addFields(fields)
+      .setTimestamp(new Date(bet.created_at))
+
+    await channel.send({ embeds: [embed] })
+  }
+}
+
+async function postNewCombos(client: Client) {
+  const channelId = process.env.DISCORD_BETS_CHANNEL_ID
+  if (!channelId) return
+  const channel = await client.channels.fetch(channelId).catch(() => null) as TextChannel | null
+  if (!channel) return
+
+  const since = lastNewComboCheck.toISOString()
+  lastNewComboCheck = new Date()
+
+  const { data: combos } = await supabase
+    .from('combos')
+    .select('id, created_at, stake, total_odds, legs_count, boost_used, users(discord_id, username, avatar_url)')
+    .gt('created_at', since)
+    .order('created_at', { ascending: true })
+
+  for (const combo of combos ?? []) {
+    if (announcedNewComboIds.has(combo.id)) continue
+    announcedNewComboIds.add(combo.id)
+
+    const user   = combo.users as any
+    const potWin = Math.round(combo.total_odds * combo.stake)
+
+    const embed = new EmbedBuilder()
+      .setColor(0xA855F7)
+      .setAuthor({ name: user.username, iconURL: user.avatar_url ?? undefined })
+      .setDescription(`place un **combiné ${combo.legs_count} matchs** · **${formatPoints(combo.stake)}** misés`)
+      .addFields(
+        { name: 'Cote totale',    value: formatOdds(combo.total_odds), inline: true },
+        { name: 'Gain potentiel', value: `**+${formatPoints(potWin)}**`, inline: true },
+        ...(combo.boost_used ? [{ name: 'Boost', value: '🔥 actif', inline: true }] : []),
+      )
+      .setTimestamp(new Date(combo.created_at))
+
+    await channel.send({ embeds: [embed] })
   }
 }
 
@@ -371,6 +479,8 @@ export function startResultsPoller(client: Client) {
         postResolvedCombos(client),
         postResolvedDuels(client),
         postMatchResults(client),
+        postNewBets(client),
+        postNewCombos(client),
       ])
     } catch (err) {
       console.error('Erreur poller résultats:', err)
