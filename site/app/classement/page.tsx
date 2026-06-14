@@ -1,5 +1,23 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Trophy, BarChart2, Dices, Swords, Medal, TrendingUp } from 'lucide-react'
+
+function StreakBadge({ streak }: { streak: number }) {
+  const tiers = [
+    { min: 10, emoji: '👑', bg: 'rgba(240,180,41,.2)', color: '#F0B429' },
+    { min: 7,  emoji: '🔥', bg: 'rgba(239,68,68,.2)',  color: '#EF4444' },
+    { min: 5,  emoji: '🔥', bg: 'rgba(249,115,22,.2)', color: '#F97316' },
+    { min: 3,  emoji: '🔥', bg: 'rgba(234,179,8,.15)', color: '#CA8A04' },
+  ]
+  const tier = tiers.find(t => streak >= t.min)!
+  return (
+    <span
+      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold leading-none"
+      style={{ background: tier.bg, color: tier.color }}
+    >
+      {tier.emoji} {streak}
+    </span>
+  )
+}
 import PointsLineChart, { ChartSeries } from '@/components/PointsLineChart'
 import { buildCumulative, WC_START } from '@/lib/wc-dates'
 
@@ -205,6 +223,9 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
                           }
                         </span>
                         <span className="font-semibold text-sm">{row.username}</span>
+                        {row.bet_win_streak >= 3 && (
+                          <StreakBadge streak={row.bet_win_streak} />
+                        )}
                       </a>
                     </td>
 

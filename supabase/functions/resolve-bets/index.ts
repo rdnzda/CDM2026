@@ -14,8 +14,16 @@ async function fetchMatchDetail(matchId: number) {
   return res.json()
 }
 
-function calcPoints(odds: number, stake: number, phaseMultiplier: number, boostMultiplier: number, wildcardDouble: boolean): number {
-  return Math.round(odds * stake * phaseMultiplier * boostMultiplier * (wildcardDouble ? 2.0 : 1.0))
+function getStreakMultiplier(streak: number): number {
+  if (streak >= 10) return 1.5
+  if (streak >= 7)  return 1.3
+  if (streak >= 5)  return 1.2
+  if (streak >= 3)  return 1.1
+  return 1.0
+}
+
+function calcPoints(odds: number, stake: number, phaseMultiplier: number, boostMultiplier: number, wildcardDouble: boolean, streakMultiplier = 1.0): number {
+  return Math.round(odds * stake * phaseMultiplier * boostMultiplier * (wildcardDouble ? 2.0 : 1.0) * streakMultiplier)
 }
 
 function isBetWon(bet: any, match: any): boolean {
@@ -101,6 +109,13 @@ Deno.serve(async () => {
 
       // ── Resolve simple bets ──
       for (const bet of (pendingBets ?? [])) {
+        // Always fetch fresh user state to avoid overwrite bug when same user has multiple bets on same match
+        const { data: freshUser } = await supabase
+          .from('users').select('total_points, frozen_points, bets_won, total_bets, bet_win_streak')
+          .eq('id', bet.user_id).single()
+        if (!freshUser) continue
+
+        const streakMult = getStreakMultiplier(freshUser.bet_win_streak)
         let status: string
         let pointsWon = 0
 
@@ -108,10 +123,10 @@ Deno.serve(async () => {
           const outcome = resolveResultCombo(bet, match)
           if (outcome === 'full') {
             status = 'won'
-            pointsWon = calcPoints(bet.odds_at_bet_time, bet.stake, bet.phase_multiplier, bet.boost_multiplier || 1.0, bet.wildcard_used === 'double')
+            pointsWon = calcPoints(bet.odds_at_bet_time, bet.stake, bet.phase_multiplier, bet.boost_multiplier || 1.0, bet.wildcard_used === 'double', streakMult)
           } else if (outcome === 'partial' && bet.base_odds) {
             status = 'won'
-            pointsWon = calcPoints(bet.base_odds, bet.stake, bet.phase_multiplier, bet.boost_multiplier || 1.0, bet.wildcard_used === 'double')
+            pointsWon = calcPoints(bet.base_odds, bet.stake, bet.phase_multiplier, bet.boost_multiplier || 1.0, bet.wildcard_used === 'double', streakMult)
           } else {
             status = 'lost'
           }
@@ -119,7 +134,7 @@ Deno.serve(async () => {
           const won = isBetWon(bet, match)
           status = won ? 'won' : 'lost'
           if (won) {
-            pointsWon = calcPoints(bet.odds_at_bet_time, bet.stake, bet.phase_multiplier, bet.boost_multiplier || 1.0, bet.wildcard_used === 'double')
+            pointsWon = calcPoints(bet.odds_at_bet_time, bet.stake, bet.phase_multiplier, bet.boost_multiplier || 1.0, bet.wildcard_used === 'double', streakMult)
           }
         }
 
@@ -141,18 +156,13 @@ Deno.serve(async () => {
           resolved_at: new Date().toISOString(),
         }).eq('id', bet.id)
 
-        // Always fetch fresh user state to avoid overwrite bug when same user has multiple bets on same match
-        const { data: freshUser } = await supabase
-          .from('users').select('total_points, frozen_points, bets_won, total_bets')
-          .eq('id', bet.user_id).single()
-        if (freshUser) {
-          await supabase.from('users').update({
-            total_points:  freshUser.total_points + pointsWon - bet.stake,
-            frozen_points: Math.max(0, freshUser.frozen_points - bet.stake),
-            bets_won:      status === 'won' ? freshUser.bets_won + 1 : freshUser.bets_won,
-            total_bets:    freshUser.total_bets + 1,
-          }).eq('id', bet.user_id)
-        }
+        await supabase.from('users').update({
+          total_points:   freshUser.total_points + pointsWon - bet.stake,
+          frozen_points:  Math.max(0, freshUser.frozen_points - bet.stake),
+          bets_won:       status === 'won' ? freshUser.bets_won + 1 : freshUser.bets_won,
+          total_bets:     freshUser.total_bets + 1,
+          bet_win_streak: status === 'won' ? freshUser.bet_win_streak + 1 : 0,
+        }).eq('id', bet.user_id)
 
         totalResolved++
       }
@@ -185,9 +195,10 @@ Deno.serve(async () => {
 
             if (user) {
               await supabase.from('users').update({
-                total_points:  user.total_points - combo.stake,
-                frozen_points: Math.max(0, user.frozen_points - combo.stake),
-                total_bets:    user.total_bets + 1,
+                total_points:   user.total_points - combo.stake,
+                frozen_points:  Math.max(0, user.frozen_points - combo.stake),
+                total_bets:     user.total_bets + 1,
+                bet_win_streak: 0,
               }).eq('id', combo.user_id)
             }
             totalResolved++
@@ -214,22 +225,26 @@ Deno.serve(async () => {
             // FIX: pay out the combo win
             const { data: user } = await supabase
               .from('users')
-              .select('total_points, frozen_points, bets_won, total_bets')
+              .select('total_points, frozen_points, bets_won, total_bets, bet_win_streak')
               .eq('id', freshCombo.user_id)
               .single()
 
             if (user) {
+              const comboStreakMult = getStreakMultiplier(user.bet_win_streak)
+              const actualPayout = Math.round(freshCombo.potential_win * comboStreakMult)
+
               await supabase.from('combos').update({
                 status:      'won',
                 resolved_at: new Date().toISOString(),
-                points_won:  freshCombo.potential_win,
+                points_won:  actualPayout,
               }).eq('id', leg.combo_id)
 
               await supabase.from('users').update({
-                total_points:  user.total_points + freshCombo.potential_win - freshCombo.stake,
-                frozen_points: Math.max(0, user.frozen_points - freshCombo.stake),
-                bets_won:      user.bets_won + 1,
-                total_bets:    user.total_bets + 1,
+                total_points:   user.total_points + actualPayout - freshCombo.stake,
+                frozen_points:  Math.max(0, user.frozen_points - freshCombo.stake),
+                bets_won:       user.bets_won + 1,
+                total_bets:     user.total_bets + 1,
+                bet_win_streak: user.bet_win_streak + 1,
               }).eq('id', freshCombo.user_id)
 
               totalResolved++
