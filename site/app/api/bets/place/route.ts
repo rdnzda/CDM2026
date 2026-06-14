@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Le boost ×2.0 est réservé aux paris score exact' }, { status: 400 })
       }
     }
-    boostMultiplier = boost.boost_type === 'x15' ? 1.5 : 2.0
+    boostMultiplier = boost.boost_type === 'x15' ? 1.5 : boost.boost_type === 'x3' ? 3.0 : 2.0
     boostUsed = true
   }
 
