@@ -136,7 +136,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  await service.from('users').update({ frozen_points: dbUser.frozen_points + stake }).eq('id', dbUser.id)
+  const { data: newAvgOdds } = await service
+    .from('bets')
+    .select('odds_at_bet_time')
+    .eq('user_id', dbUser.id)
+  const avgOdds = newAvgOdds?.length
+    ? Math.round((newAvgOdds.reduce((s, b) => s + Number(b.odds_at_bet_time), 0) / newAvgOdds.length) * 100) / 100
+    : oddsAtBetTime
+
+  await service.from('users').update({
+    frozen_points: dbUser.frozen_points + stake,
+    avg_odds: avgOdds,
+  }).eq('id', dbUser.id)
 
   if (boostId && boostUsed) {
     await service.from('user_boosts').update({ used: true }).eq('id', boostId)
