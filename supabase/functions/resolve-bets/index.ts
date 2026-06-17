@@ -44,9 +44,12 @@ function resolveResultCombo(bet: any, match: any): 'full' | 'partial' | 'lost' {
   if (bet.prediction_result !== match.result) return 'lost'
   const hasScore  = bet.prediction_score_home != null
   const hasScorer = bet.prediction_scorer != null
-  const scoreCorrect  = !hasScore  || (bet.prediction_score_home === match.final_score_home && bet.prediction_score_away === match.final_score_away)
+  const scoreCorrect  = !hasScore || (bet.prediction_score_home === match.final_score_home && bet.prediction_score_away === match.final_score_away)
   const scorerCorrect = !hasScorer || match.scorers?.some((s: string) => s.toLowerCase().includes((bet.prediction_scorer ?? '').toLowerCase()))
-  return scoreCorrect && scorerCorrect ? 'full' : 'partial'
+  // Score prédit mais faux → perte totale (pas de fallback gratuit sur le résultat)
+  if (hasScore && !scoreCorrect) return 'lost'
+  // Résultat correct, score correct ou absent, buteur faux → fallback base_odds
+  return scorerCorrect ? 'full' : 'partial'
 }
 
 Deno.serve(async () => {
