@@ -7,7 +7,8 @@ const supabase = createClient(
 
 Deno.serve(async () => {
   try {
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })
+      .split('/').reverse().join('-') // DD/MM/YYYY → YYYY-MM-DD Paris
 
     // Check if already created
     const { data: existing } = await supabase
