@@ -318,6 +318,7 @@ async function postMatchResults(client: Client) {
     .from('matches')
     .select('*')
     .eq('status', 'finished')
+    .eq('results_announced', false)
     .not('final_score_home', 'is', null)
 
   for (const match of finishedMatches ?? []) {
@@ -332,6 +333,7 @@ async function postMatchResults(client: Client) {
     if ((pendingCount ?? 0) > 0) continue
 
     announcedMatchIds.add(match.id)
+    await supabase.from('matches').update({ results_announced: true }).eq('id', match.id)
 
     // Fetch resolved bets for this match
     const { data: bets } = await supabase
@@ -447,6 +449,7 @@ export async function forcePostMatchResults(client: Client, matchId?: string): P
 
   await channel.send({ embeds: [embed] })
   announcedMatchIds.add(match.id)
+  await supabase.from('matches').update({ results_announced: true }).eq('id', match.id)
 
   const { data: leaderboard } = await supabase
     .from('leaderboard_points')

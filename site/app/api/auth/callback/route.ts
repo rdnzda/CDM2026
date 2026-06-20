@@ -31,10 +31,16 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (newUser) {
-      // Seed wildcards (3 per tournament)
+      // Seed wildcards (3 de chaque type, aligné sur le boost de phase de groupes)
       await serviceClient.from('user_wildcards').insert([
         { user_id: newUser.id, type: 'double' },
+        { user_id: newUser.id, type: 'double' },
+        { user_id: newUser.id, type: 'double' },
         { user_id: newUser.id, type: 'insurance' },
+        { user_id: newUser.id, type: 'insurance' },
+        { user_id: newUser.id, type: 'insurance' },
+        { user_id: newUser.id, type: 'last_minute' },
+        { user_id: newUser.id, type: 'last_minute' },
         { user_id: newUser.id, type: 'last_minute' },
       ])
       // Seed boosts for group phase (3x ×1.5 + 1x ×2.0)

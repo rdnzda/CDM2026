@@ -22,6 +22,28 @@ function getStreakMultiplier(streak: number): number {
   return 1.0
 }
 
+// Malus top 3 — actif en phase de groupes à partir du 22/06/2026 (annoncé sur Discord)
+const TOP3_MALUS_START = new Date('2026-06-22T00:00:00+02:00')
+const TOP3_MALUS_BASE_PCT = [1.15, 1.10, 1.05] // rank 0 = 1er, 1 = 2e, 2 = 3e
+const TOP3_MALUS_STREAK_STEP = 0.05 // +5 points par défaite consécutive dans le top 3
+
+function getTop3MalusMultiplier(rank: number, top3LoseStreak: number): number {
+  return TOP3_MALUS_BASE_PCT[rank] + TOP3_MALUS_STREAK_STEP * (top3LoseStreak - 1)
+}
+
+async function getTop3UserIds(): Promise<string[]> {
+  const { data } = await supabase
+    .from('users')
+    .select('id')
+    .order('total_points', { ascending: false })
+    .limit(3)
+  return (data ?? []).map((u: any) => u.id)
+}
+
+function isTop3MalusActive(match: any): boolean {
+  return match.phase === 'group' && new Date() >= TOP3_MALUS_START
+}
+
 function calcPoints(odds: number, stake: number, phaseMultiplier: number, boostMultiplier: number, wildcardDouble: boolean, streakMultiplier = 1.0): number {
   return Math.round(odds * stake * phaseMultiplier * boostMultiplier * (wildcardDouble ? 2.0 : 1.0) * streakMultiplier)
 }
@@ -114,7 +136,7 @@ Deno.serve(async () => {
       for (const bet of (pendingBets ?? [])) {
         // Always fetch fresh user state to avoid overwrite bug when same user has multiple bets on same match
         const { data: freshUser } = await supabase
-          .from('users').select('total_points, frozen_points, bets_won, total_bets, bet_win_streak')
+          .from('users').select('total_points, frozen_points, bets_won, total_bets, bet_win_streak, top3_lose_streak')
           .eq('id', bet.user_id).single()
         if (!freshUser) continue
 
@@ -153,6 +175,23 @@ Deno.serve(async () => {
           pointsWon = bet.stake
         }
 
+        // Malus top 3 : une défaite en phase de groupes (à partir du 22/06) coûte 105-115% de la mise
+        // selon le rang, et davantage si la défaite s'enchaîne en restant dans le top 3
+        let effectiveStake = bet.stake
+        let top3LoseStreak  = freshUser.top3_lose_streak
+        if (status === 'won') {
+          top3LoseStreak = 0
+        } else if (status === 'lost') {
+          const top3Ids = isTop3MalusActive(match) ? await getTop3UserIds() : []
+          const rank = top3Ids.indexOf(bet.user_id)
+          if (rank !== -1) {
+            top3LoseStreak = freshUser.top3_lose_streak + 1
+            effectiveStake = Math.round(bet.stake * getTop3MalusMultiplier(rank, top3LoseStreak))
+          } else {
+            top3LoseStreak = 0
+          }
+        }
+
         await supabase.from('bets').update({
           status,
           points_won:  pointsWon,
@@ -160,11 +199,12 @@ Deno.serve(async () => {
         }).eq('id', bet.id)
 
         await supabase.from('users').update({
-          total_points:   freshUser.total_points + pointsWon - bet.stake,
-          frozen_points:  Math.max(0, freshUser.frozen_points - bet.stake),
-          bets_won:       status === 'won' ? freshUser.bets_won + 1 : freshUser.bets_won,
-          total_bets:     freshUser.total_bets + 1,
-          bet_win_streak: status === 'won' ? freshUser.bet_win_streak + 1 : 0,
+          total_points:     freshUser.total_points + pointsWon - effectiveStake,
+          frozen_points:    Math.max(0, freshUser.frozen_points - bet.stake),
+          bets_won:         status === 'won' ? freshUser.bets_won + 1 : freshUser.bets_won,
+          total_bets:       freshUser.total_bets + 1,
+          bet_win_streak:   status === 'won' ? freshUser.bet_win_streak + 1 : 0,
+          top3_lose_streak: top3LoseStreak,
         }).eq('id', bet.user_id)
 
         totalResolved++
@@ -192,16 +232,26 @@ Deno.serve(async () => {
             // FIX: unfreeze stake + decrement total_points + increment total_bets
             const { data: user } = await supabase
               .from('users')
-              .select('total_points, frozen_points, total_bets')
+              .select('total_points, frozen_points, total_bets, top3_lose_streak')
               .eq('id', combo.user_id)
               .single()
 
             if (user) {
+              let effectiveStake = combo.stake
+              let top3LoseStreak  = 0
+              const top3Ids = isTop3MalusActive(match) ? await getTop3UserIds() : []
+              const rank = top3Ids.indexOf(combo.user_id)
+              if (rank !== -1) {
+                top3LoseStreak = user.top3_lose_streak + 1
+                effectiveStake = Math.round(combo.stake * getTop3MalusMultiplier(rank, top3LoseStreak))
+              }
+
               await supabase.from('users').update({
-                total_points:   user.total_points - combo.stake,
-                frozen_points:  Math.max(0, user.frozen_points - combo.stake),
-                total_bets:     user.total_bets + 1,
-                bet_win_streak: 0,
+                total_points:     user.total_points - effectiveStake,
+                frozen_points:    Math.max(0, user.frozen_points - combo.stake),
+                total_bets:       user.total_bets + 1,
+                bet_win_streak:   0,
+                top3_lose_streak: top3LoseStreak,
               }).eq('id', combo.user_id)
             }
             totalResolved++
@@ -243,11 +293,12 @@ Deno.serve(async () => {
               }).eq('id', leg.combo_id)
 
               await supabase.from('users').update({
-                total_points:   user.total_points + actualPayout - freshCombo.stake,
-                frozen_points:  Math.max(0, user.frozen_points - freshCombo.stake),
-                bets_won:       user.bets_won + 1,
-                total_bets:     user.total_bets + 1,
-                bet_win_streak: user.bet_win_streak + 1,
+                total_points:     user.total_points + actualPayout - freshCombo.stake,
+                frozen_points:    Math.max(0, user.frozen_points - freshCombo.stake),
+                bets_won:         user.bets_won + 1,
+                total_bets:       user.total_bets + 1,
+                bet_win_streak:   user.bet_win_streak + 1,
+                top3_lose_streak: 0,
               }).eq('id', freshCombo.user_id)
 
               totalResolved++
