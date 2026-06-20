@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   if (!authUser) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
 
   const body = await request.json()
-  const { matchId, betType, stake, predictionResult, predictionScoreHome, predictionScoreAway, predictionScorer, predictionBool, predictionHalf, boostId } = body
+  const { matchId, betType, stake, predictionResult, predictionScoreHome, predictionScoreAway, predictionScorer, predictionBool, predictionHalf, boostId, wildcardId } = body
 
   if (!matchId || !betType || !stake) return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
   if (stake < 100 || stake > 2000) return NextResponse.json({ error: 'Mise entre 100 et 2000 pts' }, { status: 400 })
@@ -24,8 +24,31 @@ export async function POST(request: NextRequest) {
 
   const { data: match } = await service.from('matches').select('*').eq('id', matchId).single()
   if (!match) return NextResponse.json({ error: 'Match introuvable' }, { status: 404 })
-  if (match.status !== 'upcoming') return NextResponse.json({ error: 'Paris fermés pour ce match' }, { status: 400 })
-  if (new Date() >= new Date(match.bets_locked_at)) return NextResponse.json({ error: 'Paris fermés pour ce match' }, { status: 400 })
+
+  // Validate wildcard before the deadline check — "last_minute" bypasses bets_locked_at
+  let wildcard: { id: string; type: string } | null = null
+  if (wildcardId) {
+    const { data: wc } = await service.from('user_wildcards').select('id, type, used, user_id').eq('id', wildcardId).single()
+    if (!wc) return NextResponse.json({ error: 'Wildcard introuvable' }, { status: 400 })
+    if (wc.user_id !== dbUser.id) return NextResponse.json({ error: 'Wildcard invalide' }, { status: 403 })
+    if (wc.used) return NextResponse.json({ error: 'Wildcard déjà utilisée' }, { status: 400 })
+    if (wc.type === 'insurance' && !(betType === 'result_combo' && predictionScoreHome != null && predictionScoreAway != null)) {
+      return NextResponse.json({ error: 'La wildcard Assurance nécessite un pari sur un score exact' }, { status: 400 })
+    }
+    wildcard = wc
+  }
+
+  const isLastMinute = wildcard?.type === 'last_minute'
+  const now          = Date.now()
+  const tenthMinute  = new Date(match.kickoff_at).getTime() + 10 * 60 * 1000
+
+  if (match.status === 'finished') return NextResponse.json({ error: 'Paris fermés pour ce match' }, { status: 400 })
+  if (isLastMinute) {
+    if (now >= tenthMinute) return NextResponse.json({ error: 'La wildcard Dernière Minute ne peut s\'utiliser qu\'avant la 10e minute.' }, { status: 400 })
+  } else {
+    if (match.status !== 'upcoming') return NextResponse.json({ error: 'Paris fermés pour ce match' }, { status: 400 })
+    if (now >= new Date(match.bets_locked_at).getTime()) return NextResponse.json({ error: 'Paris fermés pour ce match' }, { status: 400 })
+  }
 
   let oddsAtBetTime = 0
   let baseOdds: number | null = null
@@ -110,8 +133,9 @@ export async function POST(request: NextRequest) {
     boostUsed = true
   }
 
-  const pointsIfWon = calcPoints(oddsAtBetTime, stake, match.phase_multiplier, boostMultiplier, false)
-  const basePointsIfWon = baseOdds ? calcPoints(baseOdds, stake, match.phase_multiplier, boostMultiplier, false) : null
+  const wildcardDouble = wildcard?.type === 'double'
+  const pointsIfWon = calcPoints(oddsAtBetTime, stake, match.phase_multiplier, boostMultiplier, wildcardDouble)
+  const basePointsIfWon = baseOdds ? calcPoints(baseOdds, stake, match.phase_multiplier, boostMultiplier, wildcardDouble) : null
 
   const { data: bet, error } = await service.from('bets').insert({
     user_id:               dbUser.id,
@@ -129,6 +153,7 @@ export async function POST(request: NextRequest) {
     phase_multiplier:      match.phase_multiplier,
     boost_multiplier:      boostMultiplier,
     boost_used:            boostUsed,
+    wildcard_used:         wildcard?.type ?? null,
   }).select().single()
 
   if (error) {
@@ -151,6 +176,12 @@ export async function POST(request: NextRequest) {
 
   if (boostId && boostUsed) {
     await service.from('user_boosts').update({ used: true }).eq('id', boostId)
+  }
+
+  if (wildcard) {
+    await service.from('user_wildcards').update({
+      used: true, used_on_bet_id: bet.id, used_at: new Date().toISOString(),
+    }).eq('id', wildcard.id)
   }
 
   return NextResponse.json({ bet, pointsIfWon, basePointsIfWon })

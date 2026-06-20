@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { CheckCircle2, XCircle, Zap } from 'lucide-react'
+import { CheckCircle2, XCircle, Zap, Shield, Clock3 } from 'lucide-react'
 
 type Match = {
   id: string; home_team: string; away_team: string; phase_multiplier: number
@@ -13,6 +13,7 @@ type Match = {
 type ExactOdd  = { id: string; score_home: number; score_away: number; odds: number }
 type ScorerOdd = { id: string; player_name: string; team: string; odds: number }
 type Boost     = { id: string; boost_type: 'x15' | 'x20_exact'; phase: string }
+type Wildcard  = { id: string; type: 'double' | 'insurance' | 'last_minute' }
 type Tab = '1x2' | 'score' | 'buteur' | 'speciaux'
 
 function getResultFromScore(h: number, a: number): 'home' | 'draw' | 'away' {
@@ -21,9 +22,9 @@ function getResultFromScore(h: number, a: number): 'home' | 'draw' | 'away' {
   return 'draw'
 }
 
-export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthenticated, availablePoints, userBoosts }: {
+export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthenticated, availablePoints, userBoosts, userWildcards }: {
   match: Match; exactScoreOdds: ExactOdd[]; scorerOdds: ScorerOdd[]
-  isAuthenticated: boolean; availablePoints: number; userBoosts: Boost[]
+  isAuthenticated: boolean; availablePoints: number; userBoosts: Boost[]; userWildcards: Wildcard[]
 }) {
   const [predResult, setPredResult]         = useState<'home'|'draw'|'away'|null>(null)
   const [selectedScore, setSelectedScore]   = useState<{ h: number; a: number }|null>(null)
@@ -34,6 +35,7 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
   const [manualA, setManualA]               = useState(0)
   const [stake, setStake]                   = useState(200)
   const [selectedBoostId, setSelectedBoostId] = useState<string|null>(null)
+  const [selectedWildcardId, setSelectedWildcardId] = useState<string|null>(null)
   const [loading, setLoading]               = useState(false)
   const [feedback, setFeedback]             = useState<{ ok: boolean; msg: string }|null>(null)
   const [specialSel, setSpecialSel]         = useState<string|null>(null)
@@ -92,12 +94,15 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
   const selectedBoost = userBoosts.find(b => b.id === selectedBoostId) ?? null
   const boostMultiplier = selectedBoost?.boost_type === 'x15' ? 1.5 : selectedBoost?.boost_type === 'x20_exact' ? 2.0 : 1.0
 
+  const selectedWildcard = userWildcards.find(w => w.id === selectedWildcardId) ?? null
+  const wildcardDoubleMultiplier = selectedWildcard?.type === 'double' ? 2.0 : 1.0
+
   const activeOdds = activeTab === 'speciaux' ? (selSpecial?.odds ?? null) : combinedOdds
   const gain = activeOdds && stake >= 100
-    ? Math.round(Number(activeOdds) * stake * match.phase_multiplier * boostMultiplier)
+    ? Math.round(Number(activeOdds) * stake * match.phase_multiplier * boostMultiplier * wildcardDoubleMultiplier)
     : null
   const baseGain = baseOdds && stake >= 100
-    ? Math.round(baseOdds * stake * match.phase_multiplier * boostMultiplier)
+    ? Math.round(baseOdds * stake * match.phase_multiplier * boostMultiplier * wildcardDoubleMultiplier)
     : null
 
   const canBet = isAuthenticated && stake >= 100 && stake <= 2000 && stake <= availablePoints && (
@@ -143,6 +148,7 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
 
   function clearBoostAndReset() {
     setSelectedBoostId(null)
+    setSelectedWildcardId(null)
   }
 
   async function submitSpecial() {
@@ -153,6 +159,7 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
         matchId: match.id, stake, betType: selSpecial.bt, predictionBool: selSpecial.pb,
       }
       if (selectedBoostId) payload.boostId = selectedBoostId
+      if (selectedWildcardId) payload.wildcardId = selectedWildcardId
       const res = await fetch('/api/bets/place', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -178,6 +185,7 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
     if (selectedScore) { body.predictionScoreHome = selectedScore.h; body.predictionScoreAway = selectedScore.a }
     if (selectedScorer) body.predictionScorer = selectedScorer
     if (selectedBoostId) body.boostId = selectedBoostId
+    if (selectedWildcardId) body.wildcardId = selectedWildcardId
     setLoading(true)
     try {
       const res  = await fetch('/api/bets/place', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
@@ -251,6 +259,53 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
             {selectedBoost.boost_type === 'x20_exact'
               ? 'Multiplie ×2.0 tes gains (score exact requis)'
               : 'Multiplie ×1.5 tes gains potentiels'}
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  const WildcardBlock = () => {
+    const isExactScoreTab = activeTab === 'score' || (activeTab === '1x2' && !!selectedScore)
+    const visibleWildcards = userWildcards.filter(w => w.type !== 'insurance' || isExactScoreTab)
+    if (visibleWildcards.length === 0) return null
+    const ICONS: Record<Wildcard['type'], any> = { double: Zap, insurance: Shield, last_minute: Clock3 }
+    const LABELS: Record<Wildcard['type'], string> = { double: '×2 Double', insurance: 'Assurance', last_minute: 'Dernière Minute' }
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Shield className="w-3 h-3" style={{ color: '#60A5FA' }} />
+          <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
+            Wildcards disponibles
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {visibleWildcards.map(w => {
+            const active = selectedWildcardId === w.id
+            const Icon   = ICONS[w.type]
+            return (
+              <button
+                key={w.id}
+                type="button"
+                onClick={() => setSelectedWildcardId(active ? null : w.id)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
+                style={{
+                  background: active ? 'rgba(96,165,250,.2)' : 'rgba(96,165,250,.07)',
+                  border: `1.5px solid ${active ? '#60A5FA' : 'rgba(96,165,250,.3)'}`,
+                  color: active ? '#60A5FA' : 'rgba(120,160,220,.9)',
+                }}
+              >
+                <Icon className="w-3 h-3" />
+                {LABELS[w.type]}
+              </button>
+            )
+          })}
+        </div>
+        {selectedWildcard && (
+          <p className="text-[10px]" style={{ color: 'var(--muted)' }}>
+            {selectedWildcard.type === 'double' && 'Double tes gains si le pari est gagnant'}
+            {selectedWildcard.type === 'insurance' && 'Remboursée si ton score exact rate de 1 but seulement'}
+            {selectedWildcard.type === 'last_minute' && 'Permet de parier jusqu\'à la 10e minute de jeu'}
           </p>
         )}
       </div>
@@ -514,6 +569,7 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
 
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }} className="space-y-4">
               <BoostBlock />
+              <WildcardBlock />
               <StakeBlock />
             </div>
 
@@ -598,6 +654,7 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
 
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }} className="space-y-4">
               <BoostBlock />
+              <WildcardBlock />
               <StakeBlock />
             </div>
             {selectedScore && <GainBlock />}
@@ -762,6 +819,7 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
 
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }} className="space-y-4">
               <BoostBlock />
+              <WildcardBlock />
               <StakeBlock />
             </div>
             {predResult && selectedScorer && <GainBlock />}
@@ -814,6 +872,7 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
 
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }} className="space-y-4">
               <BoostBlock />
+              <WildcardBlock />
               <StakeBlock />
             </div>
             {selSpecial && <GainBlock isSpecial />}

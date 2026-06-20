@@ -164,10 +164,12 @@ Deno.serve(async () => {
         }
 
         // FIX: insurance wildcard — use |diff_home| + |diff_away| not |(diff_home + diff_away)|
+        // Covers both the legacy 'exact_score' type and the unified 'result_combo' type used by the site
         if (
           status === 'lost' &&
           bet.wildcard_used === 'insurance' &&
-          bet.bet_type === 'exact_score' &&
+          (bet.bet_type === 'exact_score' || bet.bet_type === 'result_combo') &&
+          bet.prediction_score_home != null && bet.prediction_score_away != null &&
           Math.abs(match.final_score_home - bet.prediction_score_home) +
           Math.abs(match.final_score_away - bet.prediction_score_away) === 1
         ) {

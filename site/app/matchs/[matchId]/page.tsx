@@ -53,7 +53,6 @@ export default async function MatchPage({
   ])
   if (!match) notFound()
 
-  const locked = match.status !== 'upcoming' || new Date() >= new Date(match.bets_locked_at)
   const activeTab = searchParams.tab === 'paris' ? 'paris' : 'parier'
 
   // Always fetch bet count for the tab badge
@@ -89,17 +88,27 @@ export default async function MatchPage({
 
   let availablePoints = 0
   let userBoosts: { id: string; boost_type: 'x15' | 'x20_exact'; phase: string }[] = []
+  let userWildcards: { id: string; type: 'double' | 'insurance' | 'last_minute' }[] = []
   if (authUser) {
     const discordId = authUser.user_metadata?.provider_id ?? authUser.user_metadata?.sub
     const { data: dbUser } = await service.from('users').select('id, total_points, frozen_points').eq('discord_id', discordId).single()
     if (dbUser) {
       availablePoints = dbUser.total_points - dbUser.frozen_points
-      const { data: boosts } = await service
-        .from('user_boosts').select('id, boost_type, phase')
-        .eq('user_id', dbUser.id).eq('phase', match.phase).eq('used', false)
+      const [{ data: boosts }, { data: wildcards }] = await Promise.all([
+        service.from('user_boosts').select('id, boost_type, phase').eq('user_id', dbUser.id).eq('phase', match.phase).eq('used', false),
+        service.from('user_wildcards').select('id, type').eq('user_id', dbUser.id).eq('used', false),
+      ])
       userBoosts = (boosts ?? []) as typeof userBoosts
+      userWildcards = (wildcards ?? []) as typeof userWildcards
     }
   }
+
+  const hasLastMinuteWildcard = userWildcards.some(w => w.type === 'last_minute')
+  const withinLastMinuteWindow = Date.now() < new Date(match.kickoff_at).getTime() + 10 * 60 * 1000
+  const locked = match.status === 'finished' || (
+    (match.status !== 'upcoming' || Date.now() >= new Date(match.bets_locked_at).getTime()) &&
+    !(hasLastMinuteWildcard && withinLastMinuteWindow)
+  )
 
   // Fetch paris tab data only when needed
   let pendingBets: any[] = []
@@ -269,6 +278,7 @@ export default async function MatchPage({
             isAuthenticated={!!authUser}
             availablePoints={availablePoints}
             userBoosts={userBoosts}
+            userWildcards={userWildcards}
           />
         ) : (
           (match.odds_home || match.odds_draw || match.odds_away) ? (
