@@ -26,6 +26,17 @@ export const PHASE_MULTIPLIERS: Record<string, number> = {
   final:        3.0,
 }
 
+// Phase éliminatoire : points fixes gagnés par prédiction correcte (pas de mise)
+export const KNOCKOUT_POINTS: Record<string, number> = {
+  result:      200,
+  exact_score: 300,
+  scorer:      150,
+}
+
+export function isKnockoutPhase(phase: string): boolean {
+  return phase !== 'group'
+}
+
 export function getAvailableBalance(user: { total_points: number; frozen_points: number }): number {
   return user.total_points - user.frozen_points
 }

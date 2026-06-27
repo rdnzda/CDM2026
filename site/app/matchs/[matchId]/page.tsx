@@ -7,7 +7,7 @@ import { getFlagUrl } from '@/lib/flags'
 import LiveRefresh from '@/components/LiveRefresh'
 
 const PHASE_LABEL: Record<string, string> = {
-  group: 'Phase de groupes', round_of_16: '8e de finale',
+  group: 'Phase de groupes', round_of_32: '32e de finale', round_of_16: '8e de finale',
   quarter: 'Quart de finale', semi: 'Demi-finale', final: 'Finale',
 }
 
@@ -340,17 +340,24 @@ export default async function MatchPage({
                         </p>
                       </div>
 
-                      {/* Odds */}
-                      <div className="text-center shrink-0 w-12">
-                        <p className="text-[10px]" style={{ color: 'var(--muted)' }}>Cote</p>
-                        <p className="font-mono text-sm font-bold" style={{ color: '#F0B429' }}>×{Number(bet.odds_at_bet_time).toFixed(2)}</p>
-                      </div>
-
-                      {/* Stake + potential */}
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{bet.stake.toLocaleString('fr-FR')} pts</p>
-                        <p className="text-[10px]" style={{ color: '#22C55E' }}>→ {potWin.toLocaleString('fr-FR')}</p>
-                      </div>
+                      {/* Odds / Points */}
+                      {bet.stake === 0 ? (
+                        <div className="text-right shrink-0">
+                          <p className="text-[10px]" style={{ color: 'var(--muted)' }}>Si correct</p>
+                          <p className="text-sm font-bold" style={{ color: '#22C55E' }}>+{Number(bet.odds_at_bet_time).toLocaleString('fr-FR')} pts</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-center shrink-0 w-12">
+                            <p className="text-[10px]" style={{ color: 'var(--muted)' }}>Cote</p>
+                            <p className="font-mono text-sm font-bold" style={{ color: '#F0B429' }}>×{Number(bet.odds_at_bet_time).toFixed(2)}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{bet.stake.toLocaleString('fr-FR')} pts</p>
+                            <p className="text-[10px]" style={{ color: '#22C55E' }}>→ {potWin.toLocaleString('fr-FR')}</p>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )
                 })}

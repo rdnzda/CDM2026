@@ -140,6 +140,30 @@ Deno.serve(async () => {
           .eq('id', bet.user_id).single()
         if (!freshUser) continue
 
+        // ── Knockout prediction bet (stake === 0) : points fixes, aucune mise à déduire ──
+        if (bet.stake === 0) {
+          const won = isBetWon(bet, match)
+          const pointsWon = won ? Math.round(Number(bet.odds_at_bet_time)) : 0
+          const status = won ? 'won' : 'lost'
+
+          await supabase.from('bets').update({
+            status,
+            points_won:  pointsWon,
+            resolved_at: new Date().toISOString(),
+          }).eq('id', bet.id)
+
+          await supabase.from('users').update({
+            total_points:   freshUser.total_points + pointsWon,
+            bets_won:       won ? freshUser.bets_won + 1 : freshUser.bets_won,
+            total_bets:     freshUser.total_bets + 1,
+            bet_win_streak: won ? freshUser.bet_win_streak + 1 : 0,
+          }).eq('id', bet.user_id)
+
+          totalResolved++
+          continue
+        }
+
+        // ── Group phase bet : ancien système mise × cote ──
         const streakMult = getStreakMultiplier(freshUser.bet_win_streak)
         let status: string
         let pointsWon = 0
