@@ -218,6 +218,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           inline: false,
         },
         {
+          name: '🎁 Boost de rattrapage — solde < 300 pts',
+          value:
+            'Les joueurs avec **moins de 300 pts** recevront exceptionnellement un **boost ×1.5 supplémentaire** ' +
+            'pour leur permettre de remonter dans la compétition. Personne n\'est encore éliminé !',
+          inline: false,
+        },
+        {
           name: '❌ Ce qui disparaît en éliminatoires',
           value: 'Combinés · Wildcards · Défis 1v1 · Paris spéciaux (BTTS, Over/Under…)',
           inline: false,
