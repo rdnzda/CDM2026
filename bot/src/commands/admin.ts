@@ -54,6 +54,15 @@ export const data = new SlashCommandBuilder()
           )
       )
   )
+  .addSubcommand(sub =>
+    sub.setName('announce-knockout')
+      .setDescription('Annonce la transition vers la phase à élimination directe')
+      .addChannelOption(o =>
+        o.setName('canal')
+          .setDescription('Canal cible (défaut : canal général configuré)')
+          .setRequired(false)
+      )
+  )
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (interaction.user.id !== ADMIN_ID) {
@@ -162,6 +171,64 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return interaction.editReply(`❌ Impossible d'envoyer dans ce canal : \`${err?.message ?? err}\``)
     }
     return interaction.editReply('✅ Annonce officielle envoyée !')
+  }
+
+  if (sub === 'announce-knockout') {
+    const picked    = interaction.options.getChannel('canal')
+    const channelId = picked?.id ?? process.env.DISCORD_GENERAL_CHANNEL_ID
+    if (!channelId) return interaction.editReply('❌ Précise un canal ou configure `DISCORD_GENERAL_CHANNEL_ID`.')
+    const channel = await interaction.client.channels.fetch(channelId).catch(() => null) as TextChannel | null
+    if (!channel || !channel.isTextBased()) return interaction.editReply('❌ Canal introuvable.')
+
+    const embedMain = new EmbedBuilder()
+      .setColor(0xF0B429)
+      .setTitle('⚡  Phase à élimination directe — Nouveau système !')
+      .setDescription(
+        '> À partir de demain, la **phase à élimination directe** de la CDM 2026 commence.\n' +
+        '> Le système de paris change complètement. Voici ce qu\'il faut savoir.\n\n' +
+        '🌐 **Tableau des 8es** : https://cdm-2026-phi.vercel.app/bracket'
+      )
+      .addFields(
+        {
+          name: '💰 Conversion des soldes (÷100)',
+          value:
+            'Tous les soldes sont divisés par 100 pour coller à la nouvelle échelle :\n' +
+            '```\n200 000 pts  →  2 000 pts\n 50 000 pts  →    500 pts\n 10 000 pts  →    100 pts\n```' +
+            'Le classement et les écarts restent **strictement identiques** — c\'est juste un changement d\'échelle.',
+          inline: false,
+        },
+        {
+          name: '🎯 Prédictions gratuites — plus de mise',
+          value:
+            'On ne parie plus des points, on en **gagne** en prédisant correctement :\n\n' +
+            '🏆 **Vainqueur** — bonne prédiction du résultat → **+200 pts**\n' +
+            '🎯 **Score exact** — bonne prédiction du score final → **+300 pts**\n' +
+            '⚽ **Buteur** — un joueur marque bien → **+150 pts**\n\n' +
+            '_Tu peux prédire les 3 sur le même match et cumuler jusqu\'à **+650 pts** !_',
+          inline: false,
+        },
+        {
+          name: '🔥 Ce qui reste actif',
+          value:
+            '**Boosts ×1.5 et ×2.0** — toujours disponibles, multiplient les points gagnés\n' +
+            '(3× boost ×1.5 + 1× boost ×2.0 score exact distribués pour chaque phase)',
+          inline: false,
+        },
+        {
+          name: '❌ Ce qui disparaît en éliminatoires',
+          value: 'Combinés · Wildcards · Défis 1v1 · Paris spéciaux (BTTS, Over/Under…)',
+          inline: false,
+        },
+      )
+      .setFooter({ text: 'Nouvelle saison, nouvelles règles — que le meilleur pronostiqueur gagne ! 🏆' })
+      .setTimestamp()
+
+    try {
+      await channel.send({ embeds: [embedMain] })
+    } catch (err: any) {
+      return interaction.editReply(`❌ Impossible d'envoyer : \`${err?.message ?? err}\``)
+    }
+    return interaction.editReply('✅ Annonce phase éliminatoire envoyée !')
   }
 
   if (sub === 'post-results') {
