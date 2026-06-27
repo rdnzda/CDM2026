@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getFlagUrl } from '@/lib/flags'
 import MatchScoreForm from './MatchScoreForm'
+import PhaseBoostButtons from './PhaseBoostButtons'
 
 const ADMIN_DISCORD_ID = '574503884987564044'
 
@@ -38,14 +39,28 @@ export default async function AdminPage() {
   }, {})
 
   const PHASE_LABEL: Record<string, string> = {
-    group: 'Groupes', round_of_16: '8es', quarter: 'Quarts', semi: 'Demies', final: 'Finale',
+    group: 'Groupes', round_of_32: '32es', round_of_16: '8es', quarter: 'Quarts', semi: 'Demies', final: 'Finale',
   }
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-fade-up">
       <div className="flex items-baseline gap-4">
         <h1 className="font-display text-4xl" style={{ color: 'var(--text)', letterSpacing: '.05em' }}>ADMIN</h1>
-        <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: 'rgba(239,68,68,.15)', color: '#EF4444' }}>SCORES & BUTEURS</span>
+        <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: 'rgba(239,68,68,.15)', color: '#EF4444' }}>SCORES & BOOSTS</span>
+      </div>
+
+      {/* Phase boost distribution */}
+      <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+        <div className="flex items-center gap-3">
+          <h2 className="font-semibold text-sm" style={{ color: 'var(--text)' }}>Distribution des boosts — Phase éliminatoire</h2>
+          <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'rgba(240,180,41,.1)', color: '#F0B429' }}>
+            3× ×1.5 + 1× ×2.0 par joueur
+          </span>
+        </div>
+        <p className="text-xs" style={{ color: 'var(--muted)' }}>
+          Distribue les boosts de la nouvelle phase à tous les joueurs qui n'en ont pas encore. Idempotent — sans risque de doublon.
+        </p>
+        <PhaseBoostButtons />
       </div>
 
       {Object.entries(grouped).map(([date, dayMatches]) => (

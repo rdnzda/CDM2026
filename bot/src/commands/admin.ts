@@ -4,6 +4,8 @@ import { forcePostMatchResults } from '../services/notifications'
 
 const ADMIN_ID = '574503884987564044'
 
+const KNOCKOUT_PHASES = ['round_of_32', 'round_of_16', 'quarter', 'semi', 'final'] as const
+
 export const data = new SlashCommandBuilder()
   .setName('admin')
   .setDescription('Commandes admin')
@@ -34,6 +36,22 @@ export const data = new SlashCommandBuilder()
         o.setName('match-id')
           .setDescription('ID du match (laisse vide pour le dernier match terminé)')
           .setRequired(false)
+      )
+  )
+  .addSubcommand(sub =>
+    sub.setName('grant-boosts')
+      .setDescription('Distribue les boosts d\'une phase éliminatoire à tous les joueurs')
+      .addStringOption(o =>
+        o.setName('phase')
+          .setDescription('Phase cible')
+          .setRequired(true)
+          .addChoices(
+            { name: '32es de finale (×1.25)', value: 'round_of_32' },
+            { name: '8es de finale (×1.5)',   value: 'round_of_16' },
+            { name: 'Quarts de finale (×2.0)', value: 'quarter'     },
+            { name: 'Demi-finales (×2.5)',     value: 'semi'        },
+            { name: 'Finale (×3.0)',           value: 'final'       },
+          )
       )
   )
 
@@ -150,6 +168,30 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const matchId = interaction.options.getString('match-id') ?? undefined
     const result  = await forcePostMatchResults(interaction.client, matchId)
     return interaction.editReply(result)
+  }
+
+  if (sub === 'grant-boosts') {
+    const phase = interaction.options.getString('phase', true)
+    const supabaseUrl = process.env.SUPABASE_URL!
+    const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/grant-phase-boosts`, {
+        method:  'POST',
+        headers: {
+          Authorization:  `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phase }),
+      })
+      const data = await res.json() as { granted?: number; skipped?: number; error?: string }
+      if (!res.ok) return interaction.editReply(`❌ Erreur : ${data.error ?? 'inconnue'}`)
+      return interaction.editReply(
+        `✅ Boosts **${phase}** distribués — **${data.granted}** joueurs crédités, ${data.skipped} déjà équipés.`
+      )
+    } catch (err: any) {
+      return interaction.editReply(`❌ Erreur réseau : ${err?.message ?? err}`)
+    }
   }
 
   const targetUser = interaction.options.getUser('utilisateur', true)

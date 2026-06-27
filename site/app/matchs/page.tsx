@@ -3,14 +3,15 @@ import { getFlagUrl } from '@/lib/flags'
 import LiveRefresh from '@/components/LiveRefresh'
 
 const PHASE_LABEL: Record<string, string> = {
-  group: 'Groupes', round_of_16: '8es', quarter: 'Quarts', semi: 'Demies', final: 'Finale',
+  group: 'Groupes', round_of_32: '32es', round_of_16: '8es', quarter: 'Quarts', semi: 'Demies', final: 'Finale',
 }
 const PHASE_COLOR: Record<string, { bg: string; text: string }> = {
-  group:       { bg: 'rgba(74,98,128,.2)',   text: '#4A6280' },
-  round_of_16: { bg: 'rgba(59,130,246,.12)', text: '#60A5FA' },
-  quarter:     { bg: 'rgba(139,92,246,.12)', text: '#A78BFA' },
-  semi:        { bg: 'rgba(249,115,22,.12)', text: '#FB923C' },
-  final:       { bg: 'rgba(240,180,41,.12)', text: '#F0B429' },
+  group:        { bg: 'rgba(74,98,128,.2)',   text: '#4A6280' },
+  round_of_32:  { bg: 'rgba(14,165,233,.12)', text: '#38BDF8' },
+  round_of_16:  { bg: 'rgba(59,130,246,.12)', text: '#60A5FA' },
+  quarter:      { bg: 'rgba(139,92,246,.12)', text: '#A78BFA' },
+  semi:         { bg: 'rgba(249,115,22,.12)', text: '#FB923C' },
+  final:        { bg: 'rgba(240,180,41,.12)', text: '#F0B429' },
 }
 
 function fmt(d: string) {

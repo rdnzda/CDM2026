@@ -18,9 +18,10 @@ export function calcPoints(
 }
 
 export const PHASE_MULTIPLIERS: Record<string, number> = {
-  group: 1.0,
-  round_of_16: 1.5,
-  quarter: 2.0,
-  semi: 2.5,
-  final: 3.0,
+  group:        1.0,
+  round_of_32:  1.25,
+  round_of_16:  1.5,
+  quarter:      2.0,
+  semi:         2.5,
+  final:        3.0,
 }

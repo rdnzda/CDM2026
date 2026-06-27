@@ -11,7 +11,7 @@ const ODDS_KEY       = Deno.env.get('ODDS_API_KEY')
 const ODDS_SPORT     = Deno.env.get('ODDS_SPORT') || 'soccer_fifa_world_cup'
 
 const PHASE_MULTIPLIERS: Record<string, number> = {
-  group: 1.0, round_of_16: 1.5, quarter: 2.0, semi: 2.5, final: 3.0,
+  group: 1.0, round_of_32: 1.25, round_of_16: 1.5, quarter: 2.0, semi: 2.5, final: 3.0,
 }
 
 // FIFA World Rankings points (June 2026)
@@ -175,11 +175,12 @@ function teamsMatch(fdName: string, oddsName: string): boolean {
 
 function detectPhase(stage: string): string {
   const s = (stage || '').toUpperCase()
-  if (s === 'FINAL')          return 'final'
-  if (s === 'SEMI_FINALS')    return 'semi'
-  if (s === 'THIRD_PLACE')    return 'semi'
-  if (s === 'QUARTER_FINALS') return 'quarter'
-  if (s === 'ROUND_OF_16')    return 'round_of_16'
+  if (s === 'FINAL')                    return 'final'
+  if (s === 'SEMI_FINALS')              return 'semi'
+  if (s === 'THIRD_PLACE')              return 'semi'
+  if (s === 'QUARTER_FINALS')           return 'quarter'
+  if (s === 'ROUND_OF_16')              return 'round_of_16'
+  if (s === 'ROUND_OF_32' || s === 'LAST_32') return 'round_of_32'
   return 'group'
 }
 
