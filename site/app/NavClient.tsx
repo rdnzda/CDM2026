@@ -8,6 +8,7 @@ type NavUser = { username: string; avatar_url: string | null; total_points: numb
 
 const LINKS = [
   { href: '/matchs',     label: 'Matchs'    },
+  { href: '/groupes',    label: 'Groupes'   },
   { href: '/bracket',    label: 'Bracket'   },
   { href: '/combos',     label: 'Combinés'  },
   { href: '/1v1',        label: '1v1'       },
