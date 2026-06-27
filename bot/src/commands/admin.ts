@@ -186,7 +186,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       .setDescription(
         '> À partir de demain, la **phase à élimination directe** de la CDM 2026 commence.\n' +
         '> Le système de paris change complètement. Voici ce qu\'il faut savoir.\n\n' +
-        '🌐 **Tableau des 8es** : https://cdm-2026-phi.vercel.app/bracket'
+        '📊 Les points accumulés pendant la **phase de groupes** vous ont permis de creuser un écart — ' +
+        'cet avantage reste intact et comptera jusqu\'au bout de la compétition. ' +
+        'Chaque point gagné en groupes pèse dans la course au titre de meilleur pronostiqueur !\n\n' +
+        '🌐 **Tableau des éliminatoires** : https://cdm-2026-phi.vercel.app/bracket'
       )
       .addFields(
         {
