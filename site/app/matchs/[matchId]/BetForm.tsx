@@ -51,273 +51,348 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
 }
 
 // ══════════════════════════════════════════════════════
-// KNOCKOUT FORM — prédictions libres, points fixes
+// KNOCKOUT FORM — formulaire unifié, un seul bouton
 // ══════════════════════════════════════════════════════
 function KnockoutForm({ match, scorerOdds, userBoosts }: {
   match: Match; scorerOdds: ScorerOdd[]; userBoosts: Boost[]
 }) {
+  // ── Résultat (1X2) — peut être défini par clic direct ou dérivé du score
   const [resultPred,  setResultPred]  = useState<'home'|'draw'|'away'|null>(null)
-  const [manualH,     setManualH]     = useState(1)
-  const [manualA,     setManualA]     = useState(0)
+  // ── Score exact — optionnel ; quand actif, dérive le résultat
+  const [scoreActive, setScoreActive] = useState(false)
+  const [scoreH,      setScoreH]      = useState(1)
+  const [scoreA,      setScoreA]      = useState(0)
+  // ── Buteur — optionnel
   const [scorerQuery, setScorerQuery] = useState('')
   const [scorerPred,  setScorerPred]  = useState<string|null>(null)
-
+  // ── Boost & état global
   const [boostId,  setBoostId]  = useState<string|null>(null)
-  const [feedback, setFeedback] = useState<Record<string, { ok: boolean; msg: string }>>({})
-  const [loading,  setLoading]  = useState<string|null>(null)
+  const [loading,  setLoading]  = useState(false)
+  const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null)
 
   const filteredScorers = useMemo(() =>
     !scorerQuery.trim() ? scorerOdds : scorerOdds.filter(o => o.player_name.toLowerCase().includes(scorerQuery.toLowerCase()))
   , [scorerOdds, scorerQuery])
 
+  // Résultat effectif : dérivé du score si score actif, sinon choix 1X2
+  const effectiveResult = scoreActive ? getResultFromScore(scoreH, scoreA) : resultPred
+
+  // Modifier le score → dérive le résultat automatiquement
+  function updateScore(h: number, a: number) {
+    const ch = Math.max(0, Math.min(15, h))
+    const ca = Math.max(0, Math.min(15, a))
+    setScoreH(ch); setScoreA(ca)
+    setScoreActive(true)
+    setResultPred(getResultFromScore(ch, ca))
+  }
+
+  // Cliquer 1X2 désactive le score exact
+  function pickResult(val: 'home'|'draw'|'away') {
+    setResultPred(effectiveResult === val ? null : val)
+    setScoreActive(false)
+    setFeedback(null)
+  }
+
+  // Sélectionner le mode score exact
+  function activateScore() {
+    setScoreActive(true)
+    setResultPred(getResultFromScore(scoreH, scoreA))
+    setFeedback(null)
+  }
+
   const boost = userBoosts.find(b => b.id === boostId) ?? null
-  const boostMult = boost?.boost_type === 'x20_exact' ? 2.0 : boost?.boost_type === 'x15' ? 1.5 : 1.0
 
-  async function submit(betType: string, extra: Record<string, unknown> = {}) {
-    setLoading(betType)
-    const activeBoostId = betType === 'exact_score' ? boostId : (boost?.boost_type === 'x15' ? boostId : null)
-    try {
-      const res = await fetch('/api/bets/place', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchId: match.id, betType, ...extra, ...(activeBoostId ? { boostId: activeBoostId } : {}) }),
-      })
-      const data = await res.json()
-      if (!res.ok) setFeedback(f => ({ ...f, [betType]: { ok: false, msg: data.error ?? 'Erreur.' } }))
-      else {
-        setFeedback(f => ({ ...f, [betType]: { ok: true, msg: `Prédiction enregistrée — +${data.pointsIfWon} pts si correct !` } }))
-        if (betType === 'result') setResultPred(null)
-        if (betType === 'scorer') { setScorerPred(null); setScorerQuery('') }
-        setBoostId(null)
-      }
-    } catch { setFeedback(f => ({ ...f, [betType]: { ok: false, msg: 'Erreur réseau.' } })) }
-    finally { setLoading(null) }
+  // Quel boost s'applique à quel betType ?
+  function boostForType(type: string): string | null {
+    if (!boost) return null
+    if (boost.boost_type === 'x20_exact') return type === 'exact_score' ? boostId : null
+    // x15 → s'applique à exact_score si actif, sinon result, sinon scorer
+    const priority = scoreActive ? 'exact_score' : (effectiveResult ? 'result' : 'scorer')
+    return type === priority ? boostId : null
+  }
+  function multForType(type: string) {
+    if (!boostForType(type)) return 1.0
+    return boost?.boost_type === 'x20_exact' ? 2.0 : 1.5
+  }
+  function pts(type: string) {
+    return Math.round(KNOCKOUT_POINTS[type] * multForType(type))
   }
 
-  const scoreResult = getResultFromScore(manualH, manualA)
-  const x20Available = userBoosts.some(b => b.boost_type === 'x20_exact' && !boostId?.startsWith(b.id))
-  const x15Available = userBoosts.filter(b => b.boost_type === 'x15')
+  // Points max potentiels
+  const totalPts = (effectiveResult ? pts('result') : 0) + (scoreActive ? pts('exact_score') : 0) + (scorerPred ? pts('scorer') : 0)
+  const canSubmit = !loading && (!!effectiveResult || scoreActive || !!scorerPred)
 
-  const FeedbackBlock = ({ type }: { type: string }) => {
-    const fb = feedback[type]
-    if (!fb) return null
-    return (
-      <div className="px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2"
-        style={{
-          background: fb.ok ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)',
-          border: `1px solid ${fb.ok ? 'rgba(34,197,94,.2)' : 'rgba(239,68,68,.2)'}`,
-          color: fb.ok ? '#22C55E' : '#EF4444',
-        }}>
-        {fb.ok ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
-        {fb.msg}
-      </div>
-    )
+  async function submitAll() {
+    setLoading(true); setFeedback(null)
+    const calls: { betType: string; extra: Record<string, unknown> }[] = []
+
+    if (effectiveResult) calls.push({ betType: 'result', extra: { predictionResult: effectiveResult } })
+    if (scoreActive)     calls.push({ betType: 'exact_score', extra: { predictionScoreHome: scoreH, predictionScoreAway: scoreA } })
+    if (scorerPred)      calls.push({ betType: 'scorer', extra: { predictionScorer: scorerPred } })
+
+    const errors: string[] = []
+    let totalWon = 0
+    let successCount = 0
+
+    for (const { betType, extra } of calls) {
+      const bId = boostForType(betType)
+      try {
+        const res = await fetch('/api/bets/place', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ matchId: match.id, betType, ...extra, ...(bId ? { boostId: bId } : {}) }),
+        })
+        const data = await res.json()
+        if (!res.ok) errors.push(data.error ?? 'Erreur')
+        else { totalWon += data.pointsIfWon ?? 0; successCount++ }
+      } catch { errors.push('Erreur réseau') }
+    }
+
+    if (errors.length === 0) {
+      setFeedback({ ok: true, msg: `${successCount} prédiction(s) enregistrée(s) — jusqu'à +${totalWon} pts si tout est correct !` })
+      setResultPred(null); setScoreActive(false); setScoreH(1); setScoreA(0)
+      setScorerPred(null); setScorerQuery(''); setBoostId(null)
+    } else {
+      setFeedback({ ok: false, msg: errors.join(' · ') })
+    }
+    setLoading(false)
   }
 
-  const BoostPicker = ({ types }: { types: Array<'x15'|'x20_exact'> }) => {
-    const available = userBoosts.filter(b => types.includes(b.boost_type as any))
-    if (!available.length) return null
-    return (
-      <div className="flex flex-wrap gap-1.5">
-        {available.map(b => {
-          const active = boostId === b.id
-          const label = b.boost_type === 'x20_exact' ? '×2.0 Score exact' : '×1.5 Boost'
-          return (
-            <button key={b.id} type="button"
-              onClick={() => setBoostId(active ? null : b.id)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
-              style={{
-                background: active ? 'rgba(240,180,41,.2)' : 'rgba(240,180,41,.07)',
-                border: `1.5px solid ${active ? '#F0B429' : 'rgba(240,180,41,.3)'}`,
-                color: active ? '#F0B429' : 'rgba(200,160,40,.9)',
-              }}>
-              <Zap className="w-3 h-3" />{label}
-            </button>
-          )
-        })}
-      </div>
-    )
+  const resultLabels: Record<string, string> = {
+    home: match.home_team, draw: 'Nul', away: match.away_team,
   }
-
-  const pts = (type: string) => Math.round(KNOCKOUT_POINTS[type] * (
-    type === 'exact_score' && boost?.boost_type === 'x20_exact' ? 2.0
-    : type !== 'exact_score' && boost?.boost_type === 'x15' ? 1.5
-    : 1.0
-  ))
 
   return (
-    <div className="space-y-3">
+    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
 
-      {/* Header info */}
-      <div className="rounded-xl px-4 py-3 flex items-center gap-3"
-        style={{ background: 'rgba(240,180,41,.06)', border: '1px solid rgba(240,180,41,.15)' }}>
+      {/* ── Header ── */}
+      <div className="flex items-center gap-3 px-5 py-3.5" style={{ borderBottom: '1px solid var(--border)', background: 'rgba(240,180,41,.04)' }}>
         <Zap className="w-4 h-4 shrink-0" style={{ color: '#F0B429' }} />
         <p className="text-xs" style={{ color: 'var(--muted)' }}>
-          Phase éliminatoire — prédictions gratuites. Aucune mise : tu gagnes des points si tu as raison, tu n'en perds pas si tu as tort.
+          Phase éliminatoire — prédictions gratuites. Tu gagnes des points si tu as raison, sans mise.
         </p>
       </div>
 
-      {/* ── Prédiction Vainqueur ── */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
-          <div>
+      <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
+
+        {/* ── Section 1 : Vainqueur ── */}
+        <div className="p-5 space-y-3">
+          <div className="flex items-center justify-between">
             <p className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text)' }}>Vainqueur</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--muted)' }}>Prédit le résultat du match</p>
+            <span className="text-sm font-bold" style={{ color: '#22C55E' }}>+{pts('result')} pts</span>
           </div>
-          <span className="font-display text-2xl" style={{ color: '#22C55E' }}>+{pts('result')}</span>
-        </div>
-        <div className="p-5 space-y-4">
-          <div className="grid grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-3 gap-2">
             {([
               { val: 'home' as const, label: match.home_team, odds: match.odds_home },
               { val: 'draw' as const, label: 'Nul',           odds: match.odds_draw },
               { val: 'away' as const, label: match.away_team, odds: match.odds_away },
             ]).map(o => {
               if (!o.odds) return null
-              const active = resultPred === o.val
+              const active = effectiveResult === o.val
+              const derived = active && scoreActive
               return (
-                <button key={o.val} type="button" onClick={() => { setResultPred(active ? null : o.val); setFeedback(f => ({ ...f, result: null as any })) }}
-                  className="relative flex flex-col items-center gap-2 pt-4 pb-3.5 px-2 rounded-xl overflow-hidden transition-all"
+                <button key={o.val} type="button" onClick={() => pickResult(o.val)}
+                  className="relative flex flex-col items-center gap-1.5 pt-3.5 pb-3 px-1 rounded-xl overflow-hidden transition-all"
                   style={{
-                    background: active ? 'linear-gradient(160deg, rgba(34,197,94,.15) 0%, rgba(34,197,94,.05) 100%)' : 'var(--bg)',
+                    background: active ? 'linear-gradient(160deg, rgba(34,197,94,.14) 0%, rgba(34,197,94,.04) 100%)' : 'var(--bg)',
                     border: `1.5px solid ${active ? '#22C55E' : 'var(--border)'}`,
-                    transform: active ? 'translateY(-2px)' : 'none',
+                    transform: active ? 'translateY(-1px)' : 'none',
+                    opacity: derived ? 0.75 : 1,
                   }}>
                   {active && <span className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, #22C55E, transparent)' }} />}
                   <span className="text-[10px] font-semibold text-center leading-tight w-full px-1 truncate uppercase tracking-wide" style={{ color: active ? '#D8E6F3' : 'var(--muted)' }}>
                     {o.label}
                   </span>
-                  <span className="font-mono text-[11px] font-bold" style={{ color: 'var(--muted)' }}>×{Number(o.odds).toFixed(2)}</span>
-                  {active && <span className="text-[8px] font-bold tracking-[.14em] uppercase px-2 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,.2)', color: '#22C55E' }}>CHOISI</span>}
+                  <span className="font-mono text-xs font-bold" style={{ color: active ? '#22C55E' : 'var(--muted)' }}>
+                    ×{Number(o.odds).toFixed(2)}
+                  </span>
+                  {derived && <span className="text-[8px] font-semibold tracking-wide" style={{ color: 'rgba(34,197,94,.7)' }}>via score</span>}
                 </button>
               )
             })}
           </div>
-          <BoostPicker types={['x15']} />
-          <FeedbackBlock type="result" />
-          <button type="button" disabled={!resultPred || loading === 'result'}
-            onClick={() => resultPred && submit('result', { predictionResult: resultPred })}
-            className="w-full py-3 rounded-xl font-display text-base tracking-[.06em] transition-all"
-            style={{
-              background: resultPred && loading !== 'result' ? 'linear-gradient(135deg, #22C55E 0%, #4ADE80 100%)' : 'var(--bg)',
-              color:  resultPred && loading !== 'result' ? '#07101E' : 'var(--muted)',
-              border: `1.5px solid ${resultPred && loading !== 'result' ? '#22C55E' : 'var(--border)'}`,
-              boxShadow: resultPred && loading !== 'result' ? '0 4px 20px rgba(34,197,94,.2)' : 'none',
-            }}>
-            {loading === 'result' ? 'Envoi…' : resultPred ? `PRÉDIRE — +${pts('result')} pts` : 'CHOISIR UN RÉSULTAT'}
-          </button>
         </div>
-      </div>
 
-      {/* ── Prédiction Score exact ── */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
-          <div>
+        {/* ── Section 2 : Score exact ── */}
+        <div className="p-5 space-y-3">
+          <div className="flex items-center justify-between">
             <p className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text)' }}>Score exact</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--muted)' }}>Prédit le score final</p>
+            <div className="flex items-center gap-2">
+              {scoreActive && (
+                <button type="button" onClick={() => { setScoreActive(false); setFeedback(null) }}
+                  className="text-[10px] px-2 py-0.5 rounded-full" style={{ color: 'var(--muted)', border: '1px solid var(--border)' }}>
+                  Retirer
+                </button>
+              )}
+              <span className="text-sm font-bold" style={{ color: scoreActive ? '#F0B429' : 'var(--muted)' }}>+{pts('exact_score')} pts</span>
+            </div>
           </div>
-          <span className="font-display text-2xl" style={{ color: '#F0B429' }}>+{pts('exact_score')}</span>
-        </div>
-        <div className="p-5 space-y-4">
-          <div className="rounded-xl p-4" style={{ background: 'var(--bg)', border: '1.5px solid var(--border)' }}>
-            <div className="flex items-center justify-center gap-8">
+
+          <div className="rounded-xl p-4" style={{ background: 'var(--bg)', border: `1.5px solid ${scoreActive ? '#F0B429' : 'var(--border)'}`, transition: 'border-color .2s' }}>
+            <div className="flex items-center justify-center gap-6">
               <div className="flex flex-col items-center gap-2">
                 <p className="text-[10px] font-semibold uppercase tracking-wide truncate max-w-[80px] text-center" style={{ color: 'var(--muted)' }}>{match.home_team}</p>
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => setManualH(Math.max(0, manualH - 1))}
-                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center" style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>−</button>
-                  <span className="font-display text-3xl w-8 text-center" style={{ color: '#F0B429' }}>{manualH}</span>
-                  <button type="button" onClick={() => setManualH(Math.min(15, manualH + 1))}
-                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center" style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>+</button>
+                  <button type="button" onClick={() => updateScore(scoreH - 1, scoreA)}
+                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-colors"
+                    style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>−</button>
+                  <span className="font-display text-3xl w-8 text-center" style={{ color: '#F0B429' }}>{scoreH}</span>
+                  <button type="button" onClick={() => updateScore(scoreH + 1, scoreA)}
+                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-colors"
+                    style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>+</button>
                 </div>
               </div>
               <span className="font-display text-2xl" style={{ color: 'var(--border-2)' }}>:</span>
               <div className="flex flex-col items-center gap-2">
                 <p className="text-[10px] font-semibold uppercase tracking-wide truncate max-w-[80px] text-center" style={{ color: 'var(--muted)' }}>{match.away_team}</p>
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => setManualA(Math.max(0, manualA - 1))}
-                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center" style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>−</button>
-                  <span className="font-display text-3xl w-8 text-center" style={{ color: '#F0B429' }}>{manualA}</span>
-                  <button type="button" onClick={() => setManualA(Math.min(15, manualA + 1))}
-                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center" style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>+</button>
+                  <button type="button" onClick={() => updateScore(scoreH, scoreA - 1)}
+                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-colors"
+                    style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>−</button>
+                  <span className="font-display text-3xl w-8 text-center" style={{ color: '#F0B429' }}>{scoreA}</span>
+                  <button type="button" onClick={() => updateScore(scoreH, scoreA + 1)}
+                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-colors"
+                    style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>+</button>
                 </div>
               </div>
             </div>
-            <p className="text-xs font-semibold text-center mt-3" style={{ color: 'var(--muted)' }}>
-              {manualH > manualA ? match.home_team : manualH < manualA ? match.away_team : 'Match nul'}
-            </p>
+            {!scoreActive && (
+              <button type="button" onClick={activateScore}
+                className="w-full mt-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{ background: 'rgba(240,180,41,.08)', border: '1.5px dashed rgba(240,180,41,.3)', color: '#F0B429' }}>
+                Inclure ce score dans ma prédiction
+              </button>
+            )}
+            {scoreActive && (
+              <p className="text-[10px] font-semibold text-center mt-3" style={{ color: '#F0B429' }}>
+                {resultLabels[getResultFromScore(scoreH, scoreA)]} · {scoreH}–{scoreA}
+              </p>
+            )}
           </div>
-          <BoostPicker types={['x15', 'x20_exact']} />
-          <FeedbackBlock type="exact_score" />
-          <button type="button" disabled={loading === 'exact_score'}
-            onClick={() => submit('exact_score', { predictionScoreHome: manualH, predictionScoreAway: manualA })}
-            className="w-full py-3 rounded-xl font-display text-base tracking-[.06em] transition-all"
-            style={{
-              background: loading !== 'exact_score' ? 'linear-gradient(135deg, #F0B429 0%, #FFD060 100%)' : 'var(--bg)',
-              color:  loading !== 'exact_score' ? '#07101E' : 'var(--muted)',
-              border: `1.5px solid ${loading !== 'exact_score' ? '#F0B429' : 'var(--border)'}`,
-              boxShadow: loading !== 'exact_score' ? '0 4px 20px rgba(240,180,41,.2)' : 'none',
-            }}>
-            {loading === 'exact_score' ? 'Envoi…' : `PRÉDIRE ${manualH}–${manualA} — +${pts('exact_score')} pts`}
-          </button>
         </div>
-      </div>
 
-      {/* ── Prédiction Buteur ── */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
-          <div>
-            <p className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text)' }}>Buteur</p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--muted)' }}>Prédit un buteur du match</p>
-          </div>
-          <span className="font-display text-2xl" style={{ color: '#60A5FA' }}>+{pts('scorer')}</span>
-        </div>
+        {/* ── Section 3 : Buteur ── */}
         <div className="p-5 space-y-3">
-          <input type="text" value={scorerQuery} onChange={e => setScorerQuery(e.target.value)}
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text)' }}>Buteur</p>
+            <span className="text-sm font-bold" style={{ color: scorerPred ? '#60A5FA' : 'var(--muted)' }}>+{pts('scorer')} pts</span>
+          </div>
+          <input type="text" value={scorerQuery} onChange={e => { setScorerQuery(e.target.value); setFeedback(null) }}
             placeholder="Rechercher un joueur…"
             className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
             style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', color: 'var(--text)', transition: 'border-color .15s' }}
             onFocus={(e: any) => e.target.style.borderColor = '#60A5FA'}
             onBlur={(e: any) => e.target.style.borderColor = 'var(--border)'}
           />
-
           {scorerOdds.length === 0 ? (
-            <div className="rounded-xl px-4 py-6 text-center text-xs" style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--muted)' }}>
-              Les buteurs ne sont pas encore disponibles pour ce match.
-            </div>
+            <p className="text-xs text-center py-2" style={{ color: 'var(--muted)' }}>Buteurs non encore disponibles pour ce match.</p>
           ) : filteredScorers.length === 0 ? (
-            <div className="text-center py-4 text-xs" style={{ color: 'var(--muted)' }}>Aucun joueur trouvé.</div>
+            <p className="text-xs text-center py-2" style={{ color: 'var(--muted)' }}>Aucun joueur trouvé.</p>
           ) : (
-            <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-0.5">
+            <div className="grid grid-cols-2 gap-1.5 max-h-44 overflow-y-auto pr-0.5">
               {filteredScorers.map(o => {
                 const isSel = scorerPred === o.player_name
                 return (
                   <button key={o.id} type="button"
-                    onClick={() => { setScorerPred(isSel ? null : o.player_name); setFeedback(f => ({ ...f, scorer: null as any })) }}
+                    onClick={() => { setScorerPred(isSel ? null : o.player_name); setFeedback(null) }}
                     className="flex items-center justify-between rounded-xl px-3 py-2.5 text-left transition-all"
                     style={{ background: isSel ? 'rgba(96,165,250,.1)' : 'var(--bg)', border: `1.5px solid ${isSel ? '#60A5FA' : 'var(--border)'}` }}>
                     <div className="min-w-0">
                       <p className="text-xs font-semibold truncate" style={{ color: 'var(--text)' }}>{o.player_name}</p>
                       <p className="text-[10px]" style={{ color: 'var(--muted)' }}>{o.team}</p>
                     </div>
-                    <span className="font-mono text-xs font-bold ml-2 shrink-0" style={{ color: 'var(--muted)' }}>×{o.odds.toFixed(2)}</span>
+                    <span className="font-mono text-xs font-bold ml-2 shrink-0" style={{ color: isSel ? '#60A5FA' : 'var(--muted)' }}>×{o.odds.toFixed(2)}</span>
                   </button>
                 )
               })}
             </div>
           )}
+        </div>
 
-          <BoostPicker types={['x15']} />
-          <FeedbackBlock type="scorer" />
-          <button type="button" disabled={!scorerPred || loading === 'scorer'}
-            onClick={() => scorerPred && submit('scorer', { predictionScorer: scorerPred })}
-            className="w-full py-3 rounded-xl font-display text-base tracking-[.06em] transition-all"
+        {/* ── Section 4 : Boosts + Récap + Bouton ── */}
+        <div className="p-5 space-y-4">
+          {/* Boost picker */}
+          {userBoosts.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Zap className="w-3 h-3" style={{ color: '#F0B429' }} />
+                <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>Boost</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {userBoosts.map(b => {
+                  const active = boostId === b.id
+                  const label = b.boost_type === 'x20_exact' ? '×2.0 Score exact' : '×1.5 Boost'
+                  return (
+                    <button key={b.id} type="button" onClick={() => setBoostId(active ? null : b.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
+                      style={{
+                        background: active ? 'rgba(240,180,41,.2)' : 'rgba(240,180,41,.07)',
+                        border: `1.5px solid ${active ? '#F0B429' : 'rgba(240,180,41,.3)'}`,
+                        color: active ? '#F0B429' : 'rgba(200,160,40,.9)',
+                      }}>
+                      <Zap className="w-3 h-3" />{label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Récap des sélections */}
+          {(effectiveResult || scoreActive || scorerPred) && (
+            <div className="rounded-xl px-4 py-3 space-y-1.5" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+              {effectiveResult && (
+                <div className="flex items-center justify-between text-xs">
+                  <span style={{ color: 'var(--muted)' }}>Vainqueur · {resultLabels[effectiveResult]}{scoreActive ? ' (via score)' : ''}</span>
+                  <span className="font-bold" style={{ color: '#22C55E' }}>+{pts('result')}</span>
+                </div>
+              )}
+              {scoreActive && (
+                <div className="flex items-center justify-between text-xs">
+                  <span style={{ color: 'var(--muted)' }}>Score exact · {scoreH}–{scoreA}</span>
+                  <span className="font-bold" style={{ color: '#F0B429' }}>+{pts('exact_score')}</span>
+                </div>
+              )}
+              {scorerPred && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="truncate" style={{ color: 'var(--muted)' }}>Buteur · {scorerPred}</span>
+                  <span className="font-bold ml-2 shrink-0" style={{ color: '#60A5FA' }}>+{pts('scorer')}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between pt-1.5" style={{ borderTop: '1px solid var(--border)' }}>
+                <span className="text-xs font-semibold" style={{ color: 'var(--muted)' }}>TOTAL SI TOUT CORRECT</span>
+                <span className="font-display text-xl" style={{ color: 'var(--text)', letterSpacing: '.04em' }}>+{totalPts}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Feedback */}
+          {feedback && (
+            <div className="px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2"
+              style={{
+                background: feedback.ok ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)',
+                border: `1px solid ${feedback.ok ? 'rgba(34,197,94,.2)' : 'rgba(239,68,68,.2)'}`,
+                color: feedback.ok ? '#22C55E' : '#EF4444',
+              }}>
+              {feedback.ok ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
+              {feedback.msg}
+            </div>
+          )}
+
+          {/* Bouton unique */}
+          <button type="button" disabled={!canSubmit} onClick={submitAll}
+            className="w-full py-3.5 rounded-xl font-display text-lg tracking-[.08em] transition-all"
             style={{
-              background: scorerPred && loading !== 'scorer' ? 'linear-gradient(135deg, #60A5FA 0%, #93C5FD 100%)' : 'var(--bg)',
-              color:  scorerPred && loading !== 'scorer' ? '#07101E' : 'var(--muted)',
-              border: `1.5px solid ${scorerPred && loading !== 'scorer' ? '#60A5FA' : 'var(--border)'}`,
-              boxShadow: scorerPred && loading !== 'scorer' ? '0 4px 20px rgba(96,165,250,.2)' : 'none',
+              background: canSubmit ? 'linear-gradient(135deg, #F0B429 0%, #FFD060 100%)' : 'var(--bg)',
+              color:      canSubmit ? '#07101E' : 'var(--muted)',
+              border:     `1.5px solid ${canSubmit ? '#F0B429' : 'var(--border)'}`,
+              boxShadow:  canSubmit ? '0 4px 20px rgba(240,180,41,.2)' : 'none',
             }}>
-            {loading === 'scorer' ? 'Envoi…' : scorerPred ? `PRÉDIRE ${scorerPred} — +${pts('scorer')} pts` : 'CHOISIR UN JOUEUR'}
+            {loading
+              ? 'Envoi…'
+              : canSubmit
+                ? `PRÉDIRE${totalPts > 0 ? ` — +${totalPts} pts` : ''}`
+                : 'FAIRE MES PRÉDICTIONS'
+            }
           </button>
         </div>
       </div>
