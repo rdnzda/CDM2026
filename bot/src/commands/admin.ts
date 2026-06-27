@@ -227,7 +227,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       .setTimestamp()
 
     try {
-      await channel.send({ embeds: [embedMain] })
+      await channel.send({ content: '@everyone', embeds: [embedMain] })
     } catch (err: any) {
       return interaction.editReply(`❌ Impossible d'envoyer : \`${err?.message ?? err}\``)
     }
