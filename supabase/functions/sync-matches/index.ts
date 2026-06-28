@@ -173,14 +173,16 @@ function teamsMatch(fdName: string, oddsName: string): boolean {
   return false
 }
 
-function detectPhase(stage: string): string {
+function detectPhase(stage: string, groupField?: string | null): string {
   const s = (stage || '').toUpperCase()
-  if (s === 'FINAL')                    return 'final'
-  if (s === 'SEMI_FINALS')              return 'semi'
-  if (s === 'THIRD_PLACE')              return 'semi'
-  if (s === 'QUARTER_FINALS')           return 'quarter'
-  if (s === 'ROUND_OF_16')              return 'round_of_16'
-  if (s === 'ROUND_OF_32' || s === 'LAST_32') return 'round_of_32'
+  if (s === 'FINAL')                                      return 'final'
+  if (s === 'SEMI_FINALS' || s === 'SEMI_FINAL')          return 'semi'
+  if (s === 'THIRD_PLACE' || s === 'THIRD_PLACE_PLAYOFF') return 'semi'
+  if (s === 'QUARTER_FINALS' || s === 'QUARTER_FINAL')    return 'quarter'
+  if (s === 'ROUND_OF_16' || s === 'LAST_16')             return 'round_of_16'
+  if (s === 'ROUND_OF_32' || s === 'LAST_32' || s === 'FIRST_KNOCKOUT_ROUND' || s === 'KNOCKOUT_ROUND_PLAY_INS') return 'round_of_32'
+  // Fallback : si le match n'a pas de groupe (groupField null/vide), c'est un éliminatoire inconnu → round_of_32
+  if (!groupField) return 'round_of_32'
   return 'group'
 }
 
@@ -236,7 +238,7 @@ Deno.serve(async () => {
     let oddsFromElo = 0
 
     for (const m of matches) {
-      const phase      = detectPhase(m.stage)
+      const phase      = detectPhase(m.stage, m.group)
       const status     = mapStatus(m.status, m.utcDate)
       const isKnockout = phase !== 'group'
 
