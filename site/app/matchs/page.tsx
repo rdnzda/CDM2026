@@ -33,14 +33,19 @@ export default async function MatchsPage() {
   const in3h           = new Date(now.getTime() + 3 * 60 * 60 * 1000)
 
   const liveMatches    = allMatches.filter((m: any) => m.status === 'live')
+  const knockout16     = allMatches.filter((m: any) =>
+    m.status === 'upcoming' && m.phase === 'round_of_16'
+  )
   const soonMatches    = allMatches.filter((m: any) => {
     if (m.status !== 'upcoming') return false
+    if (m.phase === 'round_of_16') return false   // déjà dans knockout16
     const k = new Date(m.kickoff_at)
     return k > now && k <= in3h
   })
-  const hasLiveMatches = liveMatches.length > 0
-  const pinnedIds      = new Set([...liveMatches, ...soonMatches].map((m: any) => m.id))
-  const rest           = allMatches.filter((m: any) => !pinnedIds.has(m.id))
+  const hasLiveMatches  = liveMatches.length > 0
+  const hasKnockout16   = knockout16.length > 0
+  const pinnedIds       = new Set([...liveMatches, ...soonMatches, ...knockout16].map((m: any) => m.id))
+  const rest            = allMatches.filter((m: any) => !pinnedIds.has(m.id))
 
   const grouped = rest.reduce<Record<string, typeof matches>>((acc, m) => {
     const d = new Date(m!.kickoff_at).toLocaleDateString('fr-FR', {
@@ -58,6 +63,109 @@ export default async function MatchsPage() {
         <h1 className="font-display text-5xl" style={{ color: 'var(--text)', letterSpacing: '.05em' }}>MATCHS</h1>
         <span className="text-sm" style={{ color: 'var(--muted)' }}>{matches?.length ?? 0} rencontres</span>
       </div>
+
+      {/* ── 8es de finale upcoming en tête ── */}
+      {hasKnockout16 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-[.12em] uppercase" style={{ color: '#60A5FA' }}>
+              <span className="w-2 h-2 rounded-full" style={{ background: '#60A5FA' }} />
+              8es de finale
+            </span>
+            <div className="flex-1 h-px" style={{ background: 'rgba(96,165,250,.2)' }} />
+          </div>
+          {knockout16.map((match: any) => {
+            const locked  = new Date() >= new Date(match.bets_locked_at)
+            const hasOdds = match.odds_home || match.odds_draw || match.odds_away
+            return (
+              <a
+                key={match.id}
+                href={`/matchs/${match.id}`}
+                className="hover-bg-3 group relative flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl overflow-hidden"
+                style={{
+                  background: 'var(--bg-2)',
+                  border: '1px solid rgba(96,165,250,.25)',
+                  transition: 'background .15s, border-color .15s',
+                }}
+              >
+                {!locked && (
+                  <div className="absolute left-0 top-0 bottom-0 w-0.5" style={{ background: '#60A5FA' }} />
+                )}
+                <div className="shrink-0 text-center w-10 sm:w-14">
+                  <p className="font-mono text-[10px] leading-tight text-center" style={{ color: 'var(--muted)' }}>
+                    {new Date(match.kickoff_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' })}
+                  </p>
+                  <p className="font-mono text-xs font-semibold" style={{ color: '#60A5FA' }}>
+                    {new Date(match.kickoff_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })}
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  {/* Mobile */}
+                  <div className="flex flex-col gap-1 sm:hidden">
+                    <p className="font-semibold text-sm leading-tight flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
+                      {getFlagUrl(match.home_team) && <img src={getFlagUrl(match.home_team)!} alt="" width={18} height={13} className="shrink-0 rounded-sm" />}
+                      <span className="truncate">{match.home_team}</span>
+                    </p>
+                    <div className="flex items-center gap-2 pl-0.5">
+                      {hasOdds ? (
+                        <div className="flex items-center gap-3">
+                          {[{ l: '1', v: match.odds_home }, { l: 'X', v: match.odds_draw }, { l: '2', v: match.odds_away }].map(o => o.v && (
+                            <div key={o.l} className="flex items-baseline gap-1">
+                              <span className="text-[9px]" style={{ color: 'var(--muted)' }}>{o.l}</span>
+                              <span className="font-mono text-xs font-semibold" style={{ color: '#60A5FA' }}>×{Number(o.v).toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="font-display text-sm" style={{ color: 'var(--border-2)' }}>VS</span>
+                      )}
+                    </div>
+                    <p className="font-semibold text-sm leading-tight flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
+                      {getFlagUrl(match.away_team) && <img src={getFlagUrl(match.away_team)!} alt="" width={18} height={13} className="shrink-0 rounded-sm" />}
+                      <span className="truncate">{match.away_team}</span>
+                    </p>
+                  </div>
+                  {/* Desktop */}
+                  <div className="hidden sm:flex items-center justify-between gap-6">
+                    <p className="flex-1 font-semibold text-base leading-tight truncate flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
+                      {getFlagUrl(match.home_team) && <img src={getFlagUrl(match.home_team)!} alt="" width={20} height={15} className="shrink-0 rounded-sm" />}
+                      {match.home_team}
+                    </p>
+                    <div className="shrink-0 flex items-center gap-1">
+                      {hasOdds ? [{ l: '1', v: match.odds_home }, { l: 'X', v: match.odds_draw }, { l: '2', v: match.odds_away }].map(o => o.v && (
+                        <div key={o.l} className="text-center" style={{ minWidth: 44 }}>
+                          <p className="font-mono text-xs font-semibold" style={{ color: '#60A5FA' }}>×{Number(o.v).toFixed(2)}</p>
+                          <p className="text-[9px] tracking-wide" style={{ color: 'var(--muted)' }}>{o.l}</p>
+                        </div>
+                      )) : (
+                        <span className="font-display text-xl" style={{ color: 'var(--border-2)' }}>VS</span>
+                      )}
+                    </div>
+                    <p className="flex-1 font-semibold text-base leading-tight truncate flex items-center justify-end gap-1.5" style={{ color: 'var(--text)' }}>
+                      {match.away_team}
+                      {getFlagUrl(match.away_team) && <img src={getFlagUrl(match.away_team)!} alt="" width={20} height={15} className="shrink-0 rounded-sm" />}
+                    </p>
+                  </div>
+                </div>
+                <div className="shrink-0 flex flex-col items-end gap-1.5">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: 'rgba(59,130,246,.12)', color: '#60A5FA' }}>
+                    8es de finale
+                  </span>
+                  {!locked ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(96,165,250,.12)', color: '#60A5FA' }}>
+                      <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#60A5FA' }} />OUVERT
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(239,68,68,.1)', color: '#EF4444' }}>
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#EF4444' }} />FERMÉ
+                    </span>
+                  )}
+                </div>
+              </a>
+            )
+          })}
+        </div>
+      )}
 
       {/* Matchs LIVE en tête */}
       {hasLiveMatches && (
