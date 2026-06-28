@@ -34,11 +34,11 @@ export default async function MatchsPage() {
 
   const liveMatches    = allMatches.filter((m: any) => m.status === 'live')
   const knockout16     = allMatches.filter((m: any) =>
-    m.status === 'upcoming' && m.phase === 'round_of_16'
+    m.status === 'upcoming' && m.phase !== 'group'
   )
   const soonMatches    = allMatches.filter((m: any) => {
     if (m.status !== 'upcoming') return false
-    if (m.phase === 'round_of_16') return false   // déjà dans knockout16
+    if (m.phase !== 'group') return false   // déjà dans knockout16
     const k = new Date(m.kickoff_at)
     return k > now && k <= in3h
   })
@@ -70,7 +70,7 @@ export default async function MatchsPage() {
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-[.12em] uppercase" style={{ color: '#60A5FA' }}>
               <span className="w-2 h-2 rounded-full" style={{ background: '#60A5FA' }} />
-              8es de finale
+              Phase éliminatoire
             </span>
             <div className="flex-1 h-px" style={{ background: 'rgba(96,165,250,.2)' }} />
           </div>
@@ -148,8 +148,8 @@ export default async function MatchsPage() {
                   </div>
                 </div>
                 <div className="shrink-0 flex flex-col items-end gap-1.5">
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: 'rgba(59,130,246,.12)', color: '#60A5FA' }}>
-                    8es de finale
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: (PHASE_COLOR[match.phase] ?? PHASE_COLOR.round_of_16).bg, color: (PHASE_COLOR[match.phase] ?? PHASE_COLOR.round_of_16).text }}>
+                    {PHASE_LABEL[match.phase] ?? match.phase}
                   </span>
                   {!locked ? (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(96,165,250,.12)', color: '#60A5FA' }}>
