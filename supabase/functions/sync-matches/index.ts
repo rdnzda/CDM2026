@@ -173,15 +173,31 @@ function teamsMatch(fdName: string, oddsName: string): boolean {
   return false
 }
 
+const PHASE_ORDER: Record<string, number> = {
+  group: 0, round_of_32: 1, round_of_16: 2, quarter: 3, semi: 4, final: 5,
+}
+
 function detectPhase(stage: string, groupField?: string | null): string {
-  const s = (stage || '').toUpperCase()
-  if (s === 'FINAL')                                      return 'final'
-  if (s === 'SEMI_FINALS' || s === 'SEMI_FINAL')          return 'semi'
-  if (s === 'THIRD_PLACE' || s === 'THIRD_PLACE_PLAYOFF') return 'semi'
-  if (s === 'QUARTER_FINALS' || s === 'QUARTER_FINAL')    return 'quarter'
-  if (s === 'ROUND_OF_16' || s === 'LAST_16')             return 'round_of_16'
-  if (s === 'ROUND_OF_32' || s === 'LAST_32' || s === 'FIRST_KNOCKOUT_ROUND' || s === 'KNOCKOUT_ROUND_PLAY_INS') return 'round_of_32'
-  // Fallback : si le match n'a pas de groupe (groupField null/vide), c'est un éliminatoire inconnu → round_of_32
+  const s = (stage || '').toUpperCase().replace(/[\s-]+/g, '_')
+  // Final
+  if (s === 'FINAL')                                                           return 'final'
+  // Semi-finals (y compris 3e place)
+  if (['SEMI_FINALS','SEMI_FINAL','THIRD_PLACE','THIRD_PLACE_PLAYOFF',
+       '3RD_PLACE','THIRD_PLACE_MATCH'].includes(s))                           return 'semi'
+  // Quarts
+  if (['QUARTER_FINALS','QUARTER_FINAL','QUARTERFINALS','QUARTERFINAL',
+       'LAST_8'].includes(s))                                                  return 'quarter'
+  // 1/8e de finale — toutes les variantes connues de football-data.org
+  if (['ROUND_OF_16','LAST_16','LAST16','16TH_FINALS',
+       'ROUND_16','EIGHTH_FINALS','KNOCKOUT_ROUND_OF_16'].includes(s))         return 'round_of_16'
+  // 1/16e (play-in round CDM 2026)
+  if (['ROUND_OF_32','LAST_32','LAST32','FIRST_KNOCKOUT_ROUND',
+       'KNOCKOUT_ROUND_PLAY_INS','PLAY_OFF_ROUND','PLAY_IN_ROUND'].includes(s)) return 'round_of_32'
+  // Si le nom de stage contient "16" sans "32" → 1/8e (safety net)
+  if (s.includes('16') && !s.includes('32') && !s.includes('GROUP'))          return 'round_of_16'
+  // Si le nom de stage contient "32" → 1/16e
+  if (s.includes('32') && !s.includes('GROUP'))                                return 'round_of_32'
+  // Fallback : pas de groupe → knockout inconnu
   if (!groupField) return 'round_of_32'
   return 'group'
 }
@@ -233,12 +249,29 @@ Deno.serve(async () => {
       if (Array.isArray(oddsRaw)) oddsEvents = oddsRaw
     }
 
+    // Charger les phases existantes — jamais downgrader une phase knockout → group
+    const { data: existingMatches } = await supabase
+      .from('matches')
+      .select('footballdata_match_id, phase')
+    const existingPhaseMap = new Map<number, string>(
+      (existingMatches || []).map((m: any) => [m.footballdata_match_id, m.phase])
+    )
+
     let synced = 0
     let oddsFromApi = 0
     let oddsFromElo = 0
 
     for (const m of matches) {
-      const phase      = detectPhase(m.stage, m.group)
+      const detectedPhase = detectPhase(m.stage, m.group)
+      const existingPhase = existingPhaseMap.get(m.id)
+      // Protection : si la phase en base est plus avancée que celle détectée, on la garde
+      const phase = (
+        existingPhase &&
+        PHASE_ORDER[existingPhase] !== undefined &&
+        PHASE_ORDER[detectedPhase] !== undefined &&
+        PHASE_ORDER[existingPhase] > PHASE_ORDER[detectedPhase]
+      ) ? existingPhase : detectedPhase
+
       const status     = mapStatus(m.status, m.utcDate)
       const isKnockout = phase !== 'group'
 

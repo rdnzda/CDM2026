@@ -3,21 +3,7 @@
 -- Données vérifiées au 10 juin 2026 — squads officiels soumis à la FIFA.
 -- Idempotent : WHERE NOT EXISTS sur (match_id, player_name).
 --
--- ⚠️  IMPORTANT : vérifier les noms d'équipes dans ta table `matches` :
---      SELECT DISTINCT home_team FROM matches UNION
---      SELECT DISTINCT away_team FROM matches ORDER BY 1;
---
---  Variantes connues selon la source :
---   "Bosnia-Herzegovina" ou "Bosnia and Herzegovina"
---   "Cape Verde"         ou "Cabo Verde"
---   "Czech Republic"     ou "Czechia"
---   "DR Congo"           ou "Congo DR"
---   "Iran"               ou "IR Iran"
---   "Ivory Coast"        ou "Côte d'Ivoire"
---   "South Korea"        ou "Korea Republic" ou "Republic of Korea"
---   "Turkey"             ou "Türkiye"
---   "United States"      ou "USA"
---
+-- La CTE team_name_map gère toutes les variantes de noms selon la source API.
 -- Exécuter dans : Supabase Dashboard → SQL Editor
 
 WITH players (player_name, team, odds) AS (VALUES
@@ -54,7 +40,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Jayden Adams',           'South Africa', 6.50),
   ('Teboho Mokoena',         'South Africa', 7.00),
 
-  -- SOUTH KOREA  (⚠️ peut être "Korea Republic" selon API-Football)
+  -- SOUTH KOREA
   ('Son Heung-min',   'South Korea', 2.20),
   ('Lee Kang-in',     'South Korea', 3.00),
   ('Hwang Hee-chan',  'South Korea', 3.50),
@@ -66,7 +52,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Lee Jae-sung',    'South Korea', 6.50),
   ('Lee Dong-gyeong', 'South Korea', 7.00),
 
-  -- CZECH REPUBLIC  (⚠️ peut être "Czechia")
+  -- CZECH REPUBLIC
   ('Patrik Schick',   'Czech Republic', 2.50),
   ('Adam Hložek',     'Czech Republic', 3.50),
   ('Jan Kuchta',      'Czech Republic', 4.00),
@@ -94,7 +80,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Ali Ahmed',         'Canada', 5.50),
   ('Jayden Nelson',     'Canada', 6.00),
 
-  -- BOSNIA-HERZEGOVINA  (⚠️ peut être "Bosnia and Herzegovina")
+  -- BOSNIA-HERZEGOVINA
   ('Edin Džeko',           'Bosnia-Herzegovina', 2.80),
   ('Ermedin Demirović',    'Bosnia-Herzegovina', 3.00),
   ('Haris Tabaković',      'Bosnia-Herzegovina', 3.50),
@@ -131,7 +117,7 @@ WITH players (player_name, team, odds) AS (VALUES
   -- GROUPE C
   -- ════════════════════════════════════════════════════════════════════════
 
-  -- BRAZIL (Carlo Ancelotti)
+  -- BRAZIL
   ('Vinícius Júnior',    'Brazil', 1.90),
   ('Neymar',             'Brazil', 2.00),
   ('Raphinha',           'Brazil', 2.50),
@@ -144,8 +130,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Lucas Paquetá',      'Brazil', 4.50),
   ('Éderson Silva',      'Brazil', 6.00),
 
-  -- MOROCCO (Mohamed Ouahbi)
-  -- Note officielle: Hakim Ziyech et Sofiane Boufal ne sont PAS dans le squad
+  -- MOROCCO
   ('Ayoub El Kaabi',     'Morocco', 2.50),
   ('Soufiane Rahimi',    'Morocco', 3.00),
   ('Brahim Díaz',        'Morocco', 3.00),
@@ -186,7 +171,7 @@ WITH players (player_name, team, odds) AS (VALUES
   -- GROUPE D
   -- ════════════════════════════════════════════════════════════════════════
 
-  -- UNITED STATES  (⚠️ peut être "USA")
+  -- UNITED STATES
   ('Christian Pulisic',  'United States', 2.50),
   ('Folarin Balogun',    'United States', 3.00),
   ('Haji Wright',        'United States', 3.50),
@@ -221,7 +206,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Ajdin Hrustic',     'Australia', 5.50),
   ('Connor Metcalfe',   'Australia', 6.50),
 
-  -- TURKEY  (⚠️ peut être "Türkiye")
+  -- TURKEY
   ('Arda Güler',          'Turkey', 2.50),
   ('Kerem Aktürkoğlu',    'Turkey', 3.00),
   ('Kenan Yıldız',        'Turkey', 3.20),
@@ -238,7 +223,7 @@ WITH players (player_name, team, odds) AS (VALUES
   -- GROUPE E
   -- ════════════════════════════════════════════════════════════════════════
 
-  -- GERMANY (Julian Nagelsmann)
+  -- GERMANY
   ('Jamal Musiala',    'Germany', 2.50),
   ('Kai Havertz',      'Germany', 2.80),
   ('Florian Wirtz',    'Germany', 3.00),
@@ -254,7 +239,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Felix Nmecha',     'Germany', 6.50),
   ('Joshua Kimmich',   'Germany', 8.00),
 
-  -- IVORY COAST  (⚠️ peut être "Côte d'Ivoire")
+  -- IVORY COAST
   ('Amad Diallo',        'Ivory Coast', 2.80),
   ('Elye Wahi',          'Ivory Coast', 3.00),
   ('Ange-Yoan Bonny',    'Ivory Coast', 3.20),
@@ -268,16 +253,16 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Seko Fofana',        'Ivory Coast', 6.00),
 
   -- ECUADOR
-  ('Enner Valencia',  'Ecuador', 2.80),
-  ('Anthony Valencia','Ecuador', 3.00),
-  ('Gonzalo Plata',   'Ecuador', 3.20),
-  ('Jordy Caicedo',   'Ecuador', 3.80),
-  ('Jeremy Arévalo',  'Ecuador', 4.00),
-  ('Kevin Rodríguez', 'Ecuador', 4.50),
-  ('Nilson Angulo',   'Ecuador', 5.00),
-  ('Kendry Páez',     'Ecuador', 5.00),
-  ('John Yeboah',     'Ecuador', 5.50),
-  ('Moisés Caicedo',  'Ecuador', 6.50),
+  ('Enner Valencia',   'Ecuador', 2.80),
+  ('Anthony Valencia', 'Ecuador', 3.00),
+  ('Gonzalo Plata',    'Ecuador', 3.20),
+  ('Jordy Caicedo',    'Ecuador', 3.80),
+  ('Jeremy Arévalo',   'Ecuador', 4.00),
+  ('Kevin Rodríguez',  'Ecuador', 4.50),
+  ('Nilson Angulo',    'Ecuador', 5.00),
+  ('Kendry Páez',      'Ecuador', 5.00),
+  ('John Yeboah',      'Ecuador', 5.50),
+  ('Moisés Caicedo',   'Ecuador', 6.50),
 
   -- CURACAO
   ('Sontje Hansen',     'Curacao', 3.50),
@@ -293,7 +278,7 @@ WITH players (player_name, team, odds) AS (VALUES
   -- GROUPE F
   -- ════════════════════════════════════════════════════════════════════════
 
-  -- NETHERLANDS (Ronald Koeman)
+  -- NETHERLANDS
   ('Cody Gakpo',            'Netherlands', 2.50),
   ('Brian Brobbey',         'Netherlands', 2.80),
   ('Donyell Malen',         'Netherlands', 3.00),
@@ -307,7 +292,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Guus Til',              'Netherlands', 6.00),
   ('Ryan Gravenberch',      'Netherlands', 6.50),
 
-  -- JAPAN (Hajime Moriyasu)
+  -- JAPAN
   ('Ayase Ueda',     'Japan', 3.00),
   ('Daizen Maeda',   'Japan', 3.50),
   ('Koki Ogawa',     'Japan', 3.50),
@@ -320,7 +305,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Yuito Suzuki',   'Japan', 5.00),
   ('Kento Shiogai',  'Japan', 5.50),
 
-  -- SWEDEN (Jon Dahl Tomasson)
+  -- SWEDEN
   ('Viktor Gyökeres',        'Sweden', 2.00),
   ('Alexander Isak',         'Sweden', 2.20),
   ('Anthony Elanga',         'Sweden', 3.50),
@@ -347,7 +332,7 @@ WITH players (player_name, team, odds) AS (VALUES
   -- GROUPE G
   -- ════════════════════════════════════════════════════════════════════════
 
-  -- BELGIUM (Domenico Tedesco)
+  -- BELGIUM
   ('Romelu Lukaku',          'Belgium', 2.00),
   ('Jeremy Doku',            'Belgium', 3.00),
   ('Leandro Trossard',       'Belgium', 3.00),
@@ -371,7 +356,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Ahmed Zizo',       'Egypt', 5.00),
   ('Emam Ashour',      'Egypt', 6.50),
 
-  -- IRAN  (⚠️ peut être "IR Iran")
+  -- IRAN
   ('Mehdi Taremi',             'Iran', 2.50),
   ('Ali Alipour',              'Iran', 3.50),
   ('Saman Ghoddos',            'Iran', 4.00),
@@ -397,7 +382,7 @@ WITH players (player_name, team, odds) AS (VALUES
   -- GROUPE H
   -- ════════════════════════════════════════════════════════════════════════
 
-  -- SPAIN (Luis De La Fuente)
+  -- SPAIN
   ('Lamine Yamal',    'Spain', 2.50),
   ('Nico Williams',   'Spain', 2.80),
   ('Ferran Torres',   'Spain', 3.00),
@@ -413,16 +398,16 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Fabián Ruiz',     'Spain', 6.00),
   ('Rodri',           'Spain', 8.00),
 
-  -- CAPE VERDE  (⚠️ peut être "Cabo Verde")
-  ('Ryan Mendes',      'Cape Verde', 4.00),
-  ('Garry Rodrigues',  'Cape Verde', 4.00),
-  ('Dailon Livramento','Cape Verde', 4.50),
-  ('Willy Semedo',     'Cape Verde', 4.50),
-  ('Jovane Cabral',    'Cape Verde', 4.50),
-  ('Helio Varela',     'Cape Verde', 5.00),
-  ('Gilson Benchimol', 'Cape Verde', 5.00),
-  ('Nuno da Costa',    'Cape Verde', 5.00),
-  ('Jamiro Monteiro',  'Cape Verde', 5.50),
+  -- CAPE VERDE
+  ('Ryan Mendes',       'Cape Verde', 4.00),
+  ('Garry Rodrigues',   'Cape Verde', 4.00),
+  ('Dailon Livramento', 'Cape Verde', 4.50),
+  ('Willy Semedo',      'Cape Verde', 4.50),
+  ('Jovane Cabral',     'Cape Verde', 4.50),
+  ('Helio Varela',      'Cape Verde', 5.00),
+  ('Gilson Benchimol',  'Cape Verde', 5.00),
+  ('Nuno da Costa',     'Cape Verde', 5.00),
+  ('Jamiro Monteiro',   'Cape Verde', 5.50),
 
   -- SAUDI ARABIA
   ('Salem Al-Dawsari',   'Saudi Arabia', 3.00),
@@ -435,24 +420,24 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Khalid Al-Ghannam',  'Saudi Arabia', 5.50),
   ('Sultan Mandash',     'Saudi Arabia', 6.00),
 
-  -- URUGUAY (Marcelo Bielsa)
-  ('Darwin Núñez',          'Uruguay', 2.20),
-  ('Federico Viñas',        'Uruguay', 3.50),
-  ('Rodrigo Aguirre',       'Uruguay', 4.00),
-  ('Facundo Pellistri',     'Uruguay', 4.00),
-  ('Giorgian De Arrascaeta','Uruguay', 4.50),
-  ('Agustín Canobbio',      'Uruguay', 4.50),
-  ('Maximiliano Araújo',    'Uruguay', 5.00),
-  ('Brian Rodríguez',       'Uruguay', 5.00),
-  ('Nicolás De La Cruz',    'Uruguay', 5.50),
-  ('Federico Valverde',     'Uruguay', 6.00),
-  ('Rodrigo Bentancur',     'Uruguay', 7.00),
+  -- URUGUAY
+  ('Darwin Núñez',           'Uruguay', 2.20),
+  ('Federico Viñas',         'Uruguay', 3.50),
+  ('Rodrigo Aguirre',        'Uruguay', 4.00),
+  ('Facundo Pellistri',      'Uruguay', 4.00),
+  ('Giorgian De Arrascaeta', 'Uruguay', 4.50),
+  ('Agustín Canobbio',       'Uruguay', 4.50),
+  ('Maximiliano Araújo',     'Uruguay', 5.00),
+  ('Brian Rodríguez',        'Uruguay', 5.00),
+  ('Nicolás De La Cruz',     'Uruguay', 5.50),
+  ('Federico Valverde',      'Uruguay', 6.00),
+  ('Rodrigo Bentancur',      'Uruguay', 7.00),
 
   -- ════════════════════════════════════════════════════════════════════════
   -- GROUPE I
   -- ════════════════════════════════════════════════════════════════════════
 
-  -- FRANCE (Didier Deschamps)
+  -- FRANCE
   ('Kylian Mbappé',        'France', 1.80),
   ('Ousmane Dembélé',      'France', 2.80),
   ('Marcus Thuram',        'France', 3.00),
@@ -467,7 +452,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Aurélien Tchouaméni',  'France', 7.00),
   ('Warren Zaïre-Emery',   'France', 7.00),
 
-  -- SENEGAL (Aliou Cissé)
+  -- SENEGAL
   ('Sadio Mané',      'Senegal', 2.00),
   ('Nicolas Jackson', 'Senegal', 3.00),
   ('Ismaïla Sarr',    'Senegal', 3.00),
@@ -491,7 +476,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Marko Farji',   'Iraq', 5.50),
   ('Kevin Yakob',   'Iraq', 6.00),
 
-  -- NORWAY (Ståle Solbakken)
+  -- NORWAY
   ('Erling Haaland',       'Norway', 1.70),
   ('Alexander Sørloth',    'Norway', 3.00),
   ('Jørgen Strand Larsen', 'Norway', 3.50),
@@ -507,7 +492,7 @@ WITH players (player_name, team, odds) AS (VALUES
   -- GROUPE J
   -- ════════════════════════════════════════════════════════════════════════
 
-  -- ARGENTINA (Lionel Scaloni)
+  -- ARGENTINA
   ('Lionel Messi',        'Argentina', 2.00),
   ('Lautaro Martínez',    'Argentina', 2.20),
   ('Julián Álvarez',      'Argentina', 2.50),
@@ -535,7 +520,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Hicham Boudaoui',  'Algeria', 6.00),
   ('Nabil Bentaleb',   'Algeria', 7.00),
 
-  -- AUSTRIA (Ralf Rangnick)
+  -- AUSTRIA
   ('Marko Arnautović',    'Austria', 3.00),
   ('Michael Gregoritsch', 'Austria', 3.50),
   ('Sasa Kalajdzic',      'Austria', 3.50),
@@ -558,7 +543,7 @@ WITH players (player_name, team, odds) AS (VALUES
   -- GROUPE K
   -- ════════════════════════════════════════════════════════════════════════
 
-  -- PORTUGAL (Roberto Martínez)
+  -- PORTUGAL
   ('Cristiano Ronaldo',   'Portugal', 2.00),
   ('Rafael Leão',         'Portugal', 2.80),
   ('Gonçalo Ramos',       'Portugal', 3.00),
@@ -571,7 +556,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Bernardo Silva',      'Portugal', 5.00),
   ('Vitinha',             'Portugal', 7.00),
 
-  -- DR CONGO  (⚠️ peut être "Congo DR")
+  -- DR CONGO
   ('Yoane Wissa',     'DR Congo', 3.00),
   ('Cédric Bakambu',  'DR Congo', 3.50),
   ('Simon Banza',     'DR Congo', 3.80),
@@ -583,15 +568,15 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Meschak Elia',    'DR Congo', 5.50),
 
   -- UZBEKISTAN
-  ('Eldor Shomurodov',     'Uzbekistan', 3.00),
-  ('Abbosbek Fayzullaev',  'Uzbekistan', 4.00),
-  ('Azizbek Amonov',       'Uzbekistan', 4.50),
-  ('Igor Sergeev',         'Uzbekistan', 4.50),
-  ('Jaloliddin Masharipov','Uzbekistan', 5.00),
-  ('Oston Urunov',         'Uzbekistan', 5.50),
-  ('Dostonbek Khamdamov',  'Uzbekistan', 6.00),
+  ('Eldor Shomurodov',      'Uzbekistan', 3.00),
+  ('Abbosbek Fayzullaev',   'Uzbekistan', 4.00),
+  ('Azizbek Amonov',        'Uzbekistan', 4.50),
+  ('Igor Sergeev',          'Uzbekistan', 4.50),
+  ('Jaloliddin Masharipov', 'Uzbekistan', 5.00),
+  ('Oston Urunov',          'Uzbekistan', 5.50),
+  ('Dostonbek Khamdamov',   'Uzbekistan', 6.00),
 
-  -- COLOMBIA (Néstor Lorenzo)
+  -- COLOMBIA
   ('Luis Díaz',              'Colombia', 2.50),
   ('Cucho Hernández',        'Colombia', 3.00),
   ('Jhon Córdoba',           'Colombia', 3.50),
@@ -608,7 +593,7 @@ WITH players (player_name, team, odds) AS (VALUES
   -- GROUPE L
   -- ════════════════════════════════════════════════════════════════════════
 
-  -- ENGLAND (Thomas Tuchel)
+  -- ENGLAND
   ('Harry Kane',      'England', 1.90),
   ('Bukayo Saka',     'England', 2.80),
   ('Marcus Rashford', 'England', 3.00),
@@ -622,7 +607,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Kobbie Mainoo',   'England', 6.00),
   ('Declan Rice',     'England', 8.00),
 
-  -- CROATIA (Zlatko Dalić)
+  -- CROATIA
   ('Andrej Kramarić', 'Croatia', 2.80),
   ('Ivan Perišić',    'Croatia', 3.00),
   ('Ante Budimir',    'Croatia', 3.50),
@@ -635,7 +620,7 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Mateo Kovačić',   'Croatia', 6.00),
   ('Luka Modrić',     'Croatia', 7.00),
 
-  -- GHANA (Otto Addo)
+  -- GHANA
   ('Iñaki Williams',         'Ghana', 3.20),
   ('Kamaldeen Sulemana',     'Ghana', 3.50),
   ('Jordan Ayew',            'Ghana', 3.80),
@@ -647,26 +632,99 @@ WITH players (player_name, team, odds) AS (VALUES
   ('Prince Kwabena Adu',     'Ghana', 5.00),
   ('Thomas Partey',          'Ghana', 7.00),
 
-  -- PANAMA (Thomas Christiansen)
-  ('Cecilio Waterman',      'Panama', 4.00),
-  ('José Fajardo',          'Panama', 4.00),
-  ('Tomás Rodríguez',       'Panama', 4.50),
-  ('Ismael Díaz',           'Panama', 4.50),
-  ('Azarias Londono',       'Panama', 5.00),
-  ('Yoel Bárcenas',         'Panama', 5.00),
-  ('Adalberto Carrasquilla','Panama', 5.50),
-  ('Alberto Quintero',      'Panama', 6.00)
+  -- PANAMA
+  ('Cecilio Waterman',       'Panama', 4.00),
+  ('José Fajardo',           'Panama', 4.00),
+  ('Tomás Rodríguez',        'Panama', 4.50),
+  ('Ismael Díaz',            'Panama', 4.50),
+  ('Azarias Londono',        'Panama', 5.00),
+  ('Yoel Bárcenas',          'Panama', 5.00),
+  ('Adalberto Carrasquilla', 'Panama', 5.50),
+  ('Alberto Quintero',       'Panama', 6.00)
 
 ),
+
+-- Toutes les variantes de noms d'équipes selon la source (football-data.org, API-Football, etc.)
+team_name_map (canonical, variant) AS (VALUES
+  ('Argentina',         'Argentina'),
+  ('Australia',         'Australia'),
+  ('Algeria',           'Algeria'),
+  ('Austria',           'Austria'),
+  ('Belgium',           'Belgium'),
+  ('Brazil',            'Brazil'),
+  ('Brazil',            'Brasil'),
+  ('Bosnia-Herzegovina','Bosnia and Herzegovina'),
+  ('Bosnia-Herzegovina','Bosnia & Herzegovina'),
+  ('Bosnia-Herzegovina','Bosnia-Herzegovina'),
+  ('Bosnia-Herzegovina','Bosnia-Hercegovina'),
+  ('Canada',            'Canada'),
+  ('Cape Verde',        'Cabo Verde'),
+  ('Cape Verde',        'Cape Verde'),
+  ('Cape Verde',        'Cape Verde Islands'),
+  ('Colombia',          'Colombia'),
+  ('Croatia',           'Croatia'),
+  ('Czech Republic',    'Czechia'),
+  ('Czech Republic',    'Czech Republic'),
+  ('Curacao',           'Curaçao'),
+  ('Curacao',           'Curacao'),
+  ('DR Congo',          'Congo DR'),
+  ('DR Congo',          'DR Congo'),
+  ('DR Congo',          'Democratic Republic of Congo'),
+  ('Ecuador',           'Ecuador'),
+  ('Egypt',             'Egypt'),
+  ('England',           'England'),
+  ('France',            'France'),
+  ('Germany',           'Germany'),
+  ('Ghana',             'Ghana'),
+  ('Haiti',             'Haiti'),
+  ('Iran',              'IR Iran'),
+  ('Iran',              'Iran'),
+  ('Iraq',              'Iraq'),
+  ('Ivory Coast',       'Côte d''Ivoire'),
+  ('Ivory Coast',       'Cote d''Ivoire'),
+  ('Ivory Coast',       'Ivory Coast'),
+  ('Japan',             'Japan'),
+  ('Jordan',            'Jordan'),
+  ('Mexico',            'Mexico'),
+  ('Morocco',           'Morocco'),
+  ('Netherlands',       'Netherlands'),
+  ('New Zealand',       'New Zealand'),
+  ('Norway',            'Norway'),
+  ('Panama',            'Panama'),
+  ('Paraguay',          'Paraguay'),
+  ('Portugal',          'Portugal'),
+  ('Qatar',             'Qatar'),
+  ('Saudi Arabia',      'Saudi Arabia'),
+  ('Scotland',          'Scotland'),
+  ('Senegal',           'Senegal'),
+  ('South Africa',      'South Africa'),
+  ('South Korea',       'Korea Republic'),
+  ('South Korea',       'South Korea'),
+  ('South Korea',       'Republic of Korea'),
+  ('Spain',             'Spain'),
+  ('Sweden',            'Sweden'),
+  ('Switzerland',       'Switzerland'),
+  ('Tunisia',           'Tunisia'),
+  ('Turkey',            'Türkiye'),
+  ('Turkey',            'Turkey'),
+  ('United States',     'USA'),
+  ('United States',     'United States'),
+  ('United States',     'United States of America'),
+  ('Uruguay',           'Uruguay'),
+  ('Uzbekistan',        'Uzbekistan')
+),
+
 match_slots AS (
-  SELECT id AS match_id, home_team AS team FROM matches
+  SELECT id AS match_id, home_team AS stored_team FROM matches
   UNION ALL
-  SELECT id AS match_id, away_team AS team FROM matches
+  SELECT id AS match_id, away_team AS stored_team FROM matches
 )
+
 INSERT INTO odds_scorers (match_id, player_name, team, odds)
-SELECT ms.match_id, p.player_name, p.team, p.odds
+SELECT DISTINCT ms.match_id, p.player_name, ms.stored_team, p.odds
 FROM players p
-JOIN match_slots ms ON ms.team = p.team
+JOIN team_name_map tnm ON tnm.canonical = p.team
+JOIN match_slots ms ON LOWER(ms.stored_team) = LOWER(tnm.variant)
 WHERE NOT EXISTS (
   SELECT 1 FROM odds_scorers os
   WHERE os.match_id = ms.match_id
