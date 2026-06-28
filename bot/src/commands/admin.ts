@@ -63,6 +63,10 @@ export const data = new SlashCommandBuilder()
           .setRequired(false)
       )
   )
+  .addSubcommand(sub =>
+    sub.setName('sync-matches')
+      .setDescription('Force la synchronisation des matchs depuis football-data.org')
+  )
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (interaction.user.id !== ADMIN_ID) {
@@ -239,6 +243,24 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return interaction.editReply(`❌ Impossible d'envoyer : \`${err?.message ?? err}\``)
     }
     return interaction.editReply('✅ Annonce phase éliminatoire envoyée !')
+  }
+
+  if (sub === 'sync-matches') {
+    const supabaseUrl = process.env.SUPABASE_URL!
+    const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    try {
+      const res  = await fetch(`${supabaseUrl}/functions/v1/sync-matches`, {
+        method:  'POST',
+        headers: { Authorization: `Bearer ${serviceKey}` },
+      })
+      const data = await res.json() as { synced?: number; oddsFromApi?: number; oddsFromElo?: number; error?: string }
+      if (!res.ok || data.error) return interaction.editReply(`❌ Erreur sync : ${data.error ?? 'inconnue'}`)
+      return interaction.editReply(
+        `✅ Sync terminée — **${data.synced}** matchs mis à jour (cotes API : ${data.oddsFromApi}, Elo : ${data.oddsFromElo})`
+      )
+    } catch (err: any) {
+      return interaction.editReply(`❌ Erreur réseau : ${err?.message ?? err}`)
+    }
   }
 
   if (sub === 'post-results') {
