@@ -52,63 +52,39 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
 
 // ══════════════════════════════════════════════════════
 // KNOCKOUT FORM — formulaire unifié, un seul bouton
+// Le score est la prédiction principale : dérive le résultat (+200)
+// + bonus +300 si score exact → total +500 si tout juste
 // ══════════════════════════════════════════════════════
 function KnockoutForm({ match, scorerOdds, userBoosts }: {
   match: Match; scorerOdds: ScorerOdd[]; userBoosts: Boost[]
 }) {
-  // ── Résultat (1X2) — peut être défini par clic direct ou dérivé du score
-  const [resultPred,  setResultPred]  = useState<'home'|'draw'|'away'|null>(null)
-  // ── Score exact — optionnel ; quand actif, dérive le résultat
-  const [scoreActive, setScoreActive] = useState(false)
   const [scoreH,      setScoreH]      = useState(1)
   const [scoreA,      setScoreA]      = useState(0)
-  // ── Buteur — optionnel
   const [scorerQuery, setScorerQuery] = useState('')
   const [scorerPred,  setScorerPred]  = useState<string|null>(null)
-  // ── Boost & état global
-  const [boostId,  setBoostId]  = useState<string|null>(null)
-  const [loading,  setLoading]  = useState(false)
-  const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null)
+  const [boostId,     setBoostId]     = useState<string|null>(null)
+  const [loading,     setLoading]     = useState(false)
+  const [feedback,    setFeedback]    = useState<{ ok: boolean; msg: string } | null>(null)
 
   const filteredScorers = useMemo(() =>
     !scorerQuery.trim() ? scorerOdds : scorerOdds.filter(o => o.player_name.toLowerCase().includes(scorerQuery.toLowerCase()))
   , [scorerOdds, scorerQuery])
 
-  // Résultat effectif : dérivé du score si score actif, sinon choix 1X2
-  const effectiveResult = scoreActive ? getResultFromScore(scoreH, scoreA) : resultPred
+  const result = getResultFromScore(scoreH, scoreA)
 
-  // Modifier le score → dérive le résultat automatiquement
   function updateScore(h: number, a: number) {
-    const ch = Math.max(0, Math.min(15, h))
-    const ca = Math.max(0, Math.min(15, a))
-    setScoreH(ch); setScoreA(ca)
-    setScoreActive(true)
-    setResultPred(getResultFromScore(ch, ca))
-  }
-
-  // Cliquer 1X2 désactive le score exact
-  function pickResult(val: 'home'|'draw'|'away') {
-    setResultPred(effectiveResult === val ? null : val)
-    setScoreActive(false)
-    setFeedback(null)
-  }
-
-  // Sélectionner le mode score exact
-  function activateScore() {
-    setScoreActive(true)
-    setResultPred(getResultFromScore(scoreH, scoreA))
+    setScoreH(Math.max(0, Math.min(15, h)))
+    setScoreA(Math.max(0, Math.min(15, a)))
     setFeedback(null)
   }
 
   const boost = userBoosts.find(b => b.id === boostId) ?? null
 
-  // Quel boost s'applique à quel betType ?
   function boostForType(type: string): string | null {
     if (!boost) return null
     if (boost.boost_type === 'x20_exact') return type === 'exact_score' ? boostId : null
-    // x15 → s'applique à exact_score si actif, sinon result, sinon scorer
-    const priority = scoreActive ? 'exact_score' : (effectiveResult ? 'result' : 'scorer')
-    return type === priority ? boostId : null
+    // x15 → result en priorité, sinon scorer
+    return type === 'result' ? boostId : null
   }
   function multForType(type: string) {
     if (!boostForType(type)) return 1.0
@@ -118,26 +94,27 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
     return Math.round(KNOCKOUT_POINTS[type] * multForType(type))
   }
 
-  // Points max potentiels
-  const totalPts = (effectiveResult ? pts('result') : 0) + (scoreActive ? pts('exact_score') : 0) + (scorerPred ? pts('scorer') : 0)
-  const canSubmit = !loading && (!!effectiveResult || scoreActive || !!scorerPred)
+  const ptsResult  = pts('result')
+  const ptsExact   = pts('exact_score')
+  const ptsScorer  = pts('scorer')
+  const totalMax   = ptsResult + ptsExact + (scorerPred ? ptsScorer : 0)
 
   async function submitAll() {
     setLoading(true); setFeedback(null)
-    const calls: { betType: string; extra: Record<string, unknown> }[] = []
-
-    if (effectiveResult) calls.push({ betType: 'result', extra: { predictionResult: effectiveResult } })
-    if (scoreActive)     calls.push({ betType: 'exact_score', extra: { predictionScoreHome: scoreH, predictionScoreAway: scoreA } })
-    if (scorerPred)      calls.push({ betType: 'scorer', extra: { predictionScorer: scorerPred } })
+    // Toujours envoyer result + exact_score (le score implique les deux)
+    const calls: { betType: string; extra: Record<string, unknown> }[] = [
+      { betType: 'result',      extra: { predictionResult: result } },
+      { betType: 'exact_score', extra: { predictionScoreHome: scoreH, predictionScoreAway: scoreA } },
+      ...(scorerPred ? [{ betType: 'scorer', extra: { predictionScorer: scorerPred } }] : []),
+    ]
 
     const errors: string[] = []
-    let totalWon = 0
-    let successCount = 0
+    let totalWon = 0; let successCount = 0
 
     for (const { betType, extra } of calls) {
       const bId = boostForType(betType)
       try {
-        const res = await fetch('/api/bets/place', {
+        const res  = await fetch('/api/bets/place', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ matchId: match.id, betType, ...extra, ...(bId ? { boostId: bId } : {}) }),
         })
@@ -148,18 +125,15 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
     }
 
     if (errors.length === 0) {
-      setFeedback({ ok: true, msg: `${successCount} prédiction(s) enregistrée(s) — jusqu'à +${totalWon} pts si tout est correct !` })
-      setResultPred(null); setScoreActive(false); setScoreH(1); setScoreA(0)
-      setScorerPred(null); setScorerQuery(''); setBoostId(null)
+      setFeedback({ ok: true, msg: `Prédiction enregistrée — jusqu'à +${totalWon} pts si tout est correct !` })
+      setScoreH(1); setScoreA(0); setScorerPred(null); setScorerQuery(''); setBoostId(null)
     } else {
       setFeedback({ ok: false, msg: errors.join(' · ') })
     }
     setLoading(false)
   }
 
-  const resultLabels: Record<string, string> = {
-    home: match.home_team, draw: 'Nul', away: match.away_team,
-  }
+  const resultLabel = result === 'home' ? match.home_team : result === 'away' ? match.away_team : 'Match nul'
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
@@ -174,70 +148,30 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
 
       <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
 
-        {/* ── Section 1 : Vainqueur ── */}
+        {/* ── Section 1 : Score (= vainqueur + bonus score exact) ── */}
         <div className="p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text)' }}>Vainqueur</p>
-            <span className="text-sm font-bold" style={{ color: '#22C55E' }}>+{pts('result')} pts</span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {([
-              { val: 'home' as const, label: match.home_team, odds: match.odds_home },
-              { val: 'draw' as const, label: 'Nul',           odds: match.odds_draw },
-              { val: 'away' as const, label: match.away_team, odds: match.odds_away },
-            ]).map(o => {
-              if (!o.odds) return null
-              const active = effectiveResult === o.val
-              const derived = active && scoreActive
-              return (
-                <button key={o.val} type="button" onClick={() => pickResult(o.val)}
-                  className="relative flex flex-col items-center gap-1.5 pt-3.5 pb-3 px-1 rounded-xl overflow-hidden transition-all"
-                  style={{
-                    background: active ? 'linear-gradient(160deg, rgba(34,197,94,.14) 0%, rgba(34,197,94,.04) 100%)' : 'var(--bg)',
-                    border: `1.5px solid ${active ? '#22C55E' : 'var(--border)'}`,
-                    transform: active ? 'translateY(-1px)' : 'none',
-                    opacity: derived ? 0.75 : 1,
-                  }}>
-                  {active && <span className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, #22C55E, transparent)' }} />}
-                  <span className="text-[10px] font-semibold text-center leading-tight w-full px-1 truncate uppercase tracking-wide" style={{ color: active ? '#D8E6F3' : 'var(--muted)' }}>
-                    {o.label}
-                  </span>
-                  <span className="font-mono text-xs font-bold" style={{ color: active ? '#22C55E' : 'var(--muted)' }}>
-                    ×{Number(o.odds).toFixed(2)}
-                  </span>
-                  {derived && <span className="text-[8px] font-semibold tracking-wide" style={{ color: 'rgba(34,197,94,.7)' }}>via score</span>}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* ── Section 2 : Score exact ── */}
-        <div className="p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text)' }}>Score exact</p>
-            <div className="flex items-center gap-2">
-              {scoreActive && (
-                <button type="button" onClick={() => { setScoreActive(false); setFeedback(null) }}
-                  className="text-[10px] px-2 py-0.5 rounded-full" style={{ color: 'var(--muted)', border: '1px solid var(--border)' }}>
-                  Retirer
-                </button>
-              )}
-              <span className="text-sm font-bold" style={{ color: scoreActive ? '#F0B429' : 'var(--muted)' }}>+{pts('exact_score')} pts</span>
+            <div>
+              <p className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text)' }}>Score prédit</p>
+              <p className="text-[10px] mt-0.5" style={{ color: 'var(--muted)' }}>Définit aussi le vainqueur</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-bold" style={{ color: '#F0B429' }}>+{ptsResult + ptsExact} pts</p>
+              <p className="text-[10px]" style={{ color: 'var(--muted)' }}>+{ptsResult} résultat · +{ptsExact} bonus exact</p>
             </div>
           </div>
 
-          <div className="rounded-xl p-4" style={{ background: 'var(--bg)', border: `1.5px solid ${scoreActive ? '#F0B429' : 'var(--border)'}`, transition: 'border-color .2s' }}>
+          <div className="rounded-xl p-4" style={{ background: 'var(--bg)', border: '1.5px solid #F0B429' }}>
             <div className="flex items-center justify-center gap-6">
               <div className="flex flex-col items-center gap-2">
                 <p className="text-[10px] font-semibold uppercase tracking-wide truncate max-w-[80px] text-center" style={{ color: 'var(--muted)' }}>{match.home_team}</p>
                 <div className="flex items-center gap-2">
                   <button type="button" onClick={() => updateScore(scoreH - 1, scoreA)}
-                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-colors"
+                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center"
                     style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>−</button>
                   <span className="font-display text-3xl w-8 text-center" style={{ color: '#F0B429' }}>{scoreH}</span>
                   <button type="button" onClick={() => updateScore(scoreH + 1, scoreA)}
-                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-colors"
+                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center"
                     style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>+</button>
                 </div>
               </div>
@@ -246,35 +180,39 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
                 <p className="text-[10px] font-semibold uppercase tracking-wide truncate max-w-[80px] text-center" style={{ color: 'var(--muted)' }}>{match.away_team}</p>
                 <div className="flex items-center gap-2">
                   <button type="button" onClick={() => updateScore(scoreH, scoreA - 1)}
-                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-colors"
+                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center"
                     style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>−</button>
                   <span className="font-display text-3xl w-8 text-center" style={{ color: '#F0B429' }}>{scoreA}</span>
                   <button type="button" onClick={() => updateScore(scoreH, scoreA + 1)}
-                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-colors"
+                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center"
                     style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>+</button>
                 </div>
               </div>
             </div>
-            {!scoreActive && (
-              <button type="button" onClick={activateScore}
-                className="w-full mt-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                style={{ background: 'rgba(240,180,41,.08)', border: '1.5px dashed rgba(240,180,41,.3)', color: '#F0B429' }}>
-                Inclure ce score dans ma prédiction
-              </button>
-            )}
-            {scoreActive && (
-              <p className="text-[10px] font-semibold text-center mt-3" style={{ color: '#F0B429' }}>
-                {resultLabels[getResultFromScore(scoreH, scoreA)]} · {scoreH}–{scoreA}
-              </p>
-            )}
+            <p className="text-xs font-semibold text-center mt-3" style={{ color: '#F0B429' }}>
+              {resultLabel} · {scoreH}–{scoreA}
+            </p>
+          </div>
+
+          {/* Mini breakdown */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg px-3 py-2 text-center" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)' }}>
+              <p className="text-[10px]" style={{ color: 'var(--muted)' }}>Résultat correct</p>
+              <p className="text-sm font-bold mt-0.5" style={{ color: '#22C55E' }}>+{ptsResult} pts</p>
+            </div>
+            <div className="rounded-lg px-3 py-2 text-center" style={{ background: 'rgba(240,180,41,.06)', border: '1px solid rgba(240,180,41,.15)' }}>
+              <p className="text-[10px]" style={{ color: 'var(--muted)' }}>Score exact aussi</p>
+              <p className="text-sm font-bold mt-0.5" style={{ color: '#F0B429' }}>+{ptsResult + ptsExact} pts</p>
+            </div>
           </div>
         </div>
 
-        {/* ── Section 3 : Buteur ── */}
+        {/* ── Section 2 : Buteur (cachée si pas de joueurs) ── */}
+        {scorerOdds.length > 0 && (
         <div className="p-5 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text)' }}>Buteur</p>
-            <span className="text-sm font-bold" style={{ color: scorerPred ? '#60A5FA' : 'var(--muted)' }}>+{pts('scorer')} pts</span>
+            <span className="text-sm font-bold" style={{ color: scorerPred ? '#60A5FA' : 'var(--muted)' }}>+{ptsScorer} pts</span>
           </div>
           <input type="text" value={scorerQuery} onChange={e => { setScorerQuery(e.target.value); setFeedback(null) }}
             placeholder="Rechercher un joueur…"
@@ -307,8 +245,9 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
             </div>
           )}
         </div>
+        )}
 
-        {/* ── Section 4 : Boosts + Récap + Bouton ── */}
+        {/* ── Section boost + bouton ── */}
         <div className="p-5 space-y-4">
           {/* Boost picker */}
           {userBoosts.length > 0 && (
@@ -320,7 +259,7 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
               <div className="flex flex-wrap gap-1.5">
                 {userBoosts.map(b => {
                   const active = boostId === b.id
-                  const label = b.boost_type === 'x20_exact' ? '×2.0 Score exact' : '×1.5 Boost'
+                  const label  = b.boost_type === 'x20_exact' ? '×2.0 Score exact' : '×1.5 Boost'
                   return (
                     <button key={b.id} type="button" onClick={() => setBoostId(active ? null : b.id)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
@@ -337,33 +276,27 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
             </div>
           )}
 
-          {/* Récap des sélections */}
-          {(effectiveResult || scoreActive || scorerPred) && (
-            <div className="rounded-xl px-4 py-3 space-y-1.5" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-              {effectiveResult && (
-                <div className="flex items-center justify-between text-xs">
-                  <span style={{ color: 'var(--muted)' }}>Vainqueur · {resultLabels[effectiveResult]}{scoreActive ? ' (via score)' : ''}</span>
-                  <span className="font-bold" style={{ color: '#22C55E' }}>+{pts('result')}</span>
-                </div>
-              )}
-              {scoreActive && (
-                <div className="flex items-center justify-between text-xs">
-                  <span style={{ color: 'var(--muted)' }}>Score exact · {scoreH}–{scoreA}</span>
-                  <span className="font-bold" style={{ color: '#F0B429' }}>+{pts('exact_score')}</span>
-                </div>
-              )}
-              {scorerPred && (
-                <div className="flex items-center justify-between text-xs">
-                  <span className="truncate" style={{ color: 'var(--muted)' }}>Buteur · {scorerPred}</span>
-                  <span className="font-bold ml-2 shrink-0" style={{ color: '#60A5FA' }}>+{pts('scorer')}</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between pt-1.5" style={{ borderTop: '1px solid var(--border)' }}>
-                <span className="text-xs font-semibold" style={{ color: 'var(--muted)' }}>TOTAL SI TOUT CORRECT</span>
-                <span className="font-display text-xl" style={{ color: 'var(--text)', letterSpacing: '.04em' }}>+{totalPts}</span>
-              </div>
+          {/* Récap */}
+          <div className="rounded-xl px-4 py-3 space-y-1.5" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+            <div className="flex items-center justify-between text-xs">
+              <span style={{ color: 'var(--muted)' }}>Résultat · {resultLabel}</span>
+              <span className="font-bold" style={{ color: '#22C55E' }}>+{ptsResult}</span>
             </div>
-          )}
+            <div className="flex items-center justify-between text-xs">
+              <span style={{ color: 'var(--muted)' }}>Score exact bonus · {scoreH}–{scoreA}</span>
+              <span className="font-bold" style={{ color: '#F0B429' }}>+{ptsExact}</span>
+            </div>
+            {scorerPred && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="truncate" style={{ color: 'var(--muted)' }}>Buteur · {scorerPred}</span>
+                <span className="font-bold ml-2 shrink-0" style={{ color: '#60A5FA' }}>+{ptsScorer}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between pt-1.5" style={{ borderTop: '1px solid var(--border)' }}>
+              <span className="text-xs font-semibold" style={{ color: 'var(--muted)' }}>TOTAL SI TOUT CORRECT</span>
+              <span className="font-display text-xl" style={{ color: 'var(--text)', letterSpacing: '.04em' }}>+{totalMax}</span>
+            </div>
+          </div>
 
           {/* Feedback */}
           {feedback && (
@@ -378,21 +311,15 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
             </div>
           )}
 
-          {/* Bouton unique */}
-          <button type="button" disabled={!canSubmit} onClick={submitAll}
+          <button type="button" disabled={loading} onClick={submitAll}
             className="w-full py-3.5 rounded-xl font-display text-lg tracking-[.08em] transition-all"
             style={{
-              background: canSubmit ? 'linear-gradient(135deg, #F0B429 0%, #FFD060 100%)' : 'var(--bg)',
-              color:      canSubmit ? '#07101E' : 'var(--muted)',
-              border:     `1.5px solid ${canSubmit ? '#F0B429' : 'var(--border)'}`,
-              boxShadow:  canSubmit ? '0 4px 20px rgba(240,180,41,.2)' : 'none',
+              background: !loading ? 'linear-gradient(135deg, #F0B429 0%, #FFD060 100%)' : 'var(--bg)',
+              color:      !loading ? '#07101E' : 'var(--muted)',
+              border:     `1.5px solid ${!loading ? '#F0B429' : 'var(--border)'}`,
+              boxShadow:  !loading ? '0 4px 20px rgba(240,180,41,.2)' : 'none',
             }}>
-            {loading
-              ? 'Envoi…'
-              : canSubmit
-                ? `PRÉDIRE${totalPts > 0 ? ` — +${totalPts} pts` : ''}`
-                : 'FAIRE MES PRÉDICTIONS'
-            }
+            {loading ? 'Envoi…' : `PRÉDIRE ${scoreH}–${scoreA} — jusqu'à +${totalMax} pts`}
           </button>
         </div>
       </div>
