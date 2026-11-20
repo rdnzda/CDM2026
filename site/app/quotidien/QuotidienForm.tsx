@@ -77,9 +77,9 @@ export default function QuotidienForm({
 
   if (!isAuthenticated) {
     return (
-      <div className="bg-slate-800 rounded p-6 text-center">
+      <div className="bg-slate-800 rounded-md p-6 text-center">
         <p className="text-slate-400 mb-4">Connecte-toi pour participer au défi</p>
-        <a href="/api/auth/login" className="inline-block bg-[#D52B3A] hover:bg-[#B01F2D] text-white font-semibold px-6 py-2 rounded-sm transition-colors">
+        <a href="/api/auth/login" className="inline-block bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold px-6 py-2 rounded-lg transition-colors">
           Se connecter avec Discord
         </a>
       </div>
@@ -87,7 +87,7 @@ export default function QuotidienForm({
   }
 
   return (
-    <form onSubmit={submit} className="bg-slate-800 rounded p-6 space-y-4">
+    <form onSubmit={submit} className="bg-slate-800 rounded-md p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold">Ta prédiction</h2>
         {done && !locked && (
@@ -106,7 +106,7 @@ export default function QuotidienForm({
               value={scoreHome}
               onChange={e => setScoreHome(e.target.value === '' ? '' : Number(e.target.value))}
               disabled={locked || (done && !result)}
-              className="w-full bg-slate-700 rounded-sm px-3 py-3 text-center text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
+              className="w-full bg-slate-700 rounded-lg px-3 py-3 text-center text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
             />
           </div>
           <span className="text-slate-400 text-xl mt-5">–</span>
@@ -117,7 +117,7 @@ export default function QuotidienForm({
               value={scoreAway}
               onChange={e => setScoreAway(e.target.value === '' ? '' : Number(e.target.value))}
               disabled={locked || (done && !result)}
-              className="w-full bg-slate-700 rounded-sm px-3 py-3 text-center text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
+              className="w-full bg-slate-700 rounded-lg px-3 py-3 text-center text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
             />
           </div>
         </div>
@@ -130,19 +130,19 @@ export default function QuotidienForm({
           disabled={locked || (done && !result)}
           rows={daily.challenge_type === 'combo_3' ? 3 : 1}
           placeholder={daily.challenge_type === 'scorer' ? 'Ex: Mbappé' : 'Ex: France gagne, BTTS oui, Over 2.5'}
-          className="w-full bg-slate-700 rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 resize-none"
+          className="w-full bg-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 resize-none"
         />
       )}
 
       {result && (
-        <div className={`rounded-sm px-4 py-2.5 text-sm font-medium flex items-center gap-2 ${result.ok ? 'bg-green-900/40 border border-green-500/50 text-green-400' : 'bg-red-900/40 border border-red-500/50 text-red-400'}`}>
+        <div className={`rounded-lg px-4 py-2.5 text-sm font-medium flex items-center gap-2 ${result.ok ? 'bg-green-900/40 border border-green-500/50 text-green-400' : 'bg-red-900/40 border border-red-500/50 text-red-400'}`}>
           {result.ok ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
           {result.message}
         </div>
       )}
 
       {existing?.status === 'won' && (
-        <div className="bg-green-900/30 border border-green-500/30 rounded-sm px-4 py-2.5 text-sm text-green-400 font-medium flex items-center gap-2">
+        <div className="bg-green-900/30 border border-green-500/30 rounded-lg px-4 py-2.5 text-sm text-green-400 font-medium flex items-center gap-2">
           <Trophy className="w-4 h-4 shrink-0" />
           Gagné — +{existing.points_won.toLocaleString('fr-FR')} pts
         </div>
@@ -156,7 +156,7 @@ export default function QuotidienForm({
         <p className="text-center text-slate-500 text-sm">Les points seront attribués à la fin du match.</p>
       ) : (
         <button type="submit" disabled={loading}
-          className="w-full bg-rouge-600 hover:bg-rouge-500 disabled:bg-slate-600 disabled:text-slate-400 text-white font-bold py-3 rounded-sm transition-colors">
+          className="w-full bg-purple-600 hover:bg-purple-500 disabled:bg-slate-600 disabled:text-slate-400 text-white font-bold py-3 rounded-lg transition-colors">
           {loading ? 'Envoi...' : 'Participer'}
         </button>
       )}

@@ -53,7 +53,7 @@ export default async function ProfilPage({ params }: { params: { username: strin
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-up">
 
       {/* Header */}
-      <div className="rounded p-6 flex items-center gap-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <div className="rounded-lg p-6 flex items-center gap-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
         {user.avatar_url
           ? <img src={user.avatar_url} alt="" className="w-16 h-16 rounded-full ring-2 ring-amber-500/20" />
           : <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold" style={{ background: 'var(--bg-3)' }}>{user.username[0].toUpperCase()}</div>
@@ -69,12 +69,12 @@ export default async function ProfilPage({ params }: { params: { username: strin
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Points',     value: user.total_points.toLocaleString('fr-FR'), color: '#F4C430' },
-          { label: 'Winrate',    value: `${winrate}%`,                              color: '#4CC77F' },
-          { label: 'Duels gagnés', value: String(user.duels_won),                  color: '#2F5BD3' },
-          { label: 'Cote moy.',  value: user.avg_odds ? `×${Number(user.avg_odds).toFixed(2)}` : 'N/A', color: '#FF9EA3' },
+          { label: 'Points',     value: user.total_points.toLocaleString('fr-FR'), color: '#F0B429' },
+          { label: 'Winrate',    value: `${winrate}%`,                              color: '#22C55E' },
+          { label: 'Duels gagnés', value: String(user.duels_won),                  color: '#3B82F6' },
+          { label: 'Cote moy.',  value: user.avg_odds ? `×${Number(user.avg_odds).toFixed(2)}` : 'N/A', color: '#A855F7' },
         ].map(s => (
-          <div key={s.label} className="rounded p-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+          <div key={s.label} className="rounded-lg p-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
             <p className="text-xs mb-1" style={{ color: 'var(--muted)' }}>{s.label}</p>
             <p className="text-xl font-bold" style={{ color: s.color }}>{s.value}</p>
           </div>
@@ -83,7 +83,7 @@ export default async function ProfilPage({ params }: { params: { username: strin
 
       {/* Achievements */}
       {achievements && achievements.length > 0 && (
-        <div className="rounded p-5" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+        <div className="rounded-lg p-5" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
           <h2 className="font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text)' }}>
             <Award className="w-4 h-4 text-amber-400" />Succès ({achievements.length})
           </h2>
@@ -101,12 +101,12 @@ export default async function ProfilPage({ params }: { params: { username: strin
       )}
 
       {/* Paris en cours */}
-      <div className="rounded p-5" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <div className="rounded-lg p-5" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
         <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
           <Clock className="w-4 h-4" style={{ color: 'var(--muted)' }} />
           Paris en cours
           {hasPending && (
-            <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(244,196,48,.12)', color: '#F4C430' }}>
+            <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(240,180,41,.12)', color: '#F0B429' }}>
               {(pendingBets?.length ?? 0) + (pendingCombos?.length ?? 0)}
             </span>
           )}
@@ -117,7 +117,7 @@ export default async function ProfilPage({ params }: { params: { username: strin
             {pendingBets?.map((bet: any) => {
               const match = bet.matches as any
               return (
-                <div key={bet.id} className="flex items-center justify-between rounded px-4 py-3" style={{ background: 'var(--bg-3)' }}>
+                <div key={bet.id} className="flex items-center justify-between rounded-md px-4 py-3" style={{ background: 'var(--bg-3)' }}>
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate" style={{ color: 'var(--text)' }}>
                       {match.home_team} vs {match.away_team}
@@ -127,7 +127,7 @@ export default async function ProfilPage({ params }: { params: { username: strin
                     </p>
                   </div>
                   <div className="text-right shrink-0 ml-4">
-                    <p className="font-semibold text-sm" style={{ color: '#F4C430' }}>{bet.stake.toLocaleString('fr-FR')} pts</p>
+                    <p className="font-semibold text-sm" style={{ color: '#F0B429' }}>{bet.stake.toLocaleString('fr-FR')} pts</p>
                     <p className="text-xs" style={{ color: 'var(--muted)' }}>@ ×{Number(bet.odds_at_bet_time).toFixed(2)}</p>
                   </div>
                 </div>
@@ -138,18 +138,18 @@ export default async function ProfilPage({ params }: { params: { username: strin
               const legs = (combo.combo_legs ?? []) as any[]
               const matchNames = legs.map((l: any) => `${l.matches.home_team} vs ${l.matches.away_team}`).join(' · ')
               return (
-                <div key={combo.id} className="rounded px-4 py-3" style={{ background: 'var(--bg-3)' }}>
+                <div key={combo.id} className="rounded-md px-4 py-3" style={{ background: 'var(--bg-3)' }}>
                   <div className="flex items-center justify-between">
                     <div className="min-w-0">
                       <p className="font-medium text-sm flex items-center gap-1.5">
-                        <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,158,163,.2)', color: '#FF9EA3' }}>
+                        <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(168,85,247,.2)', color: '#C084FC' }}>
                           COMBINÉ {legs.length}
                         </span>
                         <span className="truncate text-xs" style={{ color: 'var(--muted)' }}>{matchNames}</span>
                       </p>
                     </div>
                     <div className="text-right shrink-0 ml-4">
-                      <p className="font-semibold text-sm" style={{ color: '#F4C430' }}>{combo.stake.toLocaleString('fr-FR')} pts</p>
+                      <p className="font-semibold text-sm" style={{ color: '#F0B429' }}>{combo.stake.toLocaleString('fr-FR')} pts</p>
                       <p className="text-xs" style={{ color: 'var(--muted)' }}>×{Number(combo.total_odds).toFixed(2)} → {combo.potential_win.toLocaleString('fr-FR')} pts</p>
                     </div>
                   </div>
@@ -164,22 +164,22 @@ export default async function ProfilPage({ params }: { params: { username: strin
 
       {/* Historique */}
       {recentBets && recentBets.length > 0 && (
-        <div className="rounded p-5" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+        <div className="rounded-lg p-5" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
           <h2 className="font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text)' }}>
             <ClipboardList className="w-4 h-4" style={{ color: 'var(--muted)' }} />Historique
           </h2>
           <div className="space-y-2 text-sm">
             {recentBets.map((bet: any) => {
               const match = bet.matches as any
-              const color = bet.status === 'won' ? '#4CC77F' : bet.status === 'lost' ? '#FF6B72' : 'var(--muted)'
+              const color = bet.status === 'won' ? '#22C55E' : bet.status === 'lost' ? '#EF4444' : 'var(--muted)'
               return (
-                <div key={bet.id} className="flex items-center justify-between rounded px-3 py-2" style={{ background: 'var(--bg-3)' }}>
+                <div key={bet.id} className="flex items-center justify-between rounded-md px-3 py-2" style={{ background: 'var(--bg-3)' }}>
                   <div className="min-w-0">
                     <p className="truncate" style={{ color: 'var(--text)' }}>{match?.home_team} vs {match?.away_team}</p>
                     <p className="text-xs" style={{ color: 'var(--muted)' }}>{BET_TYPE_LABELS[bet.bet_type] ?? bet.bet_type}</p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0 ml-3">
-                    <span style={{ color: '#F4C430' }} className="text-xs font-semibold">{bet.stake.toLocaleString('fr-FR')} pts</span>
+                    <span style={{ color: '#F0B429' }} className="text-xs font-semibold">{bet.stake.toLocaleString('fr-FR')} pts</span>
                     <span className="text-xs font-bold" style={{ color }}>
                       {bet.status === 'won' ? `+${(bet.points_won ?? 0).toLocaleString('fr-FR')}` : bet.status === 'lost' ? `-${bet.stake.toLocaleString('fr-FR')}` : '↩'}
                     </span>

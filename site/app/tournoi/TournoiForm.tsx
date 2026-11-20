@@ -14,8 +14,8 @@ type ExistingPredictions = {
 }
 
 const LOCK         = new Date('2026-06-14T22:00:00Z')
-const MEDAL_COLOR  = ['#F4C430', '#94A3B8', '#92734D'] as const
-const MEDAL_BG     = ['rgba(244,196,48,.1)', 'rgba(148,163,184,.07)', 'rgba(146,115,77,.09)'] as const
+const MEDAL_COLOR  = ['#F0B429', '#94A3B8', '#92734D'] as const
+const MEDAL_BG     = ['rgba(240,180,41,.1)', 'rgba(148,163,184,.07)', 'rgba(146,115,77,.09)'] as const
 const MEDAL_LABEL  = ['1er', '2ème', '3ème'] as const
 
 // ── TeamSelect combobox ────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ function TeamSelect({ index, value, onSelect, onClear, teams, exclude }: {
 
   return (
     <div
-      className="flex items-center gap-3 px-3 py-2.5 rounded transition-all"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all"
       style={{
         background: isSelected ? MEDAL_BG[index] : 'var(--bg)',
         border: `1.5px solid ${isSelected ? color : 'var(--border)'}`,
@@ -64,7 +64,7 @@ function TeamSelect({ index, value, onSelect, onClear, teams, exclude }: {
     >
       {/* Rank badge */}
       <div
-        className="shrink-0 w-8 h-8 rounded-sm flex items-center justify-center"
+        className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
         style={{ background: isSelected ? MEDAL_BG[index] : 'var(--bg-3)', border: `1px solid ${color}` }}
       >
         <span className="font-display text-sm leading-none" style={{ color }}>
@@ -106,7 +106,7 @@ function TeamSelect({ index, value, onSelect, onClear, teams, exclude }: {
             </div>
             {open && filtered.length > 0 && (
               <div
-                className="absolute top-full left-0 right-0 mt-2 rounded overflow-auto z-20"
+                className="absolute top-full left-0 right-0 mt-2 rounded-md overflow-auto z-20"
                 style={{
                   background: 'var(--bg-3)',
                   border: '1px solid var(--border)',
@@ -178,22 +178,22 @@ function PlayerCombobox({ label, icon, playerName, team, onSelect, onClear, play
 
   return (
     <div
-      className="rounded p-4 space-y-3 transition-all"
+      className="rounded-md p-4 space-y-3 transition-all"
       style={{
-        background: isSelected ? 'rgba(244,196,48,.05)' : 'var(--bg)',
-        border: `1.5px solid ${isSelected ? 'rgba(244,196,48,.28)' : 'var(--border)'}`,
+        background: isSelected ? 'rgba(240,180,41,.05)' : 'var(--bg)',
+        border: `1.5px solid ${isSelected ? 'rgba(240,180,41,.28)' : 'var(--border)'}`,
       }}
     >
       {/* Header */}
       <div className="flex items-center gap-2">
         {icon}
-        <span className="text-[10px] font-bold tracking-[.04em] uppercase" style={{ color: '#F4C430' }}>
+        <span className="text-[10px] font-bold tracking-[.06em] uppercase" style={{ color: '#F0B429' }}>
           {label}
         </span>
         {isSelected && (
           <span
             className="ml-auto text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full"
-            style={{ background: 'rgba(244,196,48,.15)', color: '#F4C430', border: '1px solid rgba(244,196,48,.2)' }}
+            style={{ background: 'rgba(240,180,41,.15)', color: '#F0B429', border: '1px solid rgba(240,180,41,.2)' }}
           >
             DÉFINI
           </span>
@@ -205,7 +205,7 @@ function PlayerCombobox({ label, icon, playerName, team, onSelect, onClear, play
         {isSelected ? (
           /* Selected chip */
           <div
-            className="flex items-center gap-3 px-3 py-2.5 rounded"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-md"
             style={{ background: 'var(--bg-3)', border: '1px solid var(--border)' }}
           >
             {flagUrl && <img src={flagUrl} alt="" width={20} height={15} className="rounded-sm shrink-0" />}
@@ -226,9 +226,9 @@ function PlayerCombobox({ label, icon, playerName, team, onSelect, onClear, play
             <input
               value={query}
               onChange={e => { setQuery(e.target.value); setOpen(true) }}
-              onFocus={(e: any) => { setOpen(true); e.target.style.borderColor = '#F4C430' }}
+              onFocus={(e: any) => { setOpen(true); e.target.style.borderColor = '#F0B429' }}
               placeholder={`Rechercher — ${label}…`}
-              className="w-full px-3 py-2.5 rounded text-sm outline-none"
+              className="w-full px-3 py-2.5 rounded-md text-sm outline-none"
               style={{
                 background: 'var(--bg-3)',
                 border: '1px solid var(--border)',
@@ -239,7 +239,7 @@ function PlayerCombobox({ label, icon, playerName, team, onSelect, onClear, play
             />
             {open && filtered.length > 0 && (
               <div
-                className="absolute top-full left-0 right-0 mt-2 rounded overflow-auto z-20"
+                className="absolute top-full left-0 right-0 mt-2 rounded-md overflow-auto z-20"
                 style={{
                   background: 'var(--bg-3)',
                   border: '1px solid var(--border)',
@@ -328,9 +328,9 @@ export default function TournoiForm({
   // ── Not logged in ──
   if (!isAuthenticated) {
     return (
-      <div className="rounded p-8 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <div className="rounded-lg p-8 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
         <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>Connecte-toi pour faire tes prédictions</p>
-        <a href="/api/auth/login" className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded" style={{ background: '#D52B3A', color: '#fff' }}>
+        <a href="/api/auth/login" className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-md" style={{ background: '#5865F2', color: '#fff' }}>
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
             <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
           </svg>
@@ -343,7 +343,7 @@ export default function TournoiForm({
   // ── Locked, no predictions ──
   if (locked && !saved) {
     return (
-      <div className="rounded p-10 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <div className="rounded-lg p-10 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
         <Lock className="w-7 h-7 mx-auto mb-4" style={{ color: 'var(--border-2)' }} />
         <p className="text-sm mb-1" style={{ color: 'var(--muted)' }}>Les prédictions tournoi sont fermées</p>
         <p className="text-xs" style={{ color: 'var(--border-2)' }}>depuis le {deadline}</p>
@@ -359,11 +359,11 @@ export default function TournoiForm({
       { label: 'Golden Ball', player: ballPlayer, team: ballTeam },
     ]
     return (
-      <div className="rounded overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <div className="rounded-lg overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between px-5 py-3" style={{ background: 'var(--bg-3)', borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2">
             <Lock className="w-3.5 h-3.5" style={{ color: 'var(--muted)' }} />
-            <span className="text-[10px] font-bold tracking-[.04em] uppercase" style={{ color: 'var(--muted)' }}>Verrouillé</span>
+            <span className="text-[10px] font-bold tracking-[.06em] uppercase" style={{ color: 'var(--muted)' }}>Verrouillé</span>
           </div>
           <span className="text-[10px]" style={{ color: 'var(--muted)' }}>Résultats calculés en fin de tournoi</span>
         </div>
@@ -379,7 +379,7 @@ export default function TournoiForm({
         <div className="grid grid-cols-2">
           {awards.map((a, i) => (
             <div key={a.label} className="px-5 py-4" style={{ borderRight: i === 0 ? '1px solid var(--border)' : 'none' }}>
-              <p className="text-[9px] font-bold tracking-[.04em] uppercase mb-2" style={{ color: 'var(--muted)' }}>{a.label}</p>
+              <p className="text-[9px] font-bold tracking-[.06em] uppercase mb-2" style={{ color: 'var(--muted)' }}>{a.label}</p>
               <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{a.player}</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 {getFlagUrl(a.team, '20x15') && <img src={getFlagUrl(a.team, '20x15')!} alt="" width={14} height={10} className="rounded-sm" />}
@@ -399,16 +399,16 @@ export default function TournoiForm({
       {/* Deadline chip */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full"
-          style={{ background: 'rgba(244,196,48,.08)', color: '#F4C430', border: '1px solid rgba(244,196,48,.2)' }}>
+          style={{ background: 'rgba(240,180,41,.08)', color: '#F0B429', border: '1px solid rgba(240,180,41,.2)' }}>
           Fermeture le {deadline}
         </span>
         {saved && <span className="text-[10px]" style={{ color: 'var(--muted)' }}>Modifiable jusqu'à la clôture</span>}
       </div>
 
       {/* Podium card */}
-      <div className="rounded overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <div className="rounded-lg overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2 px-5 py-3" style={{ background: 'var(--bg-3)', borderBottom: '1px solid var(--border)' }}>
-          <Trophy className="w-4 h-4" style={{ color: '#F4C430' }} />
+          <Trophy className="w-4 h-4" style={{ color: '#F0B429' }} />
           <span className="font-display text-base tracking-[.06em]" style={{ color: 'var(--text)' }}>PODIUM FINAL</span>
         </div>
         <div className="p-4 space-y-2">
@@ -419,15 +419,15 @@ export default function TournoiForm({
       </div>
 
       {/* Awards card */}
-      <div className="rounded overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <div className="rounded-lg overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2 px-5 py-3" style={{ background: 'var(--bg-3)', borderBottom: '1px solid var(--border)' }}>
-          <Award className="w-4 h-4" style={{ color: '#F4C430' }} />
+          <Award className="w-4 h-4" style={{ color: '#F0B429' }} />
           <span className="font-display text-base tracking-[.06em]" style={{ color: 'var(--text)' }}>PRIX INDIVIDUELS</span>
         </div>
         <div className="p-4 space-y-3">
           <PlayerCombobox
             label="Golden Boot"
-            icon={<Footprints className="w-3.5 h-3.5" style={{ color: '#F4C430' }} />}
+            icon={<Footprints className="w-3.5 h-3.5" style={{ color: '#F0B429' }} />}
             playerName={bootPlayer} team={bootTeam}
             onSelect={p => { setBootPlayer(p.player_name); setBootTeam(p.team) }}
             onClear={() => { setBootPlayer(''); setBootTeam('') }}
@@ -435,7 +435,7 @@ export default function TournoiForm({
           />
           <PlayerCombobox
             label="Golden Ball"
-            icon={<Star className="w-3.5 h-3.5" style={{ color: '#F4C430' }} />}
+            icon={<Star className="w-3.5 h-3.5" style={{ color: '#F0B429' }} />}
             playerName={ballPlayer} team={ballTeam}
             onSelect={p => { setBallPlayer(p.player_name); setBallTeam(p.team) }}
             onClear={() => { setBallPlayer(''); setBallTeam('') }}
@@ -446,11 +446,11 @@ export default function TournoiForm({
 
       {/* Feedback */}
       {result && (
-        <div className="px-4 py-3 rounded text-xs font-medium flex items-center gap-2"
+        <div className="px-4 py-3 rounded-md text-xs font-medium flex items-center gap-2"
           style={{
-            background: result.ok ? 'rgba(76,199,127,.08)' : 'rgba(255,107,114,.08)',
-            border: `1px solid ${result.ok ? 'rgba(76,199,127,.2)' : 'rgba(255,107,114,.2)'}`,
-            color: result.ok ? '#4CC77F' : '#FF6B72',
+            background: result.ok ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)',
+            border: `1px solid ${result.ok ? 'rgba(34,197,94,.2)' : 'rgba(239,68,68,.2)'}`,
+            color: result.ok ? '#22C55E' : '#EF4444',
           }}>
           {result.ok ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
           {result.message}
@@ -461,11 +461,11 @@ export default function TournoiForm({
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3.5 rounded font-display text-lg tracking-[.08em] transition-all"
+        className="w-full py-3.5 rounded-md font-display text-lg tracking-[.08em] transition-all"
         style={{
-          background: !loading ? '#F4C430' : 'var(--bg-3)',
-          color:  !loading ? '#111311' : 'var(--muted)',
-          border: `1.5px solid ${!loading ? '#F4C430' : 'var(--border)'}`,
+          background: !loading ? '#F0B429' : 'var(--bg-3)',
+          color:  !loading ? '#07101E' : 'var(--muted)',
+          border: `1.5px solid ${!loading ? '#F0B429' : 'var(--border)'}`,
           boxShadow: 'none',
         }}
         onMouseDown={(e: any) => { if (!loading) e.currentTarget.style.transform = 'scale(0.98)' }}

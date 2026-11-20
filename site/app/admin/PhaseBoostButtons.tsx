@@ -3,11 +3,11 @@
 import { useState } from 'react'
 
 const PHASES = [
-  { value: 'round_of_32', label: '32es de finale', mult: '×1.25', color: '#8FB0FF' },
-  { value: 'round_of_16', label: '8es de finale',  mult: '×1.5',  color: '#8FB0FF' },
-  { value: 'quarter',     label: 'Quarts',          mult: '×2.0',  color: '#FF9EA3' },
+  { value: 'round_of_32', label: '32es de finale', mult: '×1.25', color: '#38BDF8' },
+  { value: 'round_of_16', label: '8es de finale',  mult: '×1.5',  color: '#60A5FA' },
+  { value: 'quarter',     label: 'Quarts',          mult: '×2.0',  color: '#A78BFA' },
   { value: 'semi',        label: 'Demi-finales',    mult: '×2.5',  color: '#FB923C' },
-  { value: 'final',       label: 'Finale',          mult: '×3.0',  color: '#F4C430' },
+  { value: 'final',       label: 'Finale',          mult: '×3.0',  color: '#F0B429' },
 ]
 
 export default function PhaseBoostButtons() {
@@ -41,9 +41,9 @@ export default function PhaseBoostButtons() {
             <button
               onClick={() => grant(p.value)}
               disabled={!!loading}
-              className="flex items-center gap-3 px-4 py-2.5 rounded text-sm font-semibold transition-all disabled:opacity-50"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-semibold transition-all disabled:opacity-50"
               style={{
-                background: `rgba(${p.color === '#F4C430' ? '240,180,41' : p.color === '#FB923C' ? '251,146,60' : p.color === '#FF9EA3' ? '167,139,250' : p.color === '#8FB0FF' ? '96,165,250' : '56,189,248'},.12)`,
+                background: `rgba(${p.color === '#F0B429' ? '240,180,41' : p.color === '#FB923C' ? '251,146,60' : p.color === '#A78BFA' ? '167,139,250' : p.color === '#60A5FA' ? '96,165,250' : '56,189,248'},.12)`,
                 border: `1px solid ${p.color}30`,
                 color: p.color,
                 minWidth: 260,
@@ -59,9 +59,9 @@ export default function PhaseBoostButtons() {
 
             {result && (
               'error' in result ? (
-                <span className="text-xs font-medium" style={{ color: '#FF6B72' }}>❌ {result.error}</span>
+                <span className="text-xs font-medium" style={{ color: '#EF4444' }}>❌ {result.error}</span>
               ) : (
-                <span className="text-xs font-medium" style={{ color: '#4CC77F' }}>
+                <span className="text-xs font-medium" style={{ color: '#22C55E' }}>
                   ✅ {result.granted} joueurs crédités, {result.skipped} déjà équipés
                 </span>
               )

@@ -35,7 +35,7 @@ export default function MatchScoreForm({ match }: { match: any }) {
         <input
           type="number" min="0" max="20" value={home}
           onChange={e => setHome(e.target.value)}
-          className="w-12 text-center rounded-sm px-2 py-1 text-sm font-mono font-bold"
+          className="w-12 text-center rounded-lg px-2 py-1 text-sm font-mono font-bold"
           style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
           placeholder="0"
         />
@@ -43,7 +43,7 @@ export default function MatchScoreForm({ match }: { match: any }) {
         <input
           type="number" min="0" max="20" value={away}
           onChange={e => setAway(e.target.value)}
-          className="w-12 text-center rounded-sm px-2 py-1 text-sm font-mono font-bold"
+          className="w-12 text-center rounded-lg px-2 py-1 text-sm font-mono font-bold"
           style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
           placeholder="0"
         />
@@ -52,20 +52,20 @@ export default function MatchScoreForm({ match }: { match: any }) {
       <input
         type="text" value={scorers}
         onChange={e => setScorers(e.target.value)}
-        className="flex-1 min-w-[160px] rounded-sm px-3 py-1 text-sm"
+        className="flex-1 min-w-[160px] rounded-lg px-3 py-1 text-sm"
         style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
         placeholder="Buteurs : Mbappe, Salah, ..."
       />
 
       <button
         type="submit" disabled={saving}
-        className="px-3 py-1 rounded-sm text-sm font-semibold transition-opacity disabled:opacity-50"
-        style={{ background: '#F4C430', color: '#000' }}
+        className="px-3 py-1 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-50"
+        style={{ background: '#F0B429', color: '#000' }}
       >
         {saving ? '…' : 'Valider'}
       </button>
 
-      {msg && <span className="text-xs w-full" style={{ color: msg.startsWith('✅') ? '#4CC77F' : '#FF6B72' }}>{msg}</span>}
+      {msg && <span className="text-xs w-full" style={{ color: msg.startsWith('✅') ? '#22C55E' : '#EF4444' }}>{msg}</span>}
     </form>
   )
 }

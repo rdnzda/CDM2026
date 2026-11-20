@@ -145,12 +145,12 @@ export default async function MatchPage({
       )}
 
       {/* Match header */}
-      <div className="relative overflow-hidden rounded" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <div className="relative overflow-hidden rounded-lg" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
         <div className="absolute inset-0 bg-stripes pointer-events-none" />
         <div className="absolute top-0 left-0 right-0 h-[2px]" style={{
           background: locked
             ? 'var(--border-2)'
-            : '#F4C430',
+            : '#F0B429',
         }} />
         {!locked && (
           <div className="absolute inset-0 pointer-events-none" style={{
@@ -161,26 +161,26 @@ export default async function MatchPage({
         <div className="relative px-6 pt-5 pb-6">
           <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold tracking-[.04em] uppercase px-2 py-1 rounded-md"
+              <span className="text-[10px] font-bold tracking-[.06em] uppercase px-2 py-1 rounded-md"
                 style={{ background: 'var(--bg)', color: 'var(--muted)', border: '1px solid var(--border)' }}>
                 {PHASE_LABEL[match.phase] ?? match.phase}
               </span>
               {match.phase_multiplier > 1 && (
                 <span className="text-[10px] font-bold tracking-wider px-2 py-1 rounded-md"
-                  style={{ background: 'rgba(244,196,48,.1)', color: '#F4C430', border: '1px solid rgba(244,196,48,.2)' }}>
+                  style={{ background: 'rgba(240,180,41,.1)', color: '#F0B429', border: '1px solid rgba(240,180,41,.2)' }}>
                   ×{match.phase_multiplier} BONUS
                 </span>
               )}
             </div>
             {locked ? (
               <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full"
-                style={{ background: 'rgba(255,107,114,.1)', color: '#FF6B72', border: '1px solid rgba(255,107,114,.2)' }}>
+                style={{ background: 'rgba(239,68,68,.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,.2)' }}>
                 <Lock className="w-3 h-3" />PARIS FERMÉS
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full"
-                style={{ background: 'rgba(76,199,127,.1)', color: '#4CC77F', border: '1px solid rgba(76,199,127,.2)' }}>
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#4CC77F' }} />
+                style={{ background: 'rgba(34,197,94,.1)', color: '#22C55E', border: '1px solid rgba(34,197,94,.2)' }}>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22C55E' }} />
                 PARIS OUVERTS
               </span>
             )}
@@ -197,7 +197,7 @@ export default async function MatchPage({
               </h1>
             </div>
             <div className="flex flex-col items-center gap-1 shrink-0 px-2">
-              <span className="font-display text-xs tracking-[.04em]" style={{ color: 'var(--border-2)' }}>VS</span>
+              <span className="font-display text-xs tracking-[.06em]" style={{ color: 'var(--border-2)' }}>VS</span>
             </div>
             <div className="flex flex-col items-end gap-1.5">
               {getFlagUrl(match.away_team, '40x30') && (
@@ -215,11 +215,11 @@ export default async function MatchPage({
           {match.status === 'live' ? (
             <div className="mt-5 text-center">
               <div className="inline-flex items-center gap-1.5 mb-3">
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#4CC77F' }} />
-                <p className="text-[9px] tracking-[.04em] uppercase font-bold" style={{ color: '#4CC77F' }}>EN DIRECT</p>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22C55E' }} />
+                <p className="text-[9px] tracking-[.06em] uppercase font-bold" style={{ color: '#22C55E' }}>EN DIRECT</p>
               </div>
               {match.final_score_home !== null ? (
-                <div className="font-display" style={{ fontSize: 'clamp(3rem, 12vw, 5rem)', color: '#4CC77F', letterSpacing: '.08em', lineHeight: 1 }}>
+                <div className="font-display" style={{ fontSize: 'clamp(3rem, 12vw, 5rem)', color: '#22C55E', letterSpacing: '.08em', lineHeight: 1 }}>
                   {match.final_score_home} – {match.final_score_away}
                 </div>
               ) : (
@@ -230,8 +230,8 @@ export default async function MatchPage({
             </div>
           ) : match.status === 'finished' && match.final_score_home !== null ? (
             <div className="mt-5 text-center">
-              <p className="text-[9px] tracking-[.04em] uppercase mb-2" style={{ color: 'var(--muted)' }}>Score final</p>
-              <div className="font-display" style={{ fontSize: 'clamp(3rem, 12vw, 5rem)', color: '#F4C430', letterSpacing: '.08em', lineHeight: 1 }}>
+              <p className="text-[9px] tracking-[.06em] uppercase mb-2" style={{ color: 'var(--muted)' }}>Score final</p>
+              <div className="font-display" style={{ fontSize: 'clamp(3rem, 12vw, 5rem)', color: '#F0B429', letterSpacing: '.08em', lineHeight: 1 }}>
                 {match.final_score_home} – {match.final_score_away}
               </div>
             </div>
@@ -240,7 +240,7 @@ export default async function MatchPage({
       </div>
 
       {/* Tab nav */}
-      <div className="flex rounded p-1 gap-1" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <div className="flex rounded-md p-1 gap-1" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
         {[
           { key: 'parier', label: match.status === 'finished' ? 'Cotes' : 'Parier' },
           { key: 'paris',  label: `Paris${badgeCount > 0 ? ` (${badgeCount})` : ''}` },
@@ -248,7 +248,7 @@ export default async function MatchPage({
           <a
             key={t.key}
             href={t.key === 'parier' ? `/matchs/${match.id}` : `/matchs/${match.id}?tab=paris`}
-            className="flex-1 text-center text-sm font-semibold py-2 rounded-sm transition-colors"
+            className="flex-1 text-center text-sm font-semibold py-2 rounded-lg transition-colors"
             style={activeTab === t.key
               ? { background: 'var(--bg-3)', color: 'var(--text)' }
               : { color: 'var(--muted)' }}
@@ -282,7 +282,7 @@ export default async function MatchPage({
           />
         ) : (
           (match.odds_home || match.odds_draw || match.odds_away) ? (
-            <div className="rounded p-5 space-y-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+            <div className="rounded-lg p-5 space-y-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
               <p className="text-xs font-semibold tracking-wide" style={{ color: 'var(--muted)' }}>COTES AU MOMENT DE LA FERMETURE</p>
               <div className="grid grid-cols-3 gap-3">
                 {[
@@ -290,9 +290,9 @@ export default async function MatchPage({
                   { l: 'X', label: 'Nul',           v: match.odds_draw },
                   { l: '2', label: match.away_team,  v: match.odds_away },
                 ].map(o => o.v && (
-                  <div key={o.l} className="text-center p-3 rounded" style={{ background: 'var(--bg-3)', border: '1px solid var(--border)' }}>
+                  <div key={o.l} className="text-center p-3 rounded-md" style={{ background: 'var(--bg-3)', border: '1px solid var(--border)' }}>
                     <p className="text-xs mb-1 truncate" style={{ color: 'var(--muted)' }}>{o.label}</p>
-                    <p className="font-mono font-semibold text-lg" style={{ color: '#F4C430' }}>×{Number(o.v).toFixed(2)}</p>
+                    <p className="font-mono font-semibold text-lg" style={{ color: '#F0B429' }}>×{Number(o.v).toFixed(2)}</p>
                     <p className="text-[9px] tracking-wide mt-0.5" style={{ color: 'var(--muted)' }}>{o.l}</p>
                   </div>
                 ))}
@@ -306,7 +306,7 @@ export default async function MatchPage({
 
           {/* Simple bets */}
           {pendingBets.length > 0 && (
-            <div className="rounded overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+            <div className="rounded-lg overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
               <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
                 <p className="text-xs font-semibold tracking-wide" style={{ color: 'var(--muted)' }}>
                   PARIS SIMPLES — {pendingBets.length}
@@ -344,17 +344,17 @@ export default async function MatchPage({
                       {bet.stake === 0 ? (
                         <div className="text-right shrink-0">
                           <p className="text-[10px]" style={{ color: 'var(--muted)' }}>Si correct</p>
-                          <p className="text-sm font-bold" style={{ color: '#4CC77F' }}>+{Number(bet.odds_at_bet_time).toLocaleString('fr-FR')} pts</p>
+                          <p className="text-sm font-bold" style={{ color: '#22C55E' }}>+{Number(bet.odds_at_bet_time).toLocaleString('fr-FR')} pts</p>
                         </div>
                       ) : (
                         <>
                           <div className="text-center shrink-0 w-12">
                             <p className="text-[10px]" style={{ color: 'var(--muted)' }}>Cote</p>
-                            <p className="font-mono text-sm font-bold" style={{ color: '#F4C430' }}>×{Number(bet.odds_at_bet_time).toFixed(2)}</p>
+                            <p className="font-mono text-sm font-bold" style={{ color: '#F0B429' }}>×{Number(bet.odds_at_bet_time).toFixed(2)}</p>
                           </div>
                           <div className="text-right shrink-0">
                             <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{bet.stake.toLocaleString('fr-FR')} pts</p>
-                            <p className="text-[10px]" style={{ color: '#4CC77F' }}>→ {potWin.toLocaleString('fr-FR')}</p>
+                            <p className="text-[10px]" style={{ color: '#22C55E' }}>→ {potWin.toLocaleString('fr-FR')}</p>
                           </div>
                         </>
                       )}
@@ -367,7 +367,7 @@ export default async function MatchPage({
 
           {/* Combo legs */}
           {pendingComboLegs.length > 0 && (
-            <div className="rounded overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+            <div className="rounded-lg overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
               <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
                 <p className="text-xs font-semibold tracking-wide" style={{ color: 'var(--muted)' }}>
                   SÉLECTIONS EN COMBINÉ — {pendingComboLegs.length}
@@ -396,7 +396,7 @@ export default async function MatchPage({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-0.5">
                           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
-                            style={{ background: 'rgba(255,158,163,.15)', color: '#FF9EA3' }}>
+                            style={{ background: 'rgba(168,85,247,.15)', color: '#C084FC' }}>
                             COMBINÉ {combo.legs_count}
                           </span>
                           <span className="text-xs" style={{ color: 'var(--muted)' }}>{BET_TYPE_LABELS[leg.bet_type] ?? leg.bet_type}</span>
@@ -409,7 +409,7 @@ export default async function MatchPage({
                       {/* Leg odds */}
                       <div className="text-center shrink-0 w-12">
                         <p className="text-[10px]" style={{ color: 'var(--muted)' }}>Cote</p>
-                        <p className="font-mono text-sm font-bold" style={{ color: '#F4C430' }}>×{Number(leg.odds_at_bet_time).toFixed(2)}</p>
+                        <p className="font-mono text-sm font-bold" style={{ color: '#F0B429' }}>×{Number(leg.odds_at_bet_time).toFixed(2)}</p>
                       </div>
 
                       {/* Combo stake */}
@@ -425,7 +425,7 @@ export default async function MatchPage({
           )}
 
           {pendingBets.length === 0 && pendingComboLegs.length === 0 && (
-            <div className="rounded p-10 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+            <div className="rounded-lg p-10 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
               <p className="text-sm" style={{ color: 'var(--muted)' }}>Aucun pari en cours sur ce match.</p>
             </div>
           )}

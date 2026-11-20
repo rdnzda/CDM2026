@@ -4,14 +4,14 @@ import { Trophy, BarChart2, Dices, Swords, TrendingUp } from 'lucide-react'
 function StreakBadge({ streak }: { streak: number }) {
   // Série de victoires : plus elle est longue, plus le marquage est fort
   const tier =
-    streak >= 10 ? { bg: '#F4C430', color: '#111311', border: '#F4C430' } :
-    streak >= 7  ? { bg: '#D52B3A', color: '#fff',    border: '#D52B3A' } :
-    streak >= 5  ? { bg: 'transparent', color: '#FF6B72', border: '#FF6B72' } :
-                   { bg: 'transparent', color: '#F4C430', border: 'rgba(244,196,48,.5)' }
+    streak >= 10 ? { bg: '#F0B429', color: '#07101E', border: '#F0B429' } :
+    streak >= 7  ? { bg: '#DC2626', color: '#fff',    border: '#DC2626' } :
+    streak >= 5  ? { bg: 'transparent', color: '#F87171', border: '#F87171' } :
+                   { bg: 'transparent', color: '#F0B429', border: 'rgba(240,180,41,.5)' }
   return (
     <span
       className="inline-flex items-center px-1.5 py-0.5 font-display text-xs leading-none"
-      style={{ background: tier.bg, color: tier.color, border: `1px solid ${tier.border}`, borderRadius: 2 }}
+      style={{ background: tier.bg, color: tier.color, border: `1px solid ${tier.border}`, borderRadius: 4 }}
       title={`${streak} paris gagnés d'affilée`}
     >
       Série {streak}
@@ -38,12 +38,12 @@ const TABS: { key: Tab; Icon: React.ElementType; label: string }[] = [
   { key: 'progression', Icon: TrendingUp,  label: 'Progression' },
 ]
 
-const MEDAL_COLORS = ['#F4C430', '#C9CDD3', '#C08A57']
+const MEDAL_COLORS = ['#F0B429', '#94A3B8', '#B08856']
 
 const CHART_COLORS = [
-  '#F4C430', '#8FB0FF', '#4CC77F', '#FF6B72',
-  '#F2EFE6', '#FB923C', '#2DD4BF', '#F9A8D4',
-  '#C9CDD3', '#C08A57',
+  '#F0B429', '#5865F2', '#22C55E', '#EF4444',
+  '#D8E6F3', '#F97316', '#14B8A6', '#EC4899',
+  '#94A3B8', '#B08856',
 ]
 
 export default async function ClassementPage({ searchParams }: { searchParams: { tab?: Tab } }) {
@@ -105,46 +105,46 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-fade-up">
+    <div className="max-w-3xl mx-auto space-y-6">
 
       <style>{`
         .lb-row:hover { background: var(--bg-3); }
         .lb-username { color: var(--text); }
         .lb-username:hover { text-decoration: underline; text-underline-offset: 4px; }
         .lb-tab { color: var(--muted); }
-        .lb-tab:hover { color: var(--text); }
+        .lb-tab:hover { color: var(--text); background: var(--bg-3); }
       `}</style>
 
       {/* Page header */}
-      <div className="section-head flex-col !items-start !gap-1">
-        <h1 className="font-display text-5xl sm:text-6xl leading-none" style={{ color: 'var(--text)' }}>
-          Classement
+      <div>
+        <h1 className="font-display text-5xl leading-none mb-2" style={{ color: 'var(--text)' }}>
+          CLASSEMENT
         </h1>
-        <p className="text-sm font-semibold" style={{ color: 'var(--muted)' }}>
+        <p className="text-sm" style={{ color: 'var(--muted)' }}>
           {tab === 'progression'
-            ? 'Top 10 · évolution des points depuis le début de la compétition'
-            : `Top 50 joueurs · ${TABS.find(t => t.key === tab)?.label}`}
+            ? 'Évolution des points du top 10 depuis le début de la compétition.'
+            : `Les 50 meilleurs joueurs, classés par ${(TABS.find(t => t.key === tab)?.label ?? '').toLowerCase()}.`}
         </p>
       </div>
 
       {/* Card */}
-      <div style={{ border: '1px solid var(--border-2)', borderRadius: 2 }}>
+      <div className="rounded-lg overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
 
         {/* Tab bar */}
         <nav
           aria-label="Type de classement"
           className="flex overflow-x-auto"
-          style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border-2)' }}
+          style={{ background: 'var(--bg-3)', borderBottom: '1px solid var(--border)' }}
         >
           {TABS.map(t => (
             <a
               key={t.key}
               href={`/classement?tab=${t.key}`}
               aria-current={tab === t.key ? 'page' : undefined}
-              className="lb-tab shrink-0 flex items-center gap-2 px-4 sm:px-5 py-3 font-display text-base sm:text-lg leading-none whitespace-nowrap"
+              className="lb-tab shrink-0 flex items-center gap-2 px-4 sm:px-5 py-3 text-sm font-semibold whitespace-nowrap"
               style={tab === t.key
-                ? { background: 'var(--text)', color: '#111311' }
-                : { borderRight: '1px solid var(--border)' }}
+                ? { color: 'var(--text)', boxShadow: 'inset 0 -2px 0 var(--gold)' }
+                : undefined}
             >
               <t.Icon className="w-4 h-4" aria-hidden="true" />
               {t.label}
@@ -158,9 +158,10 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
             {chartSeries.length > 0 ? (
               <PointsLineChart series={chartSeries} showLegend />
             ) : (
-              <p className="text-center py-10 text-sm" style={{ color: 'var(--muted)' }}>
-                Aucune donnée disponible.
-              </p>
+              <div className="text-center py-10 px-6 text-sm" style={{ color: 'var(--muted)' }}>
+                <p className="font-semibold" style={{ color: 'var(--text)' }}>Pas encore de données pour ce classement.</p>
+                <p className="mt-1">Il se remplit dès que les premiers paris sont résolus, quelques minutes après la fin des matchs.</p>
+              </div>
             )}
           </div>
         )}
@@ -173,7 +174,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
               <thead>
                 <tr
                   className="text-left text-xs font-semibold"
-                  style={{ color: 'var(--muted)', borderBottom: '1px solid var(--border-2)', background: 'var(--bg-2)' }}
+                  style={{ color: 'var(--muted)', borderBottom: '1px solid var(--border)' }}
                 >
                   <th scope="col" className="pl-3 sm:pl-4 pr-2 py-2.5 w-14">Rang</th>
                   <th scope="col" className="px-2 sm:px-4 py-2.5">Joueur</th>
@@ -193,8 +194,8 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
                     {/* Rank */}
                     <td className="pl-3 sm:pl-4 pr-2 py-2.5 w-14">
                       <span
-                        className="inline-block w-9 text-center font-display text-xl leading-none py-1 tabular"
-                        style={i < 3 ? { background: MEDAL_COLORS[i], color: '#111311', borderRadius: 2 } : { color: 'var(--muted)' }}
+                        className="inline-block w-8 font-display text-2xl leading-none tabular"
+                        style={{ color: i < 3 ? MEDAL_COLORS[i] : 'var(--muted)' }}
                       >
                         {i + 1}
                       </span>
@@ -207,12 +208,12 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
                         className="lb-username inline-flex items-center gap-2.5"
                       >
                         <span
-                          className="shrink-0 w-8 h-8 overflow-hidden hidden sm:flex items-center justify-center"
-                          style={{ background: 'var(--bg-3)', borderRadius: 2 }}
+                          className="shrink-0 w-8 h-8 rounded-full overflow-hidden hidden sm:flex items-center justify-center"
+                          style={{ background: 'var(--bg-3)', border: '1px solid var(--border-2)' }}
                         >
                           {row.avatar_url
                             ? <img src={row.avatar_url} alt="" width={28} height={28} className="w-full h-full object-cover" />
-                            : <span className="font-display text-base" style={{ color: 'var(--text)' }}>{row.username?.[0]}</span>
+                            : <span className="text-xs font-bold uppercase" style={{ color: 'var(--gold)' }}>{row.username?.[0]}</span>
                           }
                         </span>
                         <span className="flex flex-col items-start sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0">
@@ -226,7 +227,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
 
                     {/* Stats — Points tab */}
                     {tab === 'points' && <>
-                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#F4C430' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#F0B429' }}>
                         {row.total_points?.toLocaleString('fr-FR')}
                       </td>
                       <td className="px-2 sm:px-4 py-2.5 text-right text-sm tabular" style={{ color: 'var(--muted)' }}>
@@ -239,7 +240,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
 
                     {/* Stats — Winrate tab */}
                     {tab === 'winrate' && <>
-                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#4CC77F' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: 'var(--green)' }}>
                         {row.winrate}%
                       </td>
                       <td className="px-2 sm:px-4 py-2.5 text-right text-sm tabular" style={{ color: 'var(--muted)' }}>
@@ -249,7 +250,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
 
                     {/* Stats — Audace tab */}
                     {tab === 'audace' && <>
-                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#F4C430' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#F0B429' }}>
                         ×{Number(row.avg_odds).toFixed(2)}
                       </td>
                       <td className="px-2 sm:px-4 py-2.5 text-right text-sm tabular" style={{ color: 'var(--muted)' }}>
@@ -259,10 +260,10 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
 
                     {/* Stats — 1v1 tab */}
                     {tab === '1v1' && <>
-                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#4CC77F' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: 'var(--green)' }}>
                         {row.duels_won}
                       </td>
-                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#FF6B72' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#F87171' }}>
                         {row.duels_lost}
                       </td>
                       <td className="px-2 sm:px-4 py-2.5 text-right text-sm tabular" style={{ color: 'var(--muted)' }}>
@@ -276,7 +277,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
             </div>
           ) : (
             <p className="text-center py-10 text-sm" style={{ color: 'var(--muted)' }}>
-              Aucune donnée disponible.
+              Pas encore de données : la courbe apparaît après les premiers paris résolus.
             </p>
           )
         )}

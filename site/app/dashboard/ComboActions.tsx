@@ -29,8 +29,8 @@ export default function ComboActions({ comboId, earliestLockedAt }: Props) {
     <div className="flex items-center gap-1 shrink-0 ml-3">
       {error && <span className="text-red-400 text-[10px] max-w-[100px] truncate">{error}</span>}
       <button onClick={handleCancel} disabled={loading}
-        className="p-1.5 rounded-sm transition-colors"
-        style={{ background: 'rgba(255,107,114,.1)', color: '#FF6B72' }}
+        className="p-1.5 rounded-lg transition-colors"
+        style={{ background: 'rgba(239,68,68,.1)', color: '#EF4444' }}
         title="Annuler ce combiné">
         <X className="w-3 h-3" />
       </button>

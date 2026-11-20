@@ -1,31 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Figtree:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/*
- * Identité : feuille de match / tableau d'affichage.
- * Les noms de variables historiques (--gold, --bg-2…) sont conservés pour
- * que tous les écrans suivent la nouvelle palette.
- */
 :root {
-  --bg:        #111311;   /* noir de stade, légèrement vert */
-  --bg-2:      #191C19;   /* surface */
-  --bg-3:      #212521;   /* surface relevée / survol */
-  --border:    #2E332E;
-  --border-2:  #434A43;
-  --gold:      #F4C430;   /* jaune tableau d'affichage : chiffres, cotes, points */
-  --gold-dim:  rgba(244,196,48,.12);
-  --gold-glow: rgba(244,196,48,.06);
-  --text:      #F2EFE6;   /* blanc craie */
-  --muted:     #A9ADA3;   /* 7:1 sur --bg */
-  --green:     #4CC77F;
-  --red:       #FF6B72;
-  --host-red:  #D52B3A;   /* action, direct */
-  --host-green:#1F9D55;
-  --host-blue: #2F5BD3;
-  --paper:     #F2EFE6;
+  --bg:        #07101E;
+  --bg-2:      #0D1A2E;
+  --bg-3:      #122038;
+  --border:    #1A2F4A;
+  --border-2:  #243D5C;
+  --gold:      #F0B429;
+  --gold-dim:  rgba(240,180,41,.12);
+  --gold-glow: rgba(240,180,41,.06);
+  --text:      #D8E6F3;
+  /* Même teinte bleu-ardoise qu'avant, éclaircie pour passer AA sur --bg */
+  --muted:     #8299B5;
+  --muted-2:   #4A6280;   /* décoratif uniquement (pas pour du texte) */
+  --green:     #22C55E;
+  --red:       #EF4444;
+  --discord:   #5865F2;
+  --discord-h: #4752C4;
 }
 
 * { box-sizing: border-box; }
@@ -39,9 +34,9 @@ html { scroll-behavior: smooth; }
 body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: 'Barlow', system-ui, sans-serif;
+  font-family: 'Figtree', sans-serif;
   font-size: 15px;
-  line-height: 1.55;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
@@ -52,118 +47,108 @@ body {
   outline-offset: 2px;
 }
 
-/* Chiffres alignés (scores, points, cotes) */
+/* Chiffres alignés */
 .font-mono, .tabular { font-variant-numeric: tabular-nums; }
+/* Deux familles seulement : Bebas Neue (titres, scores) et Figtree (texte, chiffres tabulaires) */
+.font-mono { font-family: 'Figtree', sans-serif; }
 
-/* Titres : condensé sport, pas d'espacement exagéré */
+/* Diagonal stripes background texture */
+.bg-stripes {
+  background-image: repeating-linear-gradient(
+    -55deg,
+    transparent,
+    transparent 40px,
+    rgba(255,255,255,.018) 40px,
+    rgba(255,255,255,.018) 41px
+  );
+}
+
+/* Gold left-border card accent */
+.card-gold {
+  border-left: 2px solid var(--gold);
+}
+
+/* Display font */
 .font-display {
-  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
-  font-weight: 800;
-  letter-spacing: .005em;
-  text-transform: uppercase;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: .04em;
+  font-weight: 400;
 }
 
-/* Ancienne texture rayée → simple surface */
-.bg-stripes { background-image: none; }
-
-/* Liseré tricolore des pays hôtes (Canada · Mexique · États-Unis) */
-.host-rule {
-  height: 4px;
-  background: linear-gradient(90deg,
-    var(--host-green) 0 25%, var(--paper) 25% 50%, var(--host-red) 50% 75%, var(--host-blue) 75% 100%);
+/* Mono font */
+.font-mono-alt {
+  font-family: 'Figtree', sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Filet d'en-tête de section, façon programme de match */
-.section-head {
-  display: flex; align-items: baseline; gap: .75rem;
-  border-top: 3px solid var(--text);
-  padding-top: .5rem;
-}
-
-.card-gold { border-left: 3px solid var(--gold); }
-
-.font-mono-alt { font-family: 'Barlow Semi Condensed', sans-serif; font-variant-numeric: tabular-nums; }
-
-/* Cote : chiffre de tableau d'affichage, pas une pastille */
+/* Odds pill */
 .odds-pill {
-  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-family: 'Figtree', sans-serif;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  font-size: .9rem;
+  font-size: .8rem;
   color: var(--gold);
-  background: #000;
-  border: 1px solid var(--border-2);
-  padding: .1rem .45rem;
-  border-radius: 2px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(240,180,41,.2);
+  padding: .2rem .55rem;
+  border-radius: 4px;
+}
+
+/* En-tête de section : titre Bebas + filet */
+.section-head {
+  display: flex; align-items: baseline; gap: .75rem;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid var(--border-2);
 }
 
 /* Boutons */
-.btn-primary {
+.btn-gold, .btn-discord, .btn-outline {
   display: inline-flex; align-items: center; gap: .5rem;
-  background: var(--gold); color: #111311;
-  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .02em; font-size: 1.05rem;
-  padding: .55rem 1.1rem; border-radius: 2px;
-  transition: background .15s;
+  font-weight: 700; font-size: .875rem;
+  padding: .625rem 1.15rem; border-radius: 6px;
+  transition: background .15s, border-color .15s, color .15s;
 }
-.btn-primary:hover { background: #FFD54F; }
-.btn-login {
-  display: inline-flex; align-items: center; gap: .5rem;
-  background: var(--host-red); color: #fff;
-  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .02em; font-size: 1.05rem;
-  padding: .55rem 1.1rem; border-radius: 2px;
-  transition: background .15s;
-}
-.btn-login:hover { background: #B01F2D; }
-.btn-ghost {
-  display: inline-flex; align-items: center; gap: .5rem;
-  color: var(--text); border: 1.5px solid var(--text);
-  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .02em; font-size: 1.05rem;
-  padding: .5rem 1rem; border-radius: 2px;
-  transition: background .15s, color .15s;
-}
-.btn-ghost:hover { background: var(--text); color: var(--bg); }
+.btn-gold { background: var(--gold); color: var(--bg); }
+.btn-gold:hover { background: #FFD060 !important; }
+.btn-discord { background: var(--discord); color: #fff; }
+.btn-discord:hover { background: var(--discord-h) !important; }
+.btn-outline { color: var(--text); border: 1px solid var(--border-2); }
+.btn-outline:hover { border-color: var(--muted); background: var(--bg-3); }
 
 /* Hover utilities for server components (no JS needed) */
 .hover-gold-border { transition: border-color .15s, background .15s; }
-.hover-gold-border:hover { border-color: var(--border-2) !important; }
+.hover-gold-border:hover { border-color: rgba(240,180,41,.4) !important; }
 
 .hover-gold-bg { transition: background .12s; }
-.hover-gold-bg:hover { background: var(--bg-3) !important; }
+.hover-gold-bg:hover { background: rgba(240,180,41,.05) !important; }
 
-.hover-bg-3 { transition: background .12s; }
+.hover-bg-3 { transition: background .12s, border-color .12s; }
 .hover-bg-3:hover { background: var(--bg-3) !important; }
-
-.btn-gold { transition: background .15s; }
-.btn-gold:hover { background: #FFD54F !important; }
-
-.btn-discord { transition: background .15s; }
-.btn-discord:hover { background: #B01F2D !important; }
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-2); }
-::-webkit-scrollbar-thumb { background: var(--border-2); }
-::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-
-/* Apparition de page : discrète */
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-up { animation: fade-up .2s ease-out both; }
-.delay-1, .delay-2, .delay-3 { animation-delay: 0s; }
-
-/* Ancien effet « shimmer » neutralisé */
-.shimmer:hover { color: var(--gold); }
 
 /* Navigation */
 .nav-link { color: var(--muted); transition: color .12s; }
 .nav-link:hover { color: var(--text); }
-.nav-link[data-active] { color: var(--text); }
+.nav-link[data-active] { color: var(--gold); }
 .nav-link[data-active]::after {
-  content: ''; position: absolute; left: .625rem; right: .625rem; bottom: 0;
-  height: 3px; background: var(--gold);
+  content: ''; position: absolute; left: .75rem; right: .75rem; bottom: -1px;
+  height: 2px; background: var(--gold);
 }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-2); }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted-2); }
+
+/* Page fade-in : discret */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up .25s ease-out both; }
+.delay-1 { animation-delay: .05s; }
+.delay-2 { animation-delay: .1s; }
+.delay-3 { animation-delay: .15s; }
+
+/* Ancien « shimmer » (texte en dégradé) remplacé par un simple changement de couleur */
+.shimmer:hover { color: var(--gold); }

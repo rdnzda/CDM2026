@@ -6,11 +6,11 @@ const PHASES = ['round_of_32', 'round_of_16', 'quarter', 'semi', 'final'] as con
 type Phase = typeof PHASES[number]
 
 const PHASE_CONFIG: Record<Phase, { label: string; short: string; mult: string; color: string; bg: string }> = {
-  round_of_32: { label: '32es de finale', short: '32es', mult: '×1.25', color: '#8FB0FF', bg: 'rgba(143,176,255,.12)' },
-  round_of_16: { label: '8es de finale',  short: '8es',  mult: '×1.5',  color: '#8FB0FF', bg: 'rgba(143,176,255,.12)' },
-  quarter:     { label: 'Quarts',         short: 'QF',   mult: '×2.0',  color: '#FF9EA3', bg: 'rgba(255,158,163,.12)' },
+  round_of_32: { label: '32es de finale', short: '32es', mult: '×1.25', color: '#38BDF8', bg: 'rgba(14,165,233,.12)' },
+  round_of_16: { label: '8es de finale',  short: '8es',  mult: '×1.5',  color: '#60A5FA', bg: 'rgba(59,130,246,.12)' },
+  quarter:     { label: 'Quarts',         short: 'QF',   mult: '×2.0',  color: '#A78BFA', bg: 'rgba(139,92,246,.12)' },
   semi:        { label: 'Demi-finales',   short: 'SF',   mult: '×2.5',  color: '#FB923C', bg: 'rgba(249,115,22,.12)' },
-  final:       { label: 'Finale',         short: 'F',    mult: '×3.0',  color: '#F4C430', bg: 'rgba(244,196,48,.12)' },
+  final:       { label: 'Finale',         short: 'F',    mult: '×3.0',  color: '#F0B429', bg: 'rgba(240,180,41,.12)' },
 }
 
 function fmtDate(d: string) {
@@ -50,10 +50,10 @@ function MatchCard({ match, phaseColor }: { match: Match; phaseColor: string }) 
   return (
     <a
       href={`/matchs/${match.id}`}
-      className="group block rounded overflow-hidden transition-all hover-bg-3"
+      className="group block rounded-md overflow-hidden transition-all hover-bg-3"
       style={{
         background: 'var(--bg-2)',
-        border: `1px solid ${isLive ? 'rgba(76,199,127,.3)' : 'var(--border)'}`,
+        border: `1px solid ${isLive ? 'rgba(34,197,94,.3)' : 'var(--border)'}`,
       }}
     >
       {/* Date strip */}
@@ -62,8 +62,8 @@ function MatchCard({ match, phaseColor }: { match: Match; phaseColor: string }) 
           {fmtDate(match.kickoff_at)} · {fmtTime(match.kickoff_at)}
         </span>
         {isLive && (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold" style={{ color: '#4CC77F' }}>
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#4CC77F' }} />
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold" style={{ color: '#22C55E' }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22C55E' }} />
             LIVE
           </span>
         )}
@@ -88,7 +88,7 @@ function MatchCard({ match, phaseColor }: { match: Match; phaseColor: string }) 
           {hasScore && (
             <span
               className="font-display text-lg leading-none shrink-0"
-              style={{ color: homeWon ? phaseColor : isLive ? '#4CC77F' : 'var(--text)' }}
+              style={{ color: homeWon ? phaseColor : isLive ? '#22C55E' : 'var(--text)' }}
             >
               {match.final_score_home}
             </span>
@@ -103,7 +103,7 @@ function MatchCard({ match, phaseColor }: { match: Match; phaseColor: string }) 
                 {[{ l: '1', v: match.odds_home }, { l: 'X', v: match.odds_draw }, { l: '2', v: match.odds_away }].map(o => o.v && (
                   <div key={o.l} className="flex items-baseline gap-1">
                     <span className="text-[9px]" style={{ color: 'var(--muted)' }}>{o.l}</span>
-                    <span className="font-mono text-xs font-semibold" style={{ color: '#F4C430' }}>×{Number(o.v).toFixed(2)}</span>
+                    <span className="font-mono text-xs font-semibold" style={{ color: '#F0B429' }}>×{Number(o.v).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -127,7 +127,7 @@ function MatchCard({ match, phaseColor }: { match: Match; phaseColor: string }) 
           {hasScore && (
             <span
               className="font-display text-lg leading-none shrink-0"
-              style={{ color: awayWon ? phaseColor : isLive ? '#4CC77F' : 'var(--text)' }}
+              style={{ color: awayWon ? phaseColor : isLive ? '#22C55E' : 'var(--text)' }}
             >
               {match.final_score_away}
             </span>
@@ -172,7 +172,7 @@ export default async function BracketPage() {
         </div>
         {currentPhase && (
           <div
-            className="sm:ml-auto flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm font-semibold"
+            className="sm:ml-auto flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold"
             style={{
               background: PHASE_CONFIG[currentPhase].bg,
               color: PHASE_CONFIG[currentPhase].color,
@@ -197,7 +197,7 @@ export default async function BracketPage() {
               <a
                 key={p}
                 href={`#${p}`}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-semibold"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold"
                 style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}20` }}
               >
                 <span>{cfg.label}</span>
@@ -211,7 +211,7 @@ export default async function BracketPage() {
 
       {/* No data yet */}
       {!hasAnyMatch && (
-        <div className="rounded p-14 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+        <div className="rounded-lg p-14 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
           <p className="text-2xl mb-2">⏳</p>
           <p className="font-semibold" style={{ color: 'var(--text)' }}>La phase à élimination directe n'a pas encore commencé</p>
           <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Les matchs apparaîtront ici dès que le tirage au sort sera effectué.</p>
@@ -236,7 +236,7 @@ export default async function BracketPage() {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <span
-                  className="text-xs font-bold px-2.5 py-1 rounded-sm"
+                  className="text-xs font-bold px-2.5 py-1 rounded-lg"
                   style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}20` }}
                 >
                   {cfg.short}
@@ -277,7 +277,7 @@ export default async function BracketPage() {
 
       {/* Footer stats */}
       {hasAnyMatch && (
-        <div className="rounded p-5 grid grid-cols-2 sm:grid-cols-4 gap-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+        <div className="rounded-lg p-5 grid grid-cols-2 sm:grid-cols-4 gap-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
           <div>
             <p className="text-xs" style={{ color: 'var(--muted)' }}>Matchs joués</p>
             <p className="font-display text-2xl mt-0.5" style={{ color: 'var(--text)' }}>{totalPlayed}</p>

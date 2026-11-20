@@ -29,13 +29,13 @@ export default function DailyClaimButton({ alreadyClaimed, points }: Props) {
 
   return (
     <div
-      className="flex items-center justify-between rounded px-5 py-4"
+      className="flex items-center justify-between rounded-lg px-5 py-4"
       style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}
     >
       <div className="flex items-center gap-3">
         <div
-          className="w-10 h-10 rounded flex items-center justify-center shrink-0"
-          style={{ background: claimed ? 'rgba(76,199,127,.1)' : 'rgba(244,196,48,.08)', border: `1px solid ${claimed ? 'rgba(76,199,127,.2)' : 'rgba(244,196,48,.2)'}` }}
+          className="w-10 h-10 rounded-md flex items-center justify-center shrink-0"
+          style={{ background: claimed ? 'rgba(34,197,94,.1)' : 'rgba(240,180,41,.08)', border: `1px solid ${claimed ? 'rgba(34,197,94,.2)' : 'rgba(240,180,41,.2)'}` }}
         >
           {claimed
             ? <CheckCircle2 className="w-5 h-5" style={{ color: 'var(--green)' }} />
@@ -58,10 +58,10 @@ export default function DailyClaimButton({ alreadyClaimed, points }: Props) {
       <button
         onClick={handleClaim}
         disabled={claimed || loading}
-        className="flex items-center gap-2 px-4 py-2 rounded text-sm font-bold transition-all"
+        className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all"
         style={{
-          background:  claimed ? 'rgba(76,199,127,.1)'     : 'rgba(244,196,48,.12)',
-          border:      `1px solid ${claimed ? 'rgba(76,199,127,.25)' : 'rgba(244,196,48,.3)'}`,
+          background:  claimed ? 'rgba(34,197,94,.1)'     : 'rgba(240,180,41,.12)',
+          border:      `1px solid ${claimed ? 'rgba(34,197,94,.25)' : 'rgba(240,180,41,.3)'}`,
           color:       claimed ? 'var(--green)'            : 'var(--gold)',
           cursor:      claimed ? 'default'                 : 'pointer',
           opacity:     claimed ? 0.7                       : 1,

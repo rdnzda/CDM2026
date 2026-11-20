@@ -46,14 +46,14 @@ export default async function AdminPage() {
     <div className="max-w-3xl mx-auto space-y-8 animate-fade-up">
       <div className="flex items-baseline gap-4">
         <h1 className="font-display text-4xl" style={{ color: 'var(--text)', letterSpacing: '.05em' }}>ADMIN</h1>
-        <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: 'rgba(255,107,114,.15)', color: '#FF6B72' }}>SCORES & BOOSTS</span>
+        <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: 'rgba(239,68,68,.15)', color: '#EF4444' }}>SCORES & BOOSTS</span>
       </div>
 
       {/* Phase boost distribution */}
-      <div className="rounded p-5 space-y-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <div className="rounded-lg p-5 space-y-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-3">
           <h2 className="font-semibold text-sm" style={{ color: 'var(--text)' }}>Distribution des boosts — Phase éliminatoire</h2>
-          <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'rgba(244,196,48,.1)', color: '#F4C430' }}>
+          <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'rgba(240,180,41,.1)', color: '#F0B429' }}>
             3× ×1.5 + 1× ×2.0 par joueur
           </span>
         </div>
@@ -78,10 +78,10 @@ export default async function AdminPage() {
             return (
               <div
                 key={match.id}
-                className="rounded p-4"
+                className="rounded-lg p-4"
                 style={{
                   background: 'var(--bg-2)',
-                  border: `1px solid ${isLive ? 'rgba(76,199,127,.3)' : 'var(--border)'}`,
+                  border: `1px solid ${isLive ? 'rgba(34,197,94,.3)' : 'var(--border)'}`,
                 }}
               >
                 {/* Match header */}
@@ -93,7 +93,7 @@ export default async function AdminPage() {
 
                   <div className="shrink-0 text-center">
                     {hasScore ? (
-                      <span className="font-display text-xl" style={{ color: isDone ? '#F4C430' : '#4CC77F' }}>
+                      <span className="font-display text-xl" style={{ color: isDone ? '#F0B429' : '#22C55E' }}>
                         {match.final_score_home} – {match.final_score_away}
                       </span>
                     ) : (
@@ -113,7 +113,7 @@ export default async function AdminPage() {
                       {PHASE_LABEL[match.phase] ?? match.phase}{match.group_name ? ` ${match.group_name}` : ''}
                     </span>
                     {isLive && (
-                      <span className="text-[9px] font-bold" style={{ color: '#4CC77F' }}>● LIVE</span>
+                      <span className="text-[9px] font-bold" style={{ color: '#22C55E' }}>● LIVE</span>
                     )}
                     {isDone && (
                       <span className="text-[9px] font-bold" style={{ color: 'var(--muted)' }}>● FIN</span>

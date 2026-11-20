@@ -90,7 +90,7 @@ export default async function DashboardPage() {
 
   const WILDCARD_LABELS: Record<string, string> = { double: '×2 Double', insurance: 'Assurance', last_minute: 'Dernière Minute' }
   const WILDCARD_COLORS: Record<string, string> = {
-    double:      'bg-rouge-900/40 border-rouge-500/40 text-rouge-300',
+    double:      'bg-purple-900/40 border-purple-500/40 text-purple-300',
     insurance:   'bg-blue-900/40 border-blue-500/40 text-blue-300',
     last_minute: 'bg-orange-900/40 border-orange-500/40 text-orange-300',
   }
@@ -114,15 +114,15 @@ export default async function DashboardPage() {
           <p className="text-slate-400 text-sm">{dbUser.total_bets} paris · {dbUser.total_combos} combinés · {dbUser.duels_won + dbUser.duels_lost} duels</p>
         </div>
         <div className="ml-auto flex gap-2">
-          <a href="/matchs" className="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2 rounded text-sm transition-colors">Parier</a>
-          <a href="/api/auth/logout" className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded text-sm transition-colors border border-slate-700">Déconnexion</a>
+          <a href="/matchs" className="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2 rounded-md text-sm transition-colors">Parier</a>
+          <a href="/api/auth/logout" className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-md text-sm transition-colors border border-slate-700">Déconnexion</a>
         </div>
       </div>
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {STATS.map(s => (
-          <div key={s.label} className="bg-slate-800 border border-slate-700/50 rounded p-4">
+          <div key={s.label} className="bg-slate-800 border border-slate-700/50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-slate-400 text-xs font-medium">{s.label}</p>
               <s.Icon className="w-4 h-4 text-slate-500" />
@@ -137,7 +137,7 @@ export default async function DashboardPage() {
       <DailyClaimButton alreadyClaimed={!!todayClaim} points={dailyPoints()} />
 
       {/* Progress bar */}
-      <div className="bg-slate-800 border border-slate-700/50 rounded p-4">
+      <div className="bg-slate-800 border border-slate-700/50 rounded-lg p-4">
         <div className="flex justify-between text-sm mb-2">
           <span className="text-slate-400">Progression</span>
           <span className="text-slate-400">{progressPct}% vers 50 000 pts</span>
@@ -151,9 +151,9 @@ export default async function DashboardPage() {
       {((wildcards && wildcards.length > 0) || (boosts && boosts.length > 0)) && (
         <div className="grid md:grid-cols-2 gap-4">
           {wildcards && wildcards.length > 0 && (
-            <div className={`bg-slate-800 border border-slate-700/50 rounded p-5${!(boosts && boosts.length > 0) ? ' md:col-span-2' : ''}`}>
+            <div className={`bg-slate-800 border border-slate-700/50 rounded-lg p-5${!(boosts && boosts.length > 0) ? ' md:col-span-2' : ''}`}>
               <h2 className="font-semibold mb-3 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-rouge-400" />Wild Cards
+                <Sparkles className="w-4 h-4 text-purple-400" />Wild Cards
               </h2>
               <div className="flex flex-wrap gap-2">
                 {wildcards.map((w: any) => (
@@ -165,7 +165,7 @@ export default async function DashboardPage() {
             </div>
           )}
           {boosts && boosts.length > 0 && (
-            <div className={`bg-slate-800 border border-slate-700/50 rounded p-5${!(wildcards && wildcards.length > 0) ? ' md:col-span-2' : ''}`}>
+            <div className={`bg-slate-800 border border-slate-700/50 rounded-lg p-5${!(wildcards && wildcards.length > 0) ? ' md:col-span-2' : ''}`}>
               <h2 className="font-semibold mb-3 flex items-center gap-2">
                 <Zap className="w-4 h-4 text-yellow-400" />Boosts
               </h2>
@@ -183,7 +183,7 @@ export default async function DashboardPage() {
 
       {/* Achievements */}
       {achievements && achievements.length > 0 && (
-        <div className="bg-slate-800 border border-slate-700/50 rounded p-5">
+        <div className="bg-slate-800 border border-slate-700/50 rounded-lg p-5">
           <h2 className="font-semibold mb-3 flex items-center gap-2">
             <Award className="w-4 h-4 text-amber-400" />Succès ({achievements.length})
           </h2>
@@ -200,14 +200,14 @@ export default async function DashboardPage() {
       )}
 
       {/* Daily progression chart */}
-      <div className="bg-slate-800 border border-slate-700/50 rounded p-5">
+      <div className="bg-slate-800 border border-slate-700/50 rounded-lg p-5">
         <h2 className="font-semibold mb-4 flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-amber-400" />
           Progression Coupe du Monde
         </h2>
         {chartData.length >= 2 ? (
           <PointsLineChart
-            series={[{ name: dbUser.username, color: '#F4C430', data: chartData }]}
+            series={[{ name: dbUser.username, color: '#F0B429', data: chartData }]}
           />
         ) : (
           <p className="text-center py-6 text-sm" style={{ color: 'var(--muted)' }}>
@@ -217,7 +217,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Paris en cours */}
-      <div className="bg-slate-800 border border-slate-700/50 rounded p-5">
+      <div className="bg-slate-800 border border-slate-700/50 rounded-lg p-5">
         <h2 className="font-semibold mb-4 flex items-center gap-2">
           <Clock className="w-4 h-4 text-slate-400" />Paris en cours
           {((pendingBets?.length ?? 0) + (pendingCombos?.length ?? 0)) > 0 && (
@@ -232,7 +232,7 @@ export default async function DashboardPage() {
             {pendingBets?.map((bet: any) => {
               const match = bet.matches as any
               return (
-                <div key={bet.id} className="flex items-center bg-slate-700/40 hover:bg-slate-700/60 rounded px-4 py-3 transition-colors">
+                <div key={bet.id} className="flex items-center bg-slate-700/40 hover:bg-slate-700/60 rounded-md px-4 py-3 transition-colors">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm truncate">{match.home_team} vs {match.away_team}</p>
                     <p className="text-slate-500 text-xs mt-0.5">{BET_TYPE_LABELS[bet.bet_type] ?? bet.bet_type}</p>
@@ -253,10 +253,10 @@ export default async function DashboardPage() {
                 return !min || l.matches.bets_locked_at < min ? l.matches.bets_locked_at : min
               }, '')
               return (
-                <div key={combo.id} className="flex items-center bg-slate-700/40 hover:bg-slate-700/60 rounded px-4 py-3 transition-colors">
+                <div key={combo.id} className="flex items-center bg-slate-700/40 hover:bg-slate-700/60 rounded-md px-4 py-3 transition-colors">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm flex items-center gap-1.5">
-                      <span className="bg-rouge-900/50 text-rouge-300 text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0">
+                      <span className="bg-purple-900/50 text-purple-300 text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0">
                         COMBINÉ {legs.length}
                       </span>
                       <span className="text-slate-400 text-xs truncate">{matchNames}</span>
@@ -274,7 +274,7 @@ export default async function DashboardPage() {
         ) : (
           <div className="text-center py-6">
             <p className="text-slate-500 mb-3">Aucun pari en cours.</p>
-            <a href="/matchs" className="inline-block bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-5 py-2 rounded text-sm transition-colors">
+            <a href="/matchs" className="inline-block bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-5 py-2 rounded-md text-sm transition-colors">
               Voir les matchs
             </a>
           </div>
@@ -283,7 +283,7 @@ export default async function DashboardPage() {
 
       {/* Duels en attente */}
       {pendingChallenges && pendingChallenges.length > 0 && (
-        <div className="bg-slate-800 border border-slate-700/50 rounded p-5">
+        <div className="bg-slate-800 border border-slate-700/50 rounded-lg p-5">
           <h2 className="font-semibold mb-4 flex items-center gap-2">
             <Swords className="w-4 h-4 text-slate-400" />Duels en attente
             <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400">
@@ -296,7 +296,7 @@ export default async function DashboardPage() {
               const other = isChallenger ? ch.opponent : ch.challenger
               const expiresIn = Math.max(0, Math.round((new Date(ch.expires_at).getTime() - Date.now()) / 60000))
               return (
-                <div key={ch.id} className="flex items-center bg-slate-700/40 hover:bg-slate-700/60 rounded px-4 py-3 transition-colors">
+                <div key={ch.id} className="flex items-center bg-slate-700/40 hover:bg-slate-700/60 rounded-md px-4 py-3 transition-colors">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm flex items-center gap-1.5">
                       {isChallenger ? (
