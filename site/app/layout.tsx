@@ -27,7 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="fr">
-      <body className="min-h-screen bg-slate-900 text-slate-100">
+      <body className="min-h-screen">
         <NavClient user={dbUser} />
         <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
       </body>

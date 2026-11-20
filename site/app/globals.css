@@ -1,116 +1,169 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Identité : feuille de match / tableau d'affichage.
+ * Les noms de variables historiques (--gold, --bg-2…) sont conservés pour
+ * que tous les écrans suivent la nouvelle palette.
+ */
 :root {
-  --bg:        #07101E;
-  --bg-2:      #0D1A2E;
-  --bg-3:      #122038;
-  --border:    #1A2F4A;
-  --border-2:  #243D5C;
-  --gold:      #F0B429;
-  --gold-dim:  rgba(240,180,41,.12);
-  --gold-glow: rgba(240,180,41,.06);
-  --text:      #D8E6F3;
-  --muted:     #4A6280;
-  --green:     #22C55E;
-  --red:       #EF4444;
+  --bg:        #111311;   /* noir de stade, légèrement vert */
+  --bg-2:      #191C19;   /* surface */
+  --bg-3:      #212521;   /* surface relevée / survol */
+  --border:    #2E332E;
+  --border-2:  #434A43;
+  --gold:      #F4C430;   /* jaune tableau d'affichage : chiffres, cotes, points */
+  --gold-dim:  rgba(244,196,48,.12);
+  --gold-glow: rgba(244,196,48,.06);
+  --text:      #F2EFE6;   /* blanc craie */
+  --muted:     #A9ADA3;   /* 7:1 sur --bg */
+  --green:     #4CC77F;
+  --red:       #FF6B72;
+  --host-red:  #D52B3A;   /* action, direct */
+  --host-green:#1F9D55;
+  --host-blue: #2F5BD3;
+  --paper:     #F2EFE6;
 }
 
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
 
 body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: 'Figtree', sans-serif;
+  font-family: 'Barlow', system-ui, sans-serif;
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-/* Diagonal stripes background texture */
-.bg-stripes {
-  background-image: repeating-linear-gradient(
-    -55deg,
-    transparent,
-    transparent 40px,
-    rgba(255,255,255,.018) 40px,
-    rgba(255,255,255,.018) 41px
-  );
+/* Focus visible partout */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
 
-/* Gold left-border card accent */
-.card-gold {
-  border-left: 2px solid var(--gold);
-}
+/* Chiffres alignés (scores, points, cotes) */
+.font-mono, .tabular { font-variant-numeric: tabular-nums; }
 
-/* Display font */
+/* Titres : condensé sport, pas d'espacement exagéré */
 .font-display {
-  font-family: 'Bebas Neue', sans-serif;
-  letter-spacing: .04em;
+  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-weight: 800;
+  letter-spacing: .005em;
+  text-transform: uppercase;
 }
 
-/* Mono font */
-.font-mono-alt {
-  font-family: 'JetBrains Mono', monospace;
+/* Ancienne texture rayée → simple surface */
+.bg-stripes { background-image: none; }
+
+/* Liseré tricolore des pays hôtes (Canada · Mexique · États-Unis) */
+.host-rule {
+  height: 4px;
+  background: linear-gradient(90deg,
+    var(--host-green) 0 25%, var(--paper) 25% 50%, var(--host-red) 50% 75%, var(--host-blue) 75% 100%);
 }
 
-/* Odds pill */
+/* Filet d'en-tête de section, façon programme de match */
+.section-head {
+  display: flex; align-items: baseline; gap: .75rem;
+  border-top: 3px solid var(--text);
+  padding-top: .5rem;
+}
+
+.card-gold { border-left: 3px solid var(--gold); }
+
+.font-mono-alt { font-family: 'Barlow Semi Condensed', sans-serif; font-variant-numeric: tabular-nums; }
+
+/* Cote : chiffre de tableau d'affichage, pas une pastille */
 .odds-pill {
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 600;
-  font-size: .8rem;
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: .9rem;
   color: var(--gold);
-  background: var(--gold-dim);
-  border: 1px solid rgba(240,180,41,.2);
-  padding: .2rem .55rem;
-  border-radius: 4px;
+  background: #000;
+  border: 1px solid var(--border-2);
+  padding: .1rem .45rem;
+  border-radius: 2px;
 }
+
+/* Boutons */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: var(--gold); color: #111311;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .02em; font-size: 1.05rem;
+  padding: .55rem 1.1rem; border-radius: 2px;
+  transition: background .15s;
+}
+.btn-primary:hover { background: #FFD54F; }
+.btn-login {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: var(--host-red); color: #fff;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .02em; font-size: 1.05rem;
+  padding: .55rem 1.1rem; border-radius: 2px;
+  transition: background .15s;
+}
+.btn-login:hover { background: #B01F2D; }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: .5rem;
+  color: var(--text); border: 1.5px solid var(--text);
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .02em; font-size: 1.05rem;
+  padding: .5rem 1rem; border-radius: 2px;
+  transition: background .15s, color .15s;
+}
+.btn-ghost:hover { background: var(--text); color: var(--bg); }
 
 /* Hover utilities for server components (no JS needed) */
 .hover-gold-border { transition: border-color .15s, background .15s; }
-.hover-gold-border:hover { border-color: rgba(240,180,41,.3) !important; }
+.hover-gold-border:hover { border-color: var(--border-2) !important; }
 
-.hover-gold-bg:hover { background: rgba(240,180,41,.05) !important; }
+.hover-gold-bg { transition: background .12s; }
+.hover-gold-bg:hover { background: var(--bg-3) !important; }
 
-.hover-bg-3:hover { background: var(--bg-3) !important; border-color: rgba(240,180,41,.25) !important; }
+.hover-bg-3 { transition: background .12s; }
+.hover-bg-3:hover { background: var(--bg-3) !important; }
 
 .btn-gold { transition: background .15s; }
-.btn-gold:hover { background: #FFD060 !important; }
+.btn-gold:hover { background: #FFD54F !important; }
 
 .btn-discord { transition: background .15s; }
-.btn-discord:hover { background: #4752C4 !important; }
+.btn-discord:hover { background: #B01F2D !important; }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-2); }
-::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border-2); }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-/* Page fade-in */
+/* Apparition de page : discrète */
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.animate-fade-up { animation: fade-up .35s ease both; }
-.delay-1 { animation-delay: .08s; }
-.delay-2 { animation-delay: .16s; }
-.delay-3 { animation-delay: .24s; }
+.animate-fade-up { animation: fade-up .2s ease-out both; }
+.delay-1, .delay-2, .delay-3 { animation-delay: 0s; }
 
-/* Gold shimmer on hover */
-@keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-.shimmer:hover {
-  background: linear-gradient(90deg, var(--gold) 0%, #FFD97D 50%, var(--gold) 100%);
-  background-size: 200% auto;
-  animation: shimmer 1.2s linear infinite;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Ancien effet « shimmer » neutralisé */
+.shimmer:hover { color: var(--gold); }
+
+/* Navigation */
+.nav-link { color: var(--muted); transition: color .12s; }
+.nav-link:hover { color: var(--text); }
+.nav-link[data-active] { color: var(--text); }
+.nav-link[data-active]::after {
+  content: ''; position: absolute; left: .625rem; right: .625rem; bottom: 0;
+  height: 3px; background: var(--gold);
 }

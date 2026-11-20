@@ -13,7 +13,7 @@ const CHALLENGE_LABELS: Record<string, string> = {
   combo_3:     'Combiné 3 sél.',
 }
 
-const MEDAL_COLORS = ['#F0B429', '#94A3B8', '#92734D']
+const MEDAL_COLORS = ['#F4C430', '#94A3B8', '#92734D']
 
 export default async function QuotidienPage() {
   const supabase = await createClient()
@@ -63,14 +63,14 @@ export default async function QuotidienPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
-          <Sun className="w-6 h-6 text-amber-400" />Défi quotidien
+        <h1 className="font-display text-5xl leading-none mb-2 flex items-center gap-3">
+          <Sun className="w-8 h-8 text-amber-400" aria-hidden="true" />Défi quotidien
         </h1>
         <p className="text-slate-400 text-sm">Un nouveau défi chaque jour à 10h. Les points sont attribués à la fin du match.</p>
       </div>
 
       {!daily ? (
-        <div className="bg-slate-800 rounded-xl p-12 text-center text-slate-500">
+        <div className="bg-slate-800 rounded p-12 text-center text-slate-500">
           <MoonStar className="w-10 h-10 mx-auto mb-3 opacity-40" />
           <p>Aucun défi pour aujourd'hui.</p>
           <p className="text-sm mt-1">Reviens à 10h !</p>
@@ -78,10 +78,10 @@ export default async function QuotidienPage() {
       ) : (
         <>
           {/* Challenge card */}
-          <div className="bg-gradient-to-br from-purple-900/40 to-slate-800 border border-purple-500/20 rounded-xl p-6">
+          <div className="bg-slate-800 border-l-4 border-rouge-600 rounded-sm p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <p className="text-xs text-purple-400 font-semibold uppercase tracking-wide mb-1">Défi du jour</p>
+                <p className="text-xs text-rouge-400 font-semibold uppercase tracking-wide mb-1">Défi du jour</p>
                 <h2 className="text-xl font-bold">{match.home_team} vs {match.away_team}</h2>
                 <p className="text-slate-400 text-sm mt-0.5">
                   {new Date(match.kickoff_at).toLocaleString('fr-FR', {
@@ -89,7 +89,7 @@ export default async function QuotidienPage() {
                   })} — {match.phase?.replace('_', ' ')}
                 </p>
               </div>
-              <span className="inline-flex items-center gap-1.5 bg-purple-800/60 text-purple-200 text-sm font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+              <span className="inline-flex items-center gap-1.5 bg-rouge-800/60 text-rouge-200 text-sm font-semibold px-3 py-1 rounded-full whitespace-nowrap">
                 <ChallengeIcon className="w-3.5 h-3.5" />
                 {CHALLENGE_LABELS[daily.challenge_type]}
               </span>
@@ -101,9 +101,9 @@ export default async function QuotidienPage() {
                 { Icon: Medal,        iconColor: MEDAL_COLORS[0], label: '1er',     pts: daily.reward_first   },
                 { Icon: Medal,        iconColor: MEDAL_COLORS[1], label: '2ème',    pts: daily.reward_second  },
                 { Icon: Medal,        iconColor: MEDAL_COLORS[2], label: '3ème',    pts: daily.reward_third   },
-                { Icon: CheckCircle2, iconColor: '#22C55E',       label: 'Correct', pts: daily.reward_correct },
+                { Icon: CheckCircle2, iconColor: '#4CC77F',       label: 'Correct', pts: daily.reward_correct },
               ].map(r => (
-                <div key={r.label} className="bg-slate-800/60 rounded-lg py-2">
+                <div key={r.label} className="bg-slate-800/60 rounded-sm py-2">
                   <r.Icon className="w-5 h-5 mx-auto mb-0.5" style={{ color: r.iconColor }} />
                   <div className="text-slate-400 text-xs">{r.label}</div>
                   <div className="text-amber-400 font-bold">+{r.pts}</div>
@@ -121,7 +121,7 @@ export default async function QuotidienPage() {
 
           {/* Leaderboard */}
           {topEntries.length > 0 && (
-            <div className="bg-slate-800 rounded-xl p-5">
+            <div className="bg-slate-800 rounded p-5">
               <h2 className="font-semibold mb-3 flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-amber-400" />Classement du défi
               </h2>
@@ -132,7 +132,7 @@ export default async function QuotidienPage() {
                     ? `${e.prediction_score_home}–${e.prediction_score_away}`
                     : e.prediction_scorer ?? '—'
                   return (
-                    <div key={i} className="flex items-center justify-between bg-slate-700/40 rounded-lg px-3 py-2 text-sm">
+                    <div key={i} className="flex items-center justify-between bg-slate-700/40 rounded-sm px-3 py-2 text-sm">
                       <div className="flex items-center gap-2">
                         <span className="w-5 text-center">
                           {e.rank <= 3

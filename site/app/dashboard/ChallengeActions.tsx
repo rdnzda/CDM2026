@@ -41,21 +41,21 @@ export default function ChallengeActions({ challengeId, isChallenger }: Props) {
       {error && <span className="text-red-400 text-[10px] max-w-[100px] truncate">{error}</span>}
       {isChallenger ? (
         <button onClick={handleCancel} disabled={loading}
-          className="p-1.5 rounded-lg transition-colors"
-          style={{ background: 'rgba(239,68,68,.1)', color: '#EF4444' }}
+          className="p-1.5 rounded-sm transition-colors"
+          style={{ background: 'rgba(255,107,114,.1)', color: '#FF6B72' }}
           title="Annuler le défi">
           <X className="w-3 h-3" />
         </button>
       ) : (
         <>
           <button onClick={() => handleRespond('accept')} disabled={loading}
-            className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors"
-            style={{ background: 'rgba(34,197,94,.15)', color: '#22C55E' }}>
+            className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-sm transition-colors"
+            style={{ background: 'rgba(76,199,127,.15)', color: '#4CC77F' }}>
             <Check className="w-3 h-3" />Accepter
           </button>
           <button onClick={() => handleRespond('refuse')} disabled={loading}
-            className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors"
-            style={{ background: 'rgba(239,68,68,.1)', color: '#EF4444' }}>
+            className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-sm transition-colors"
+            style={{ background: 'rgba(255,107,114,.1)', color: '#FF6B72' }}>
             <X className="w-3 h-3" />Refuser
           </button>
         </>

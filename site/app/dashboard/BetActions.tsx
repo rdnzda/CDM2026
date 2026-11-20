@@ -52,16 +52,16 @@ export default function BetActions({ betId, stake, lockedAt }: Props) {
             type="number" min={100} max={2000} step={50}
             value={newStake}
             onChange={e => setNewStake(Number(e.target.value))}
-            className="w-20 text-xs text-center rounded-lg px-2 py-1.5 font-mono"
+            className="w-20 text-xs text-center rounded-sm px-2 py-1.5 font-mono"
             style={{ background: 'var(--bg-1)', border: '1px solid var(--border)', color: 'var(--text)' }}
           />
           <button onClick={handleSave} disabled={loading}
-            className="p-1.5 rounded-lg transition-colors"
-            style={{ background: 'rgba(34,197,94,.15)', color: '#22C55E' }}>
+            className="p-1.5 rounded-sm transition-colors"
+            style={{ background: 'rgba(76,199,127,.15)', color: '#4CC77F' }}>
             <Check className="w-3 h-3" />
           </button>
           <button onClick={() => { setEditing(false); setNewStake(stake) }}
-            className="p-1.5 rounded-lg transition-colors"
+            className="p-1.5 rounded-sm transition-colors"
             style={{ background: 'var(--bg-3)', color: 'var(--muted)' }}>
             <X className="w-3 h-3" />
           </button>
@@ -69,14 +69,14 @@ export default function BetActions({ betId, stake, lockedAt }: Props) {
       ) : (
         <>
           <button onClick={() => setEditing(true)} disabled={loading}
-            className="p-1.5 rounded-lg transition-colors hover-bg-3"
+            className="p-1.5 rounded-sm transition-colors hover-bg-3"
             style={{ color: 'var(--muted)' }}
             title="Modifier la mise">
             <Pencil className="w-3 h-3" />
           </button>
           <button onClick={handleCancel} disabled={loading}
-            className="p-1.5 rounded-lg transition-colors"
-            style={{ background: 'rgba(239,68,68,.1)', color: '#EF4444' }}
+            className="p-1.5 rounded-sm transition-colors"
+            style={{ background: 'rgba(255,107,114,.1)', color: '#FF6B72' }}
             title="Annuler ce pari">
             <X className="w-3 h-3" />
           </button>

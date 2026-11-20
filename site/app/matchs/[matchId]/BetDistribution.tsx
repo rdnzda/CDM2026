@@ -27,32 +27,32 @@ export default function BetDistribution({
   const awayPct = 100 - homePct - drawPct
 
   const sides = [
-    { label: home,  key: 'home', data: dist.home, pct: homePct, color: '#60A5FA', delay: '0ms'   },
-    { label: 'Nul', key: 'draw', data: dist.draw, pct: drawPct, color: '#F0B429', delay: '80ms'  },
+    { label: home,  key: 'home', data: dist.home, pct: homePct, color: '#8FB0FF', delay: '0ms'   },
+    { label: 'Nul', key: 'draw', data: dist.draw, pct: drawPct, color: '#F4C430', delay: '80ms'  },
     { label: away,  key: 'away', data: dist.away, pct: awayPct, color: '#F97316', delay: '160ms' },
   ]
 
   const fmt = (v: number) => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(v)
 
   const donut = `conic-gradient(
-    #60A5FA 0% ${homePct}%,
-    #F0B429 ${homePct}% ${homePct + drawPct}%,
+    #8FB0FF 0% ${homePct}%,
+    #F4C430 ${homePct}% ${homePct + drawPct}%,
     #F97316 ${homePct + drawPct}% 100%
   )`
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+    <div className="rounded overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
 
       {/* Header */}
       <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
+          <span className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>
             Pronostics du groupe
           </span>
           {isLive && (
             <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-              style={{ background: 'rgba(34,197,94,.1)', color: '#22C55E', border: '1px solid rgba(34,197,94,.2)' }}>
-              <span className="w-1 h-1 rounded-full animate-pulse" style={{ background: '#22C55E' }} />
+              style={{ background: 'rgba(76,199,127,.1)', color: '#4CC77F', border: '1px solid rgba(76,199,127,.2)' }}>
+              <span className="w-1 h-1 rounded-full animate-pulse" style={{ background: '#4CC77F' }} />
               LIVE
             </span>
           )}
@@ -79,7 +79,7 @@ export default function BetDistribution({
             <span className="font-display text-2xl leading-none" style={{ color: 'var(--text)', letterSpacing: '.04em' }}>
               {total}
             </span>
-            <span className="text-[8px] tracking-widest uppercase mt-0.5" style={{ color: 'var(--muted)' }}>
+            <span className="text-[8px] tracking-wide uppercase mt-0.5" style={{ color: 'var(--muted)' }}>
               paris
             </span>
           </div>

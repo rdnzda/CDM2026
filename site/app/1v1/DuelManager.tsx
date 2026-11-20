@@ -31,7 +31,7 @@ function Avatar({ user, size = 'sm' }: {
     ) : (
       <span
         className={`${dim} rounded-full shrink-0 inline-flex items-center justify-center text-xs font-bold`}
-        style={{ background: 'var(--bg-3)', color: '#F0B429', border: '1px solid var(--border-2)' }}
+        style={{ background: 'var(--bg-3)', color: '#F4C430', border: '1px solid var(--border-2)' }}
       >
         {user.username[0].toUpperCase()}
       </span>
@@ -120,7 +120,7 @@ export default function DuelManager({
 
   return (
     <div
-      className="rounded-2xl overflow-hidden"
+      className="rounded overflow-hidden"
       style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}
     >
       {/* Tab bar */}
@@ -130,13 +130,13 @@ export default function DuelManager({
             key={t.key}
             onClick={() => { setTab(t.key); setResult(null); setActionError(null) }}
             className="relative flex-1 flex items-center justify-center gap-1.5 py-3.5 text-xs font-semibold tracking-wider transition-colors"
-            style={{ color: tab === t.key ? '#F0B429' : 'var(--muted)' }}
+            style={{ color: tab === t.key ? '#F4C430' : 'var(--muted)' }}
           >
             {t.label}
             {t.badge > 0 && (
               <span
                 className="w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center"
-                style={{ background: '#EF4444', color: '#fff' }}
+                style={{ background: '#FF6B72', color: '#fff' }}
               >
                 {t.badge}
               </span>
@@ -144,7 +144,7 @@ export default function DuelManager({
             {tab === t.key && (
               <span
                 className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full"
-                style={{ background: '#F0B429' }}
+                style={{ background: '#F4C430' }}
               />
             )}
           </button>
@@ -160,7 +160,7 @@ export default function DuelManager({
 
             {/* Search */}
             <div className="space-y-2">
-              <p className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
+              <p className="text-[10px] font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>
                 Adversaire
               </p>
               <div className="relative">
@@ -168,22 +168,22 @@ export default function DuelManager({
                   value={search}
                   onChange={e => { setSearch(e.target.value); setOpponent(null); setResult(null) }}
                   placeholder="Tape un pseudo…"
-                  className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
+                  className="w-full px-4 py-2.5 rounded text-sm outline-none"
                   style={{
                     background: 'var(--bg)',
                     border: '1.5px solid var(--border)',
                     color: 'var(--text)',
                     transition: 'border-color .15s',
                   }}
-                  onFocus={(e: any) => e.target.style.borderColor = '#F0B429'}
-                  onBlur={(e: any)  => e.target.style.borderColor = opponent ? '#F0B429' : 'var(--border)'}
+                  onFocus={(e: any) => e.target.style.borderColor = '#F4C430'}
+                  onBlur={(e: any)  => e.target.style.borderColor = opponent ? '#F4C430' : 'var(--border)'}
                 />
               </div>
 
               {/* Dropdown */}
               {filtered.length > 0 && !opponent && (
                 <div
-                  className="rounded-xl overflow-hidden"
+                  className="rounded overflow-hidden"
                   style={{ border: '1px solid var(--border)' }}
                 >
                   {filtered.map(u => (
@@ -210,10 +210,10 @@ export default function DuelManager({
               {/* Selected opponent */}
               {opponent && (
                 <div
-                  className="flex items-center justify-between px-4 py-3 rounded-xl"
+                  className="flex items-center justify-between px-4 py-3 rounded"
                   style={{
-                    background: 'rgba(240,180,41,.06)',
-                    border: '1.5px solid rgba(240,180,41,.3)',
+                    background: 'rgba(244,196,48,.06)',
+                    border: '1.5px solid rgba(244,196,48,.3)',
                   }}
                 >
                   <span className="flex items-center gap-2">
@@ -225,7 +225,7 @@ export default function DuelManager({
                   </span>
                   <button
                     onClick={() => { setOpponent(null); setSearch('') }}
-                    className="p-1 rounded-lg transition-colors"
+                    className="p-1 rounded-sm transition-colors"
                     style={{ color: 'var(--muted)' }}
                     onMouseEnter={(e: any) => e.currentTarget.style.color = 'var(--text)'}
                     onMouseLeave={(e: any) => e.currentTarget.style.color = 'var(--muted)'}
@@ -244,7 +244,7 @@ export default function DuelManager({
                   style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
+                    <span className="text-[10px] font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>
                       Mise
                     </span>
                     <span className="font-mono text-xs" style={{ color: 'var(--muted)' }}>
@@ -260,11 +260,11 @@ export default function DuelManager({
                           key={v}
                           type="button"
                           onClick={() => setStake(v)}
-                          className="flex-1 py-2 rounded-lg text-[11px] font-bold transition-all"
+                          className="flex-1 py-2 rounded-sm text-[11px] font-bold transition-all"
                           style={{
-                            background: active ? 'rgba(240,180,41,.15)' : 'var(--bg)',
-                            border: `1.5px solid ${active ? '#F0B429' : 'var(--border)'}`,
-                            color: active ? '#F0B429' : 'var(--muted)',
+                            background: active ? 'rgba(244,196,48,.15)' : 'var(--bg)',
+                            border: `1.5px solid ${active ? '#F4C430' : 'var(--border)'}`,
+                            color: active ? '#F4C430' : 'var(--muted)',
                           }}
                         >
                           {v >= 1000 ? '1k' : v}
@@ -279,14 +279,14 @@ export default function DuelManager({
                     max={maxStake}
                     value={stake}
                     onChange={e => setStake(Number(e.target.value))}
-                    className="w-full px-4 py-2.5 rounded-xl font-mono text-sm outline-none"
+                    className="w-full px-4 py-2.5 rounded font-mono text-sm outline-none"
                     style={{
                       background: 'var(--bg)',
                       border: '1.5px solid var(--border)',
                       color: 'var(--text)',
                       transition: 'border-color .15s',
                     }}
-                    onFocus={(e: any) => e.target.style.borderColor = '#F0B429'}
+                    onFocus={(e: any) => e.target.style.borderColor = '#F4C430'}
                     onBlur={(e: any)  => e.target.style.borderColor = 'var(--border)'}
                   />
                 </div>
@@ -294,17 +294,17 @@ export default function DuelManager({
                 {/* Gain preview */}
                 {stakeValid && (
                   <div
-                    className="rounded-xl px-4 py-3.5 flex items-center justify-between"
-                    style={{ background: 'rgba(34,197,94,.05)', border: '1px solid rgba(34,197,94,.2)' }}
+                    className="rounded px-4 py-3.5 flex items-center justify-between"
+                    style={{ background: 'rgba(76,199,127,.05)', border: '1px solid rgba(76,199,127,.2)' }}
                   >
-                    <p className="text-[10px] font-semibold tracking-widest" style={{ color: 'var(--muted)' }}>
+                    <p className="text-[10px] font-semibold tracking-wide" style={{ color: 'var(--muted)' }}>
                       GAIN SI VICTOIRE
                     </p>
                     <div className="text-right">
-                      <span className="font-display text-2xl" style={{ color: '#22C55E', letterSpacing: '.04em' }}>
+                      <span className="font-display text-2xl" style={{ color: '#4CC77F', letterSpacing: '.04em' }}>
                         +{stake.toLocaleString('fr-FR')}
                       </span>
-                      <p className="text-[9px] tracking-widest mt-0.5 uppercase" style={{ color: 'var(--muted)' }}>pts</p>
+                      <p className="text-[9px] tracking-wide mt-0.5 uppercase" style={{ color: 'var(--muted)' }}>pts</p>
                     </div>
                   </div>
                 )}
@@ -312,11 +312,11 @@ export default function DuelManager({
                 {/* Feedback */}
                 {result && (
                   <div
-                    className="px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2"
+                    className="px-4 py-3 rounded text-xs font-medium flex items-center gap-2"
                     style={{
-                      background: result.ok ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)',
-                      border: `1px solid ${result.ok ? 'rgba(34,197,94,.2)' : 'rgba(239,68,68,.2)'}`,
-                      color: result.ok ? '#22C55E' : '#EF4444',
+                      background: result.ok ? 'rgba(76,199,127,.08)' : 'rgba(255,107,114,.08)',
+                      border: `1px solid ${result.ok ? 'rgba(76,199,127,.2)' : 'rgba(255,107,114,.2)'}`,
+                      color: result.ok ? '#4CC77F' : '#FF6B72',
                     }}
                   >
                     {result.ok ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
@@ -328,14 +328,14 @@ export default function DuelManager({
                 <button
                   onClick={createChallenge}
                   disabled={!canSend}
-                  className="w-full py-3.5 rounded-xl font-display text-lg tracking-[.08em] transition-all"
+                  className="w-full py-3.5 rounded font-display text-lg tracking-[.08em] transition-all"
                   style={{
                     background: canSend
-                      ? 'linear-gradient(135deg, #F0B429 0%, #FFD060 100%)'
+                      ? '#F4C430'
                       : 'var(--bg)',
-                    color:  canSend ? '#07101E' : 'var(--muted)',
-                    border: `1.5px solid ${canSend ? '#F0B429' : 'var(--border)'}`,
-                    boxShadow: canSend ? '0 4px 20px rgba(240,180,41,.2)' : 'none',
+                    color:  canSend ? '#111311' : 'var(--muted)',
+                    border: `1.5px solid ${canSend ? '#F4C430' : 'var(--border)'}`,
+                    boxShadow: 'none',
                   }}
                   onMouseDown={(e: any) => { if (canSend) e.currentTarget.style.transform = 'scale(0.98)' }}
                   onMouseUp={(e: any)   => { e.currentTarget.style.transform = 'none' }}
@@ -350,7 +350,7 @@ export default function DuelManager({
             {/* Empty state — no opponent selected yet */}
             {!opponent && search.length < 2 && (
               <div
-                className="rounded-xl p-6 text-center"
+                className="rounded p-6 text-center"
                 style={{ background: 'var(--bg)', border: '1px dashed var(--border)' }}
               >
                 <Swords className="w-6 h-6 mx-auto mb-2" style={{ color: 'var(--border-2)' }} />
@@ -367,8 +367,8 @@ export default function DuelManager({
           <div className="space-y-3">
             {actionError && (
               <div
-                className="px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2"
-                style={{ background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', color: '#EF4444' }}
+                className="px-4 py-3 rounded text-xs font-medium flex items-center gap-2"
+                style={{ background: 'rgba(255,107,114,.08)', border: '1px solid rgba(255,107,114,.2)', color: '#FF6B72' }}
               >
                 <XCircle className="w-4 h-4 shrink-0" />{actionError}
               </div>
@@ -376,7 +376,7 @@ export default function DuelManager({
 
             {incomingList.length === 0 ? (
               <div
-                className="rounded-xl p-8 text-center"
+                className="rounded p-8 text-center"
                 style={{ background: 'var(--bg)', border: '1px dashed var(--border)' }}
               >
                 <p className="text-sm" style={{ color: 'var(--muted)' }}>Aucun défi reçu.</p>
@@ -385,13 +385,13 @@ export default function DuelManager({
               incomingList.map(c => (
                 <div
                   key={c.id}
-                  className="rounded-2xl overflow-hidden"
-                  style={{ background: 'var(--bg)', border: '1px solid rgba(239,68,68,.25)' }}
+                  className="rounded overflow-hidden"
+                  style={{ background: 'var(--bg)', border: '1px solid rgba(255,107,114,.25)' }}
                 >
                   {/* Red top beam */}
                   <div
                     className="h-[2px]"
-                    style={{ background: 'linear-gradient(90deg, transparent, #EF4444, transparent)' }}
+                    style={{ background: '#FF6B72' }}
                   />
 
                   <div className="p-4 space-y-4">
@@ -416,17 +416,17 @@ export default function DuelManager({
 
                     {/* Stake display */}
                     <div
-                      className="rounded-xl py-4 text-center"
-                      style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.18)' }}
+                      className="rounded py-4 text-center"
+                      style={{ background: 'rgba(255,107,114,.06)', border: '1px solid rgba(255,107,114,.18)' }}
                     >
                       <p
                         className="font-display text-3xl leading-none mb-1"
-                        style={{ color: '#EF4444', letterSpacing: '.06em' }}
+                        style={{ color: '#FF6B72', letterSpacing: '.06em' }}
                       >
                         {c.stake.toLocaleString('fr-FR')}
                       </p>
                       <p
-                        className="text-[10px] tracking-[.14em] uppercase"
+                        className="text-[10px] tracking-[.04em] uppercase"
                         style={{ color: 'var(--muted)' }}
                       >
                         pts en jeu de chaque côté
@@ -438,12 +438,12 @@ export default function DuelManager({
                       <button
                         onClick={() => respond(c.id, 'accept')}
                         disabled={!!actionLoading}
-                        className="flex-1 py-3 rounded-xl font-display text-base tracking-[.06em] transition-all"
+                        className="flex-1 py-3 rounded font-display text-base tracking-[.06em] transition-all"
                         style={{
-                          background: 'linear-gradient(135deg, #22C55E 0%, #4ADE80 100%)',
-                          color: '#07101E',
-                          border: '1.5px solid #22C55E',
-                          boxShadow: '0 4px 16px rgba(34,197,94,.2)',
+                          background: '#4CC77F',
+                          color: '#111311',
+                          border: '1.5px solid #4CC77F',
+                          boxShadow: 'none',
                           opacity: actionLoading ? 0.6 : 1,
                         }}
                         onMouseDown={(e: any) => { if (!actionLoading) e.currentTarget.style.transform = 'scale(0.98)' }}
@@ -454,7 +454,7 @@ export default function DuelManager({
                       <button
                         onClick={() => respond(c.id, 'refuse')}
                         disabled={!!actionLoading}
-                        className="flex-1 py-3 rounded-xl font-semibold text-sm transition-all"
+                        className="flex-1 py-3 rounded font-semibold text-sm transition-all"
                         style={{
                           background: 'var(--bg-3)',
                           color: 'var(--muted)',
@@ -477,7 +477,7 @@ export default function DuelManager({
           <div className="space-y-2.5">
             {outgoing.length === 0 ? (
               <div
-                className="rounded-xl p-8 text-center"
+                className="rounded p-8 text-center"
                 style={{ background: 'var(--bg)', border: '1px dashed var(--border)' }}
               >
                 <p className="text-sm" style={{ color: 'var(--muted)' }}>Aucun défi envoyé.</p>
@@ -488,16 +488,16 @@ export default function DuelManager({
                 return (
                   <div
                     key={c.id}
-                    className="rounded-2xl overflow-hidden"
+                    className="rounded overflow-hidden"
                     style={{
                       background: 'var(--bg)',
-                      border: `1px solid ${accepted ? 'rgba(34,197,94,.25)' : 'var(--border)'}`,
+                      border: `1px solid ${accepted ? 'rgba(76,199,127,.25)' : 'var(--border)'}`,
                     }}
                   >
                     {accepted && (
                       <div
                         className="h-[2px]"
-                        style={{ background: 'linear-gradient(90deg, transparent, #22C55E, transparent)' }}
+                        style={{ background: '#4CC77F' }}
                       />
                     )}
                     <div className="flex items-center gap-3 px-4 py-3.5">
@@ -507,15 +507,15 @@ export default function DuelManager({
                           {c.opponent.username}
                         </p>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                          <span className="font-mono text-xs font-bold" style={{ color: '#F0B429' }}>
+                          <span className="font-mono text-xs font-bold" style={{ color: '#F4C430' }}>
                             {c.stake.toLocaleString('fr-FR')} pts
                           </span>
                           <span
                             className="text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full"
                             style={{
-                              background: accepted ? 'rgba(34,197,94,.1)' : 'rgba(240,180,41,.1)',
-                              color: accepted ? '#22C55E' : '#F0B429',
-                              border: `1px solid ${accepted ? 'rgba(34,197,94,.2)' : 'rgba(240,180,41,.2)'}`,
+                              background: accepted ? 'rgba(76,199,127,.1)' : 'rgba(244,196,48,.1)',
+                              color: accepted ? '#4CC77F' : '#F4C430',
+                              border: `1px solid ${accepted ? 'rgba(76,199,127,.2)' : 'rgba(244,196,48,.2)'}`,
                             }}
                           >
                             {accepted

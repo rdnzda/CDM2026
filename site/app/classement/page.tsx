@@ -1,20 +1,20 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { Trophy, BarChart2, Dices, Swords, Medal, TrendingUp } from 'lucide-react'
+import { Trophy, BarChart2, Dices, Swords, TrendingUp } from 'lucide-react'
 
 function StreakBadge({ streak }: { streak: number }) {
-  const tiers = [
-    { min: 10, emoji: '👑', bg: 'rgba(240,180,41,.2)', color: '#F0B429' },
-    { min: 7,  emoji: '🔥', bg: 'rgba(239,68,68,.2)',  color: '#EF4444' },
-    { min: 5,  emoji: '🔥', bg: 'rgba(249,115,22,.2)', color: '#F97316' },
-    { min: 3,  emoji: '🔥', bg: 'rgba(234,179,8,.15)', color: '#CA8A04' },
-  ]
-  const tier = tiers.find(t => streak >= t.min)!
+  // Série de victoires : plus elle est longue, plus le marquage est fort
+  const tier =
+    streak >= 10 ? { bg: '#F4C430', color: '#111311', border: '#F4C430' } :
+    streak >= 7  ? { bg: '#D52B3A', color: '#fff',    border: '#D52B3A' } :
+    streak >= 5  ? { bg: 'transparent', color: '#FF6B72', border: '#FF6B72' } :
+                   { bg: 'transparent', color: '#F4C430', border: 'rgba(244,196,48,.5)' }
   return (
     <span
-      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold leading-none"
-      style={{ background: tier.bg, color: tier.color }}
+      className="inline-flex items-center px-1.5 py-0.5 font-display text-xs leading-none"
+      style={{ background: tier.bg, color: tier.color, border: `1px solid ${tier.border}`, borderRadius: 2 }}
+      title={`${streak} paris gagnés d'affilée`}
     >
-      {tier.emoji} {streak}
+      Série {streak}
     </span>
   )
 }
@@ -38,12 +38,12 @@ const TABS: { key: Tab; Icon: React.ElementType; label: string }[] = [
   { key: 'progression', Icon: TrendingUp,  label: 'Progression' },
 ]
 
-const MEDAL_COLORS = ['#F0B429', '#94A3B8', '#92734D']
+const MEDAL_COLORS = ['#F4C430', '#C9CDD3', '#C08A57']
 
 const CHART_COLORS = [
-  '#F0B429', '#3B82F6', '#22C55E', '#EF4444',
-  '#A855F7', '#F97316', '#14B8A6', '#EC4899',
-  '#94A3B8', '#92734D',
+  '#F4C430', '#8FB0FF', '#4CC77F', '#FF6B72',
+  '#F2EFE6', '#FB923C', '#2DD4BF', '#F9A8D4',
+  '#C9CDD3', '#C08A57',
 ]
 
 export default async function ClassementPage({ searchParams }: { searchParams: { tab?: Tab } }) {
@@ -108,23 +108,19 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-up">
 
       <style>{`
-        .lb-row-0 { background: rgba(240,180,41,.045); }
-        .lb-row-1 { background: rgba(148,163,184,.03); }
-        .lb-row-2 { background: rgba(146,115,77,.045); }
-        .lb-row:hover { background: var(--bg-3) !important; }
-        .lb-username { color: var(--text); transition: color .15s; }
-        .lb-username:hover { color: #F0B429; }
+        .lb-row:hover { background: var(--bg-3); }
+        .lb-username { color: var(--text); }
+        .lb-username:hover { text-decoration: underline; text-underline-offset: 4px; }
+        .lb-tab { color: var(--muted); }
+        .lb-tab:hover { color: var(--text); }
       `}</style>
 
       {/* Page header */}
-      <div>
-        <h1
-          className="font-display text-4xl mb-2"
-          style={{ color: 'var(--text)', letterSpacing: '.06em' }}
-        >
-          CLASSEMENT
+      <div className="section-head flex-col !items-start !gap-1">
+        <h1 className="font-display text-5xl sm:text-6xl leading-none" style={{ color: 'var(--text)' }}>
+          Classement
         </h1>
-        <p className="text-sm" style={{ color: 'var(--muted)' }}>
+        <p className="text-sm font-semibold" style={{ color: 'var(--muted)' }}>
           {tab === 'progression'
             ? 'Top 10 · évolution des points depuis le début de la compétition'
             : `Top 50 joueurs · ${TABS.find(t => t.key === tab)?.label}`}
@@ -132,32 +128,29 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
       </div>
 
       {/* Card */}
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}
-      >
+      <div style={{ border: '1px solid var(--border-2)', borderRadius: 2 }}>
 
         {/* Tab bar */}
-        <div
+        <nav
+          aria-label="Type de classement"
           className="flex overflow-x-auto"
-          style={{ background: 'var(--bg-3)', borderBottom: '1px solid var(--border)' }}
+          style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border-2)' }}
         >
           {TABS.map(t => (
             <a
               key={t.key}
               href={`/classement?tab=${t.key}`}
-              className="shrink-0 flex items-center gap-1.5 px-5 py-3 text-[10px] font-bold tracking-[.14em] uppercase transition-colors whitespace-nowrap"
-              style={{
-                color: tab === t.key ? 'var(--text)' : 'var(--muted)',
-                borderBottom: `2px solid ${tab === t.key ? '#F0B429' : 'transparent'}`,
-                marginBottom: '-1px',
-              }}
+              aria-current={tab === t.key ? 'page' : undefined}
+              className="lb-tab shrink-0 flex items-center gap-2 px-4 sm:px-5 py-3 font-display text-base sm:text-lg leading-none whitespace-nowrap"
+              style={tab === t.key
+                ? { background: 'var(--text)', color: '#111311' }
+                : { borderRight: '1px solid var(--border)' }}
             >
-              <t.Icon className="w-3.5 h-3.5" />
+              <t.Icon className="w-4 h-4" aria-hidden="true" />
               {t.label}
             </a>
           ))}
-        </div>
+        </nav>
 
         {/* Progression chart */}
         {tab === 'progression' && (
@@ -175,102 +168,104 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
         {/* Table (non-progression tabs) */}
         {tab !== 'progression' && (
           data?.length ? (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr
-                  className="text-left text-[10px] font-bold tracking-[.12em] uppercase"
-                  style={{ color: 'var(--muted)', borderBottom: '1px solid var(--border)' }}
+                  className="text-left text-xs font-semibold"
+                  style={{ color: 'var(--muted)', borderBottom: '1px solid var(--border-2)', background: 'var(--bg-2)' }}
                 >
-                  <th className="px-5 py-3 w-12">#</th>
-                  <th className="px-4 py-3">Joueur</th>
-                  {tab === 'points'  && <><th className="px-4 py-3 text-right">Points</th><th className="px-4 py-3 text-right">Paris</th><th className="px-4 py-3 text-right">Winrate</th></>}
-                  {tab === 'winrate' && <><th className="px-4 py-3 text-right">Winrate</th><th className="px-4 py-3 text-right">Paris</th></>}
-                  {tab === 'audace'  && <><th className="px-4 py-3 text-right">Cote moy.</th><th className="px-4 py-3 text-right">Paris</th></>}
-                  {tab === '1v1'     && <><th className="px-4 py-3 text-right">Victoires</th><th className="px-4 py-3 text-right">Défaites</th><th className="px-4 py-3 text-right">Série</th></>}
+                  <th scope="col" className="pl-3 sm:pl-4 pr-2 py-2.5 w-14">Rang</th>
+                  <th scope="col" className="px-2 sm:px-4 py-2.5">Joueur</th>
+                  {tab === 'points'  && <><th scope="col" className="px-2 sm:px-4 py-2.5 text-right">Points</th><th scope="col" className="px-2 sm:px-4 py-2.5 text-right">Paris</th><th scope="col" className="px-2 sm:px-4 py-2.5 text-right">Winrate</th></>}
+                  {tab === 'winrate' && <><th scope="col" className="px-2 sm:px-4 py-2.5 text-right">Winrate</th><th scope="col" className="px-2 sm:px-4 py-2.5 text-right">Paris</th></>}
+                  {tab === 'audace'  && <><th scope="col" className="px-2 sm:px-4 py-2.5 text-right">Cote moy.</th><th scope="col" className="px-2 sm:px-4 py-2.5 text-right">Paris</th></>}
+                  {tab === '1v1'     && <><th scope="col" className="px-2 sm:px-4 py-2.5 text-right">Victoires</th><th scope="col" className="px-2 sm:px-4 py-2.5 text-right">Défaites</th><th scope="col" className="px-2 sm:px-4 py-2.5 text-right">Série</th></>}
                 </tr>
               </thead>
               <tbody>
                 {data.map((row: any, i: number) => (
                   <tr
                     key={row.id}
-                    className={`lb-row transition-colors ${i < 3 ? `lb-row-${i}` : ''}`}
-                    style={{ borderBottom: '1px solid rgba(26,47,74,.5)' }}
+                    className="lb-row"
+                    style={{ borderBottom: '1px solid var(--border)' }}
                   >
                     {/* Rank */}
-                    <td className="px-5 py-3.5 w-12">
-                      {i < 3 ? (
-                        <Medal className="w-4 h-4" style={{ color: MEDAL_COLORS[i] }} />
-                      ) : (
-                        <span className="font-mono text-xs" style={{ color: 'var(--muted)' }}>
-                          {i + 1}
-                        </span>
-                      )}
+                    <td className="pl-3 sm:pl-4 pr-2 py-2.5 w-14">
+                      <span
+                        className="inline-block w-9 text-center font-display text-xl leading-none py-1 tabular"
+                        style={i < 3 ? { background: MEDAL_COLORS[i], color: '#111311', borderRadius: 2 } : { color: 'var(--muted)' }}
+                      >
+                        {i + 1}
+                      </span>
                     </td>
 
                     {/* Username */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-2 sm:px-4 py-2.5">
                       <a
                         href={`/profil/${row.username}`}
                         className="lb-username inline-flex items-center gap-2.5"
                       >
                         <span
-                          className="shrink-0 w-7 h-7 rounded-full overflow-hidden flex items-center justify-center"
-                          style={{ background: 'var(--bg-3)', border: '1px solid var(--border)' }}
+                          className="shrink-0 w-8 h-8 overflow-hidden hidden sm:flex items-center justify-center"
+                          style={{ background: 'var(--bg-3)', borderRadius: 2 }}
                         >
                           {row.avatar_url
                             ? <img src={row.avatar_url} alt="" width={28} height={28} className="w-full h-full object-cover" />
-                            : <span className="text-[10px] font-bold uppercase" style={{ color: '#F0B429' }}>{row.username?.[0]}</span>
+                            : <span className="font-display text-base" style={{ color: 'var(--text)' }}>{row.username?.[0]}</span>
                           }
                         </span>
-                        <span className="font-semibold text-sm">{row.username}</span>
-                        {row.bet_win_streak >= 3 && (
-                          <StreakBadge streak={row.bet_win_streak} />
-                        )}
+                        <span className="flex flex-col items-start sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0">
+                          <span className="font-semibold text-[15px] break-all sm:break-normal">{row.username}</span>
+                          {row.bet_win_streak >= 3 && (
+                            <StreakBadge streak={row.bet_win_streak} />
+                          )}
+                        </span>
                       </a>
                     </td>
 
                     {/* Stats — Points tab */}
                     {tab === 'points' && <>
-                      <td className="px-4 py-3.5 text-right font-mono font-bold" style={{ color: '#F0B429' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#F4C430' }}>
                         {row.total_points?.toLocaleString('fr-FR')}
                       </td>
-                      <td className="px-4 py-3.5 text-right text-xs" style={{ color: 'var(--muted)' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right text-sm tabular" style={{ color: 'var(--muted)' }}>
                         {row.total_bets}
                       </td>
-                      <td className="px-4 py-3.5 text-right text-xs" style={{ color: 'var(--muted)' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right text-sm tabular" style={{ color: 'var(--muted)' }}>
                         {row.winrate}%
                       </td>
                     </>}
 
                     {/* Stats — Winrate tab */}
                     {tab === 'winrate' && <>
-                      <td className="px-4 py-3.5 text-right font-mono font-bold" style={{ color: '#22C55E' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#4CC77F' }}>
                         {row.winrate}%
                       </td>
-                      <td className="px-4 py-3.5 text-right text-xs" style={{ color: 'var(--muted)' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right text-sm tabular" style={{ color: 'var(--muted)' }}>
                         {row.total_bets}
                       </td>
                     </>}
 
                     {/* Stats — Audace tab */}
                     {tab === 'audace' && <>
-                      <td className="px-4 py-3.5 text-right font-mono font-bold" style={{ color: '#F0B429' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#F4C430' }}>
                         ×{Number(row.avg_odds).toFixed(2)}
                       </td>
-                      <td className="px-4 py-3.5 text-right text-xs" style={{ color: 'var(--muted)' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right text-sm tabular" style={{ color: 'var(--muted)' }}>
                         {row.total_bets}
                       </td>
                     </>}
 
                     {/* Stats — 1v1 tab */}
                     {tab === '1v1' && <>
-                      <td className="px-4 py-3.5 text-right font-mono font-semibold" style={{ color: '#22C55E' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#4CC77F' }}>
                         {row.duels_won}
                       </td>
-                      <td className="px-4 py-3.5 text-right font-mono font-semibold" style={{ color: '#EF4444' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right font-display text-xl leading-none tabular" style={{ color: '#FF6B72' }}>
                         {row.duels_lost}
                       </td>
-                      <td className="px-4 py-3.5 text-right text-xs" style={{ color: 'var(--muted)' }}>
+                      <td className="px-2 sm:px-4 py-2.5 text-right text-sm tabular" style={{ color: 'var(--muted)' }}>
                         {row.duels_streak}
                       </td>
                     </>}
@@ -278,6 +273,7 @@ export default async function ClassementPage({ searchParams }: { searchParams: {
                 ))}
               </tbody>
             </table>
+            </div>
           ) : (
             <p className="text-center py-10 text-sm" style={{ color: 'var(--muted)' }}>
               Aucune donnée disponible.

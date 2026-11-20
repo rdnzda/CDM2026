@@ -50,9 +50,9 @@ function sortGroup(teams: TeamRow[]): TeamRow[] {
 
 // Row qualifier indicator: 1st=gold, 2nd=green, 3rd=possible (blue), 4th=out
 const QUAL_STYLE = [
-  { left: '#F0B429', title: '1er — Qualifié' },
-  { left: '#22C55E', title: '2e — Qualifié' },
-  { left: '#60A5FA', title: '3e — Possible' },
+  { left: '#F4C430', title: '1er — Qualifié' },
+  { left: '#4CC77F', title: '2e — Qualifié' },
+  { left: '#8FB0FF', title: '3e — Possible' },
   { left: 'transparent', title: '' },
 ]
 
@@ -75,7 +75,7 @@ export default async function GroupesPage() {
       </div>
 
       {sortedGroupNames.length === 0 && (
-        <div className="rounded-2xl p-14 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+        <div className="rounded p-14 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
           <p style={{ color: 'var(--muted)' }}>Données des groupes non disponibles pour le moment.</p>
         </div>
       )}
@@ -87,12 +87,12 @@ export default async function GroupesPage() {
           return (
             <div
               key={groupName}
-              className="rounded-2xl overflow-hidden"
+              className="rounded overflow-hidden"
               style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}
             >
               {/* Group header */}
               <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-3)' }}>
-                <span className="font-display text-lg tracking-widest" style={{ color: '#F0B429' }}>
+                <span className="font-display text-lg tracking-wide" style={{ color: '#F4C430' }}>
                   GROUPE {groupName}
                 </span>
                 <span className="text-xs ml-auto" style={{ color: 'var(--muted)' }}>
@@ -101,7 +101,7 @@ export default async function GroupesPage() {
               </div>
 
               {/* Table header */}
-              <div className="grid items-center px-4 py-1.5 text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)', gridTemplateColumns: '1fr repeat(7, 28px)' }}>
+              <div className="grid items-center px-4 py-1.5 text-[10px] font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)', gridTemplateColumns: '1fr repeat(7, 28px)' }}>
                 <span>Équipe</span>
                 <span className="text-center">Pts</span>
                 <span className="text-center">J</span>
@@ -135,21 +135,21 @@ export default async function GroupesPage() {
                     </div>
 
                     {/* Pts */}
-                    <span className="text-center text-sm font-bold font-mono" style={{ color: '#F0B429' }}>{t.pts}</span>
+                    <span className="text-center text-sm font-bold font-mono" style={{ color: '#F4C430' }}>{t.pts}</span>
                     {/* J */}
                     <span className="text-center text-xs" style={{ color: 'var(--muted)' }}>{t.played}</span>
                     {/* V */}
-                    <span className="text-center text-xs" style={{ color: t.won > 0 ? '#22C55E' : 'var(--muted)' }}>{t.won}</span>
+                    <span className="text-center text-xs" style={{ color: t.won > 0 ? '#4CC77F' : 'var(--muted)' }}>{t.won}</span>
                     {/* N */}
                     <span className="text-center text-xs" style={{ color: 'var(--muted)' }}>{t.drawn}</span>
                     {/* D */}
-                    <span className="text-center text-xs" style={{ color: t.lost > 0 ? '#EF4444' : 'var(--muted)' }}>{t.lost}</span>
+                    <span className="text-center text-xs" style={{ color: t.lost > 0 ? '#FF6B72' : 'var(--muted)' }}>{t.lost}</span>
                     {/* BP */}
                     <span className="text-center text-xs" style={{ color: 'var(--muted)' }}>{t.gf}</span>
                     {/* Diff */}
                     <span
                       className="text-center text-xs font-semibold font-mono"
-                      style={{ color: gd > 0 ? '#22C55E' : gd < 0 ? '#EF4444' : 'var(--muted)' }}
+                      style={{ color: gd > 0 ? '#4CC77F' : gd < 0 ? '#FF6B72' : 'var(--muted)' }}
                     >
                       {gd > 0 ? `+${gd}` : gd}
                     </span>
@@ -160,10 +160,10 @@ export default async function GroupesPage() {
               {/* Qualifier legend */}
               <div className="flex items-center gap-4 px-4 py-2" style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-3)' }}>
                 <span className="flex items-center gap-1.5 text-[10px]" style={{ color: 'var(--muted)' }}>
-                  <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#F0B429' }} />Qualifié
+                  <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#F4C430' }} />Qualifié
                 </span>
                 <span className="flex items-center gap-1.5 text-[10px]" style={{ color: 'var(--muted)' }}>
-                  <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#60A5FA' }} />Possible
+                  <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#8FB0FF' }} />Possible
                 </span>
               </div>
             </div>

@@ -68,7 +68,7 @@ export default async function CombosPage() {
             {pendingCombos.map((combo: any) => (
               <div
                 key={combo.id}
-                className="rounded-2xl overflow-hidden"
+                className="rounded overflow-hidden"
                 style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}
               >
                 {/* Summary row */}
@@ -85,7 +85,7 @@ export default async function CombosPage() {
                     </span>
                     <span
                       className="font-mono font-bold text-base"
-                      style={{ color: '#F0B429' }}
+                      style={{ color: '#F4C430' }}
                     >
                       ×{Number(combo.total_odds).toFixed(2)}
                     </span>
@@ -96,12 +96,12 @@ export default async function CombosPage() {
                   <div className="text-right">
                     <span
                       className="font-display text-xl"
-                      style={{ color: '#22C55E', letterSpacing: '.04em' }}
+                      style={{ color: '#4CC77F', letterSpacing: '.04em' }}
                     >
                       +{combo.potential_win.toLocaleString('fr-FR')}
                     </span>
                     <span
-                      className="text-[9px] tracking-widest ml-1.5 uppercase"
+                      className="text-[9px] tracking-wide ml-1.5 uppercase"
                       style={{ color: 'var(--muted)' }}
                     >
                       pts pot.
@@ -114,7 +114,7 @@ export default async function CombosPage() {
                   {combo.combo_legs?.map((leg: any) => (
                     <div
                       key={leg.id}
-                      className="flex items-center justify-between text-xs px-3 py-1.5 rounded-lg"
+                      className="flex items-center justify-between text-xs px-3 py-1.5 rounded-sm"
                       style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
                     >
                       <span style={{ color: 'var(--muted)' }}>
@@ -122,7 +122,7 @@ export default async function CombosPage() {
                         <span className="mx-1.5 opacity-40">·</span>
                         {leg.bet_type}
                       </span>
-                      <span className="font-mono font-semibold" style={{ color: '#F0B429' }}>
+                      <span className="font-mono font-semibold" style={{ color: '#F4C430' }}>
                         ×{Number(leg.odds_at_bet_time).toFixed(2)}
                       </span>
                     </div>

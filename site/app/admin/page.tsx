@@ -46,14 +46,14 @@ export default async function AdminPage() {
     <div className="max-w-3xl mx-auto space-y-8 animate-fade-up">
       <div className="flex items-baseline gap-4">
         <h1 className="font-display text-4xl" style={{ color: 'var(--text)', letterSpacing: '.05em' }}>ADMIN</h1>
-        <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: 'rgba(239,68,68,.15)', color: '#EF4444' }}>SCORES & BOOSTS</span>
+        <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: 'rgba(255,107,114,.15)', color: '#FF6B72' }}>SCORES & BOOSTS</span>
       </div>
 
       {/* Phase boost distribution */}
-      <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <div className="rounded p-5 space-y-4" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-3">
           <h2 className="font-semibold text-sm" style={{ color: 'var(--text)' }}>Distribution des boosts — Phase éliminatoire</h2>
-          <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'rgba(240,180,41,.1)', color: '#F0B429' }}>
+          <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'rgba(244,196,48,.1)', color: '#F4C430' }}>
             3× ×1.5 + 1× ×2.0 par joueur
           </span>
         </div>
@@ -66,7 +66,7 @@ export default async function AdminPage() {
       {Object.entries(grouped).map(([date, dayMatches]) => (
         <div key={date} className="space-y-2">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>{date}</span>
+            <span className="text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>{date}</span>
             <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
           </div>
 
@@ -78,10 +78,10 @@ export default async function AdminPage() {
             return (
               <div
                 key={match.id}
-                className="rounded-2xl p-4"
+                className="rounded p-4"
                 style={{
                   background: 'var(--bg-2)',
-                  border: `1px solid ${isLive ? 'rgba(34,197,94,.3)' : 'var(--border)'}`,
+                  border: `1px solid ${isLive ? 'rgba(76,199,127,.3)' : 'var(--border)'}`,
                 }}
               >
                 {/* Match header */}
@@ -93,7 +93,7 @@ export default async function AdminPage() {
 
                   <div className="shrink-0 text-center">
                     {hasScore ? (
-                      <span className="font-display text-xl" style={{ color: isDone ? '#F0B429' : '#22C55E' }}>
+                      <span className="font-display text-xl" style={{ color: isDone ? '#F4C430' : '#4CC77F' }}>
                         {match.final_score_home} – {match.final_score_away}
                       </span>
                     ) : (
@@ -113,7 +113,7 @@ export default async function AdminPage() {
                       {PHASE_LABEL[match.phase] ?? match.phase}{match.group_name ? ` ${match.group_name}` : ''}
                     </span>
                     {isLive && (
-                      <span className="text-[9px] font-bold" style={{ color: '#22C55E' }}>● LIVE</span>
+                      <span className="text-[9px] font-bold" style={{ color: '#4CC77F' }}>● LIVE</span>
                     )}
                     {isDone && (
                       <span className="text-[9px] font-bold" style={{ color: 'var(--muted)' }}>● FIN</span>

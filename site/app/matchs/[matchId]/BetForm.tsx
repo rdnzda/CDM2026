@@ -32,9 +32,9 @@ export default function BetForm({ match, exactScoreOdds, scorerOdds, isAuthentic
 
   if (!isAuthenticated) {
     return (
-      <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+      <div className="rounded p-8 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
         <p className="mb-4 text-sm" style={{ color: 'var(--muted)' }}>Connecte-toi pour prédire</p>
-        <a href="/api/auth/login" className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl" style={{ background: '#5865F2', color: '#fff' }}>
+        <a href="/api/auth/login" className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded" style={{ background: '#D52B3A', color: '#fff' }}>
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
             <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
           </svg>
@@ -136,11 +136,11 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
   const resultLabel = result === 'home' ? match.home_team : result === 'away' ? match.away_team : 'Match nul'
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+    <div className="rounded overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
 
       {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-5 py-3.5" style={{ borderBottom: '1px solid var(--border)', background: 'rgba(240,180,41,.04)' }}>
-        <Zap className="w-4 h-4 shrink-0" style={{ color: '#F0B429' }} />
+      <div className="flex items-center gap-3 px-5 py-3.5" style={{ borderBottom: '1px solid var(--border)', background: 'rgba(244,196,48,.04)' }}>
+        <Zap className="w-4 h-4 shrink-0" style={{ color: '#F4C430' }} />
         <p className="text-xs" style={{ color: 'var(--muted)' }}>
           Phase éliminatoire — prédictions gratuites. Tu gagnes des points si tu as raison, sans mise.
         </p>
@@ -152,26 +152,26 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
         <div className="p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text)' }}>Score prédit</p>
+              <p className="text-xs font-bold tracking-wide uppercase" style={{ color: 'var(--text)' }}>Score prédit</p>
               <p className="text-[10px] mt-0.5" style={{ color: 'var(--muted)' }}>Définit aussi le vainqueur</p>
             </div>
             <div className="text-right">
-              <p className="text-sm font-bold" style={{ color: '#F0B429' }}>+{ptsResult + ptsExact} pts</p>
+              <p className="text-sm font-bold" style={{ color: '#F4C430' }}>+{ptsResult + ptsExact} pts</p>
               <p className="text-[10px]" style={{ color: 'var(--muted)' }}>+{ptsResult} résultat · +{ptsExact} bonus exact</p>
             </div>
           </div>
 
-          <div className="rounded-xl p-4" style={{ background: 'var(--bg)', border: '1.5px solid #F0B429' }}>
+          <div className="rounded p-4" style={{ background: 'var(--bg)', border: '1.5px solid #F4C430' }}>
             <div className="flex items-center justify-center gap-6">
               <div className="flex flex-col items-center gap-2">
                 <p className="text-[10px] font-semibold uppercase tracking-wide truncate max-w-[80px] text-center" style={{ color: 'var(--muted)' }}>{match.home_team}</p>
                 <div className="flex items-center gap-2">
                   <button type="button" onClick={() => updateScore(scoreH - 1, scoreA)}
-                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center"
+                    className="w-8 h-8 rounded-sm font-bold text-lg flex items-center justify-center"
                     style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>−</button>
-                  <span className="font-display text-3xl w-8 text-center" style={{ color: '#F0B429' }}>{scoreH}</span>
+                  <span className="font-display text-3xl w-8 text-center" style={{ color: '#F4C430' }}>{scoreH}</span>
                   <button type="button" onClick={() => updateScore(scoreH + 1, scoreA)}
-                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center"
+                    className="w-8 h-8 rounded-sm font-bold text-lg flex items-center justify-center"
                     style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>+</button>
                 </div>
               </div>
@@ -180,29 +180,29 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
                 <p className="text-[10px] font-semibold uppercase tracking-wide truncate max-w-[80px] text-center" style={{ color: 'var(--muted)' }}>{match.away_team}</p>
                 <div className="flex items-center gap-2">
                   <button type="button" onClick={() => updateScore(scoreH, scoreA - 1)}
-                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center"
+                    className="w-8 h-8 rounded-sm font-bold text-lg flex items-center justify-center"
                     style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>−</button>
-                  <span className="font-display text-3xl w-8 text-center" style={{ color: '#F0B429' }}>{scoreA}</span>
+                  <span className="font-display text-3xl w-8 text-center" style={{ color: '#F4C430' }}>{scoreA}</span>
                   <button type="button" onClick={() => updateScore(scoreH, scoreA + 1)}
-                    className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center"
+                    className="w-8 h-8 rounded-sm font-bold text-lg flex items-center justify-center"
                     style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>+</button>
                 </div>
               </div>
             </div>
-            <p className="text-xs font-semibold text-center mt-3" style={{ color: '#F0B429' }}>
+            <p className="text-xs font-semibold text-center mt-3" style={{ color: '#F4C430' }}>
               {resultLabel} · {scoreH}–{scoreA}
             </p>
           </div>
 
           {/* Mini breakdown */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg px-3 py-2 text-center" style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)' }}>
+            <div className="rounded-sm px-3 py-2 text-center" style={{ background: 'rgba(76,199,127,.06)', border: '1px solid rgba(76,199,127,.15)' }}>
               <p className="text-[10px]" style={{ color: 'var(--muted)' }}>Résultat correct</p>
-              <p className="text-sm font-bold mt-0.5" style={{ color: '#22C55E' }}>+{ptsResult} pts</p>
+              <p className="text-sm font-bold mt-0.5" style={{ color: '#4CC77F' }}>+{ptsResult} pts</p>
             </div>
-            <div className="rounded-lg px-3 py-2 text-center" style={{ background: 'rgba(240,180,41,.06)', border: '1px solid rgba(240,180,41,.15)' }}>
+            <div className="rounded-sm px-3 py-2 text-center" style={{ background: 'rgba(244,196,48,.06)', border: '1px solid rgba(244,196,48,.15)' }}>
               <p className="text-[10px]" style={{ color: 'var(--muted)' }}>Score exact aussi</p>
-              <p className="text-sm font-bold mt-0.5" style={{ color: '#F0B429' }}>+{ptsResult + ptsExact} pts</p>
+              <p className="text-sm font-bold mt-0.5" style={{ color: '#F4C430' }}>+{ptsResult + ptsExact} pts</p>
             </div>
           </div>
         </div>
@@ -211,14 +211,14 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
         {scorerOdds.length > 0 && (
         <div className="p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text)' }}>Buteur</p>
-            <span className="text-sm font-bold" style={{ color: scorerPred ? '#60A5FA' : 'var(--muted)' }}>+{ptsScorer} pts</span>
+            <p className="text-xs font-bold tracking-wide uppercase" style={{ color: 'var(--text)' }}>Buteur</p>
+            <span className="text-sm font-bold" style={{ color: scorerPred ? '#8FB0FF' : 'var(--muted)' }}>+{ptsScorer} pts</span>
           </div>
           <input type="text" value={scorerQuery} onChange={e => { setScorerQuery(e.target.value); setFeedback(null) }}
             placeholder="Rechercher un joueur…"
-            className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
+            className="w-full px-4 py-2.5 rounded text-sm outline-none"
             style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', color: 'var(--text)', transition: 'border-color .15s' }}
-            onFocus={(e: any) => e.target.style.borderColor = '#60A5FA'}
+            onFocus={(e: any) => e.target.style.borderColor = '#8FB0FF'}
             onBlur={(e: any) => e.target.style.borderColor = 'var(--border)'}
           />
           {scorerOdds.length === 0 ? (
@@ -232,13 +232,13 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
                 return (
                   <button key={o.id} type="button"
                     onClick={() => { setScorerPred(isSel ? null : o.player_name); setFeedback(null) }}
-                    className="flex items-center justify-between rounded-xl px-3 py-2.5 text-left transition-all"
-                    style={{ background: isSel ? 'rgba(96,165,250,.1)' : 'var(--bg)', border: `1.5px solid ${isSel ? '#60A5FA' : 'var(--border)'}` }}>
+                    className="flex items-center justify-between rounded px-3 py-2.5 text-left transition-all"
+                    style={{ background: isSel ? 'rgba(143,176,255,.1)' : 'var(--bg)', border: `1.5px solid ${isSel ? '#8FB0FF' : 'var(--border)'}` }}>
                     <div className="min-w-0">
                       <p className="text-xs font-semibold truncate" style={{ color: 'var(--text)' }}>{o.player_name}</p>
                       <p className="text-[10px]" style={{ color: 'var(--muted)' }}>{o.team}</p>
                     </div>
-                    <span className="font-mono text-xs font-bold ml-2 shrink-0" style={{ color: isSel ? '#60A5FA' : 'var(--muted)' }}>×{o.odds.toFixed(2)}</span>
+                    <span className="font-mono text-xs font-bold ml-2 shrink-0" style={{ color: isSel ? '#8FB0FF' : 'var(--muted)' }}>×{o.odds.toFixed(2)}</span>
                   </button>
                 )
               })}
@@ -253,8 +253,8 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
           {userBoosts.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
-                <Zap className="w-3 h-3" style={{ color: '#F0B429' }} />
-                <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>Boost</span>
+                <Zap className="w-3 h-3" style={{ color: '#F4C430' }} />
+                <span className="text-[10px] font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>Boost</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {userBoosts.map(b => {
@@ -264,9 +264,9 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
                     <button key={b.id} type="button" onClick={() => setBoostId(active ? null : b.id)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
                       style={{
-                        background: active ? 'rgba(240,180,41,.2)' : 'rgba(240,180,41,.07)',
-                        border: `1.5px solid ${active ? '#F0B429' : 'rgba(240,180,41,.3)'}`,
-                        color: active ? '#F0B429' : 'rgba(200,160,40,.9)',
+                        background: active ? 'rgba(244,196,48,.2)' : 'rgba(244,196,48,.07)',
+                        border: `1.5px solid ${active ? '#F4C430' : 'rgba(244,196,48,.3)'}`,
+                        color: active ? '#F4C430' : 'rgba(244,196,48,.9)',
                       }}>
                       <Zap className="w-3 h-3" />{label}
                     </button>
@@ -277,19 +277,19 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
           )}
 
           {/* Récap */}
-          <div className="rounded-xl px-4 py-3 space-y-1.5" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+          <div className="rounded px-4 py-3 space-y-1.5" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between text-xs">
               <span style={{ color: 'var(--muted)' }}>Résultat · {resultLabel}</span>
-              <span className="font-bold" style={{ color: '#22C55E' }}>+{ptsResult}</span>
+              <span className="font-bold" style={{ color: '#4CC77F' }}>+{ptsResult}</span>
             </div>
             <div className="flex items-center justify-between text-xs">
               <span style={{ color: 'var(--muted)' }}>Score exact bonus · {scoreH}–{scoreA}</span>
-              <span className="font-bold" style={{ color: '#F0B429' }}>+{ptsExact}</span>
+              <span className="font-bold" style={{ color: '#F4C430' }}>+{ptsExact}</span>
             </div>
             {scorerPred && (
               <div className="flex items-center justify-between text-xs">
                 <span className="truncate" style={{ color: 'var(--muted)' }}>Buteur · {scorerPred}</span>
-                <span className="font-bold ml-2 shrink-0" style={{ color: '#60A5FA' }}>+{ptsScorer}</span>
+                <span className="font-bold ml-2 shrink-0" style={{ color: '#8FB0FF' }}>+{ptsScorer}</span>
               </div>
             )}
             <div className="flex items-center justify-between pt-1.5" style={{ borderTop: '1px solid var(--border)' }}>
@@ -300,11 +300,11 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
 
           {/* Feedback */}
           {feedback && (
-            <div className="px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2"
+            <div className="px-4 py-3 rounded text-xs font-medium flex items-center gap-2"
               style={{
-                background: feedback.ok ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)',
-                border: `1px solid ${feedback.ok ? 'rgba(34,197,94,.2)' : 'rgba(239,68,68,.2)'}`,
-                color: feedback.ok ? '#22C55E' : '#EF4444',
+                background: feedback.ok ? 'rgba(76,199,127,.08)' : 'rgba(255,107,114,.08)',
+                border: `1px solid ${feedback.ok ? 'rgba(76,199,127,.2)' : 'rgba(255,107,114,.2)'}`,
+                color: feedback.ok ? '#4CC77F' : '#FF6B72',
               }}>
               {feedback.ok ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
               {feedback.msg}
@@ -312,12 +312,12 @@ function KnockoutForm({ match, scorerOdds, userBoosts }: {
           )}
 
           <button type="button" disabled={loading} onClick={submitAll}
-            className="w-full py-3.5 rounded-xl font-display text-lg tracking-[.08em] transition-all"
+            className="w-full py-3.5 rounded font-display text-lg tracking-[.08em] transition-all"
             style={{
-              background: !loading ? 'linear-gradient(135deg, #F0B429 0%, #FFD060 100%)' : 'var(--bg)',
-              color:      !loading ? '#07101E' : 'var(--muted)',
-              border:     `1.5px solid ${!loading ? '#F0B429' : 'var(--border)'}`,
-              boxShadow:  !loading ? '0 4px 20px rgba(240,180,41,.2)' : 'none',
+              background: !loading ? '#F4C430' : 'var(--bg)',
+              color:      !loading ? '#111311' : 'var(--muted)',
+              border:     `1.5px solid ${!loading ? '#F4C430' : 'var(--border)'}`,
+              boxShadow: 'none',
             }}>
             {loading ? 'Envoi…' : `PRÉDIRE ${scoreH}–${scoreA} — jusqu'à +${totalMax} pts`}
           </button>
@@ -451,14 +451,14 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
     if (visibleBoosts.length === 0) return null
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-1.5"><Zap className="w-3 h-3" style={{ color: '#F0B429' }} /><span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>Bonus disponibles</span></div>
+        <div className="flex items-center gap-1.5"><Zap className="w-3 h-3" style={{ color: '#F4C430' }} /><span className="text-[10px] font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>Bonus disponibles</span></div>
         <div className="flex flex-wrap gap-1.5">
           {visibleBoosts.map(b => {
             const active = selectedBoostId === b.id; const label = b.boost_type === 'x20_exact' ? '×2.0 Score exact' : '×1.5 Boost'
             return (
               <button key={b.id} type="button" onClick={() => setSelectedBoostId(active ? null : b.id)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
-                style={{ background: active ? 'rgba(240,180,41,.2)' : 'rgba(240,180,41,.07)', border: `1.5px solid ${active ? '#F0B429' : 'rgba(240,180,41,.3)'}`, color: active ? '#F0B429' : 'rgba(200,160,40,.9)' }}>
+                style={{ background: active ? 'rgba(244,196,48,.2)' : 'rgba(244,196,48,.07)', border: `1.5px solid ${active ? '#F4C430' : 'rgba(244,196,48,.3)'}`, color: active ? '#F4C430' : 'rgba(244,196,48,.9)' }}>
                 <Zap className="w-3 h-3" />{label}
               </button>
             )
@@ -477,14 +477,14 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
     const LABELS: Record<Wildcard['type'], string> = { double: '×2 Double', insurance: 'Assurance', last_minute: 'Dernière Minute' }
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-1.5"><Shield className="w-3 h-3" style={{ color: '#60A5FA' }} /><span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>Wildcards disponibles</span></div>
+        <div className="flex items-center gap-1.5"><Shield className="w-3 h-3" style={{ color: '#8FB0FF' }} /><span className="text-[10px] font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>Wildcards disponibles</span></div>
         <div className="flex flex-wrap gap-1.5">
           {visibleWildcards.map(w => {
             const active = selectedWildcardId === w.id; const Icon = ICONS[w.type]
             return (
               <button key={w.id} type="button" onClick={() => setSelectedWildcardId(active ? null : w.id)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
-                style={{ background: active ? 'rgba(96,165,250,.2)' : 'rgba(96,165,250,.07)', border: `1.5px solid ${active ? '#60A5FA' : 'rgba(96,165,250,.3)'}`, color: active ? '#60A5FA' : 'rgba(120,160,220,.9)' }}>
+                style={{ background: active ? 'rgba(143,176,255,.2)' : 'rgba(143,176,255,.07)', border: `1.5px solid ${active ? '#8FB0FF' : 'rgba(143,176,255,.3)'}`, color: active ? '#8FB0FF' : 'rgba(169,173,163,.9)' }}>
                 <Icon className="w-3 h-3" />{LABELS[w.type]}
               </button>
             )
@@ -497,7 +497,7 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
   const StakeBlock = () => (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>Mise (100–2 000)</span>
+        <span className="text-[10px] font-semibold tracking-wide uppercase" style={{ color: 'var(--muted)' }}>Mise (100–2 000)</span>
         <span className="font-mono text-xs" style={{ color: 'var(--muted)' }}>{availablePoints.toLocaleString('fr-FR')} dispo</span>
       </div>
       <div className="flex gap-1.5">
@@ -505,8 +505,8 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
           const active = stake === v
           return (
             <button key={v} type="button" onClick={() => setStake(Math.min(v, availablePoints, 2000))}
-              className="flex-1 py-2 rounded-lg text-[11px] font-bold transition-all"
-              style={{ background: active ? 'rgba(240,180,41,.15)' : 'var(--bg)', border: `1.5px solid ${active ? '#F0B429' : 'var(--border)'}`, color: active ? '#F0B429' : 'var(--muted)' }}>
+              className="flex-1 py-2 rounded-sm text-[11px] font-bold transition-all"
+              style={{ background: active ? 'rgba(244,196,48,.15)' : 'var(--bg)', border: `1.5px solid ${active ? '#F4C430' : 'var(--border)'}`, color: active ? '#F4C430' : 'var(--muted)' }}>
               {v >= 1000 ? `${v / 1000}k` : v}
             </button>
           )
@@ -514,9 +514,9 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
       </div>
       <input type="number" min={100} max={Math.min(2000, availablePoints)} value={stake}
         onChange={e => setStake(Number(e.target.value))}
-        className="w-full px-4 py-2.5 rounded-xl font-mono text-sm outline-none"
+        className="w-full px-4 py-2.5 rounded font-mono text-sm outline-none"
         style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', color: 'var(--text)', transition: 'border-color .15s' }}
-        onFocus={(e: any) => e.target.style.borderColor = '#F0B429'}
+        onFocus={(e: any) => e.target.style.borderColor = '#F4C430'}
         onBlur={(e: any) => e.target.style.borderColor = 'var(--border)'}
       />
     </div>
@@ -524,19 +524,19 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
 
   const GainBlock = ({ isSpecial }: { isSpecial?: boolean }) => {
     if (!gain) return null
-    const color = isSpecial ? '#22C55E' : hasBonus ? '#F0B429' : '#22C55E'
-    const bg    = isSpecial ? 'rgba(34,197,94,.05)'  : hasBonus ? 'rgba(240,180,41,.05)' : 'rgba(34,197,94,.05)'
-    const bdr   = isSpecial ? 'rgba(34,197,94,.2)'   : hasBonus ? 'rgba(240,180,41,.2)'  : 'rgba(34,197,94,.2)'
+    const color = isSpecial ? '#4CC77F' : hasBonus ? '#F4C430' : '#4CC77F'
+    const bg    = isSpecial ? 'rgba(76,199,127,.05)'  : hasBonus ? 'rgba(244,196,48,.05)' : 'rgba(76,199,127,.05)'
+    const bdr   = isSpecial ? 'rgba(76,199,127,.2)'   : hasBonus ? 'rgba(244,196,48,.2)'  : 'rgba(76,199,127,.2)'
     return (
-      <div className="rounded-xl px-4 py-3.5 flex items-center justify-between" style={{ background: bg, border: `1px solid ${bdr}` }}>
+      <div className="rounded px-4 py-3.5 flex items-center justify-between" style={{ background: bg, border: `1px solid ${bdr}` }}>
         <div>
-          <p className="text-[10px] font-semibold tracking-widest" style={{ color: 'var(--muted)' }}>{hasBonus && !isSpecial ? 'SI TOUT CORRECT' : 'GAIN POTENTIEL'}</p>
+          <p className="text-[10px] font-semibold tracking-wide" style={{ color: 'var(--muted)' }}>{hasBonus && !isSpecial ? 'SI TOUT CORRECT' : 'GAIN POTENTIEL'}</p>
           {hasBonus && !isSpecial && baseGain && gain !== baseGain && <p className="text-[10px] mt-0.5" style={{ color: 'var(--muted)' }}>résultat seul : +{baseGain.toLocaleString('fr-FR')}</p>}
-          {boostMultiplier > 1 && <p className="text-[10px] mt-0.5 font-semibold" style={{ color: '#F0B429' }}>boost ×{boostMultiplier} inclus</p>}
+          {boostMultiplier > 1 && <p className="text-[10px] mt-0.5 font-semibold" style={{ color: '#F4C430' }}>boost ×{boostMultiplier} inclus</p>}
         </div>
         <div className="text-right">
           <span className="font-display text-2xl" style={{ color, letterSpacing: '.04em' }}>+{gain.toLocaleString('fr-FR')}</span>
-          <p className="text-[9px] tracking-widest mt-0.5 uppercase" style={{ color: 'var(--muted)' }}>pts</p>
+          <p className="text-[9px] tracking-wide mt-0.5 uppercase" style={{ color: 'var(--muted)' }}>pts</p>
         </div>
       </div>
     )
@@ -545,8 +545,8 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
   const FeedbackBlock = ({ fb }: { fb: { ok: boolean; msg: string } | null }) => {
     if (!fb) return null
     return (
-      <div className="px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-2"
-        style={{ background: fb.ok ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)', border: `1px solid ${fb.ok ? 'rgba(34,197,94,.2)' : 'rgba(239,68,68,.2)'}`, color: fb.ok ? '#22C55E' : '#EF4444' }}>
+      <div className="px-4 py-3 rounded text-xs font-medium flex items-center gap-2"
+        style={{ background: fb.ok ? 'rgba(76,199,127,.08)' : 'rgba(255,107,114,.08)', border: `1px solid ${fb.ok ? 'rgba(76,199,127,.2)' : 'rgba(255,107,114,.2)'}`, color: fb.ok ? '#4CC77F' : '#FF6B72' }}>
         {fb.ok ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
         {fb.msg}
       </div>
@@ -555,12 +555,12 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
 
   const SubmitButton = ({ disabled, loading: l, label }: { disabled: boolean; loading: boolean; label: string }) => (
     <button type="submit" disabled={disabled || l}
-      className="w-full py-3.5 rounded-xl font-display text-lg tracking-[.08em] transition-all"
+      className="w-full py-3.5 rounded font-display text-lg tracking-[.08em] transition-all"
       style={{
-        background: !disabled && !l ? 'linear-gradient(135deg, #F0B429 0%, #FFD060 100%)' : 'var(--bg)',
-        color: !disabled && !l ? '#07101E' : 'var(--muted)',
-        border: `1.5px solid ${!disabled && !l ? '#F0B429' : 'var(--border)'}`,
-        boxShadow: !disabled && !l ? '0 4px 20px rgba(240,180,41,.2)' : 'none',
+        background: !disabled && !l ? '#F4C430' : 'var(--bg)',
+        color: !disabled && !l ? '#111311' : 'var(--muted)',
+        border: `1.5px solid ${!disabled && !l ? '#F4C430' : 'var(--border)'}`,
+        boxShadow: 'none',
       }}
       onMouseDown={(e: any) => { if (!disabled && !l) e.currentTarget.style.transform = 'scale(0.98)' }}
       onMouseUp={(e: any) => { e.currentTarget.style.transform = 'none' }}>
@@ -572,46 +572,46 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
     const resultLabel = manualH > manualA ? match.home_team : manualH < manualA ? match.away_team : 'Match nul'
     const activeOddsForScore = scoreOdds ?? (selectedScore ? (predResult === 'home' ? match.odds_home : predResult === 'away' ? match.odds_away : match.odds_draw) : null)
     return (
-      <div className="rounded-xl p-4 space-y-3" style={{ background: 'var(--bg)', border: '1.5px solid var(--border)' }}>
-        <p className="text-[10px] font-semibold tracking-widest uppercase text-center" style={{ color: 'var(--muted)' }}>
+      <div className="rounded p-4 space-y-3" style={{ background: 'var(--bg)', border: '1.5px solid var(--border)' }}>
+        <p className="text-[10px] font-semibold tracking-wide uppercase text-center" style={{ color: 'var(--muted)' }}>
           {exactScoreOdds.length > 0 ? 'OU ENTRER UN SCORE' : 'SCORE PRÉDIT'}
         </p>
         <div className="flex items-center justify-center gap-6">
           <div className="flex flex-col items-center gap-2">
             <p className="text-[10px] font-semibold uppercase tracking-wide truncate max-w-[80px] text-center" style={{ color: 'var(--muted)' }}>{match.home_team}</p>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => handleManualScore(manualH - 1, manualA)} className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-all" style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>−</button>
-              <span className="font-display text-3xl w-8 text-center" style={{ color: '#F0B429' }}>{manualH}</span>
-              <button type="button" onClick={() => handleManualScore(manualH + 1, manualA)} className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-all" style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>+</button>
+              <button type="button" onClick={() => handleManualScore(manualH - 1, manualA)} className="w-8 h-8 rounded-sm font-bold text-lg flex items-center justify-center transition-all" style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>−</button>
+              <span className="font-display text-3xl w-8 text-center" style={{ color: '#F4C430' }}>{manualH}</span>
+              <button type="button" onClick={() => handleManualScore(manualH + 1, manualA)} className="w-8 h-8 rounded-sm font-bold text-lg flex items-center justify-center transition-all" style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>+</button>
             </div>
           </div>
           <span className="font-display text-2xl" style={{ color: 'var(--border-2)' }}>:</span>
           <div className="flex flex-col items-center gap-2">
             <p className="text-[10px] font-semibold uppercase tracking-wide truncate max-w-[80px] text-center" style={{ color: 'var(--muted)' }}>{match.away_team}</p>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => handleManualScore(manualH, manualA - 1)} className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-all" style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>−</button>
-              <span className="font-display text-3xl w-8 text-center" style={{ color: '#F0B429' }}>{manualA}</span>
-              <button type="button" onClick={() => handleManualScore(manualH, manualA + 1)} className="w-8 h-8 rounded-lg font-bold text-lg flex items-center justify-center transition-all" style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>+</button>
+              <button type="button" onClick={() => handleManualScore(manualH, manualA - 1)} className="w-8 h-8 rounded-sm font-bold text-lg flex items-center justify-center transition-all" style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>−</button>
+              <span className="font-display text-3xl w-8 text-center" style={{ color: '#F4C430' }}>{manualA}</span>
+              <button type="button" onClick={() => handleManualScore(manualH, manualA + 1)} className="w-8 h-8 rounded-sm font-bold text-lg flex items-center justify-center transition-all" style={{ background: 'var(--bg-2)', border: '1.5px solid var(--border)', color: 'var(--text)' }}>+</button>
             </div>
           </div>
         </div>
         <div className="flex items-center justify-center gap-2">
           <p className="text-xs font-semibold text-center" style={{ color: 'var(--muted)' }}>{resultLabel}</p>
-          {activeOddsForScore && <span className="font-mono text-xs font-bold" style={{ color: '#F0B429' }}>×{Number(activeOddsForScore).toFixed(2)}{scoreOdds ? ' (score exact)' : ' (résultat)'}</span>}
+          {activeOddsForScore && <span className="font-mono text-xs font-bold" style={{ color: '#F4C430' }}>×{Number(activeOddsForScore).toFixed(2)}{scoreOdds ? ' (score exact)' : ' (résultat)'}</span>}
         </div>
       </div>
     )
   }
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+    <div className="rounded overflow-hidden" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
       <div className="flex" style={{ borderBottom: '1px solid var(--border)' }}>
         {TABS.map(t => (
           <button key={t.id} type="button" onClick={() => setActiveTab(t.id)}
             className="relative flex-1 py-3.5 text-xs font-semibold tracking-wider transition-colors"
-            style={{ color: activeTab === t.id ? '#F0B429' : 'var(--muted)', background: 'transparent' }}>
+            style={{ color: activeTab === t.id ? '#F4C430' : 'var(--muted)', background: 'transparent' }}>
             {t.label}
-            {activeTab === t.id && <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ background: '#F0B429' }} />}
+            {activeTab === t.id && <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full" style={{ background: '#F4C430' }} />}
           </button>
         ))}
       </div>
@@ -624,12 +624,12 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
                 if (!o.odds) return null; const active = predResult === o.val
                 return (
                   <button key={o.val} type="button" onClick={() => handleResultClick(o.val)}
-                    className="relative flex flex-col items-center gap-2.5 pt-5 pb-4 px-2 rounded-xl overflow-hidden transition-all"
-                    style={{ background: active ? 'linear-gradient(160deg, rgba(240,180,41,.2) 0%, rgba(240,180,41,.06) 100%)' : 'var(--bg)', border: `1.5px solid ${active ? '#F0B429' : 'var(--border)'}`, transform: active ? 'translateY(-2px)' : 'none', boxShadow: active ? '0 8px 28px rgba(240,180,41,.12)' : 'none' }}>
-                    {active && <span className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, #F0B429, transparent)' }} />}
-                    <span className="text-[10px] font-semibold text-center leading-tight w-full px-1 truncate uppercase tracking-wide" style={{ color: active ? '#D8E6F3' : 'var(--muted)' }}>{o.label}</span>
-                    <span className="font-mono font-bold text-xl leading-none" style={{ color: '#F0B429' }}>×{Number(o.odds).toFixed(2)}</span>
-                    {active && <span className="text-[8px] font-bold tracking-[.14em] uppercase px-2 py-0.5 rounded-full" style={{ background: 'rgba(240,180,41,.2)', color: '#F0B429' }}>CHOISI</span>}
+                    className="relative flex flex-col items-center gap-2.5 pt-5 pb-4 px-2 rounded overflow-hidden transition-all"
+                    style={{ background: active ? 'rgba(244,196,48,.14)' : 'var(--bg)', border: `1.5px solid ${active ? '#F4C430' : 'var(--border)'}`, transform: active ? 'translateY(-2px)' : 'none', boxShadow: 'none' }}>
+                    {active && <span className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: '#F4C430' }} />}
+                    <span className="text-[10px] font-semibold text-center leading-tight w-full px-1 truncate uppercase tracking-wide" style={{ color: active ? '#F2EFE6' : 'var(--muted)' }}>{o.label}</span>
+                    <span className="font-mono font-bold text-xl leading-none" style={{ color: '#F4C430' }}>×{Number(o.odds).toFixed(2)}</span>
+                    {active && <span className="text-[8px] font-bold tracking-[.04em] uppercase px-2 py-0.5 rounded-full" style={{ background: 'rgba(244,196,48,.2)', color: '#F4C430' }}>CHOISI</span>}
                   </button>
                 )
               })}
@@ -650,8 +650,8 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
                 <div className="flex gap-1.5">
                   {(['all', 'home', 'draw', 'away'] as const).map(f => (
                     <button key={f} type="button" onClick={() => setScoreFilter(f)}
-                      className="px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all"
-                      style={{ background: scoreFilter === f ? 'rgba(240,180,41,.15)' : 'var(--bg)', border: `1.5px solid ${scoreFilter === f ? '#F0B429' : 'var(--border)'}`, color: scoreFilter === f ? '#F0B429' : 'var(--muted)' }}>
+                      className="px-3 py-1.5 rounded-sm text-[10px] font-bold transition-all"
+                      style={{ background: scoreFilter === f ? 'rgba(244,196,48,.15)' : 'var(--bg)', border: `1.5px solid ${scoreFilter === f ? '#F4C430' : 'var(--border)'}`, color: scoreFilter === f ? '#F4C430' : 'var(--muted)' }}>
                       {f === 'all' ? 'Tous' : f === 'home' ? '1' : f === 'draw' ? 'X' : '2'}
                     </button>
                   ))}
@@ -661,10 +661,10 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
                     const isSel = selectedScore?.h === o.score_home && selectedScore?.a === o.score_away
                     return (
                       <button key={o.id} type="button" onClick={() => handleScoreClick(o)}
-                        className="rounded-xl py-3 text-center transition-all"
-                        style={{ background: isSel ? 'linear-gradient(160deg, rgba(240,180,41,.2) 0%, rgba(240,180,41,.06) 100%)' : 'var(--bg)', border: `1.5px solid ${isSel ? '#F0B429' : 'var(--border)'}`, transform: isSel ? 'scale(1.04)' : 'none' }}>
-                        <p className="font-mono font-bold text-sm" style={{ color: isSel ? '#F0B429' : 'var(--text)' }}>{o.score_home}–{o.score_away}</p>
-                        <p className="font-mono text-[10px] mt-0.5" style={{ color: isSel ? '#F0B429' : 'var(--muted)' }}>×{o.odds.toFixed(2)}</p>
+                        className="rounded py-3 text-center transition-all"
+                        style={{ background: isSel ? 'rgba(244,196,48,.14)' : 'var(--bg)', border: `1.5px solid ${isSel ? '#F4C430' : 'var(--border)'}`, transform: isSel ? 'scale(1.04)' : 'none' }}>
+                        <p className="font-mono font-bold text-sm" style={{ color: isSel ? '#F4C430' : 'var(--text)' }}>{o.score_home}–{o.score_away}</p>
+                        <p className="font-mono text-[10px] mt-0.5" style={{ color: isSel ? '#F4C430' : 'var(--muted)' }}>×{o.odds.toFixed(2)}</p>
                       </button>
                     )
                   })}
@@ -685,33 +685,33 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
         {activeTab === 'buteur' && (
           <form onSubmit={submitMain} className="space-y-4">
             <div>
-              <p className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--muted)' }}>Résultat</p>
+              <p className="text-[10px] font-semibold tracking-wide uppercase mb-2" style={{ color: 'var(--muted)' }}>Résultat</p>
               <div className="grid grid-cols-3 gap-2">
                 {([{ val: 'home' as const, label: match.home_team, odds: match.odds_home }, { val: 'draw' as const, label: 'Nul', odds: match.odds_draw }, { val: 'away' as const, label: match.away_team, odds: match.odds_away }] as const).map(o => {
                   if (!o.odds) return null; const active = predResult === o.val
                   return (
                     <button key={o.val} type="button" onClick={() => handleResultClick(o.val)}
-                      className="relative flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl overflow-hidden transition-all"
-                      style={{ background: active ? 'rgba(240,180,41,.15)' : 'var(--bg)', border: `1.5px solid ${active ? '#F0B429' : 'var(--border)'}`, transform: active ? 'translateY(-1px)' : 'none' }}>
-                      {active && <span className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, #F0B429, transparent)' }} />}
+                      className="relative flex flex-col items-center gap-1 py-2.5 px-1 rounded overflow-hidden transition-all"
+                      style={{ background: active ? 'rgba(244,196,48,.15)' : 'var(--bg)', border: `1.5px solid ${active ? '#F4C430' : 'var(--border)'}`, transform: active ? 'translateY(-1px)' : 'none' }}>
+                      {active && <span className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: '#F4C430' }} />}
                       <span className="text-[10px] font-semibold truncate w-full text-center uppercase tracking-wide" style={{ color: active ? 'var(--text)' : 'var(--muted)' }}>{o.label}</span>
-                      <span className="font-mono text-sm font-bold leading-none" style={{ color: '#F0B429' }}>×{Number(o.odds).toFixed(2)}</span>
+                      <span className="font-mono text-sm font-bold leading-none" style={{ color: '#F4C430' }}>×{Number(o.odds).toFixed(2)}</span>
                     </button>
                   )
                 })}
               </div>
             </div>
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-              <p className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--muted)' }}>Buteur</p>
+              <p className="text-[10px] font-semibold tracking-wide uppercase mb-2" style={{ color: 'var(--muted)' }}>Buteur</p>
             </div>
             <input type="text" value={scorerQuery} onChange={e => setScorerQuery(e.target.value)} placeholder="Rechercher un joueur…"
-              className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
+              className="w-full px-4 py-2.5 rounded text-sm outline-none"
               style={{ background: 'var(--bg)', border: '1.5px solid var(--border)', color: 'var(--text)', transition: 'border-color .15s' }}
-              onFocus={(e: any) => e.target.style.borderColor = '#F0B429'}
+              onFocus={(e: any) => e.target.style.borderColor = '#F4C430'}
               onBlur={(e: any) => e.target.style.borderColor = 'var(--border)'}
             />
             {scorerOdds.length === 0 ? (
-              <div className="rounded-xl px-4 py-6 text-center text-xs" style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--muted)' }}>Les cotes buteurs ne sont pas encore disponibles.</div>
+              <div className="rounded px-4 py-6 text-center text-xs" style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--muted)' }}>Les cotes buteurs ne sont pas encore disponibles.</div>
             ) : filteredScorers.length === 0 ? (
               <div className="text-center py-4 text-xs" style={{ color: 'var(--muted)' }}>Aucun joueur trouvé.</div>
             ) : (
@@ -720,10 +720,10 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
                   const isSel = selectedScorer === o.player_name
                   return (
                     <button key={o.id} type="button" onClick={() => { setSelectedScorer(isSel ? null : o.player_name); setFeedback(null) }}
-                      className="flex items-center justify-between rounded-xl px-3 py-2.5 text-left transition-all"
-                      style={{ background: isSel ? 'rgba(240,180,41,.1)' : 'var(--bg)', border: `1.5px solid ${isSel ? '#F0B429' : 'var(--border)'}` }}>
+                      className="flex items-center justify-between rounded px-3 py-2.5 text-left transition-all"
+                      style={{ background: isSel ? 'rgba(244,196,48,.1)' : 'var(--bg)', border: `1.5px solid ${isSel ? '#F4C430' : 'var(--border)'}` }}>
                       <div className="min-w-0"><p className="text-xs font-semibold truncate" style={{ color: 'var(--text)' }}>{o.player_name}</p><p className="text-[10px]" style={{ color: 'var(--muted)' }}>{o.team}</p></div>
-                      <span className="font-mono text-sm font-bold ml-2 shrink-0" style={{ color: '#F0B429' }}>×{o.odds.toFixed(2)}</span>
+                      <span className="font-mono text-sm font-bold ml-2 shrink-0" style={{ color: '#F4C430' }}>×{o.odds.toFixed(2)}</span>
                     </button>
                   )
                 })}
@@ -745,11 +745,11 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
                 const active = specialSel === s.k
                 return (
                   <button key={s.k} type="button" onClick={() => { setSpecialSel(active ? null : s.k); setSpecialFeedback(null) }}
-                    className="relative flex flex-col items-center gap-2 py-4 px-3 rounded-xl overflow-hidden transition-all"
-                    style={{ background: active ? 'linear-gradient(160deg, rgba(240,180,41,.2) 0%, rgba(240,180,41,.06) 100%)' : 'var(--bg)', border: `1.5px solid ${active ? '#F0B429' : 'var(--border)'}`, transform: active ? 'translateY(-1px)' : 'none' }}>
-                    {active && <span className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, #F0B429, transparent)' }} />}
-                    <span className="text-[11px] font-semibold" style={{ color: active ? '#D8E6F3' : 'var(--muted)' }}>{s.l}</span>
-                    <span className="font-mono font-bold text-xl leading-none" style={{ color: '#F0B429' }}>×{Number(s.odds).toFixed(2)}</span>
+                    className="relative flex flex-col items-center gap-2 py-4 px-3 rounded overflow-hidden transition-all"
+                    style={{ background: active ? 'rgba(244,196,48,.14)' : 'var(--bg)', border: `1.5px solid ${active ? '#F4C430' : 'var(--border)'}`, transform: active ? 'translateY(-1px)' : 'none' }}>
+                    {active && <span className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: '#F4C430' }} />}
+                    <span className="text-[11px] font-semibold" style={{ color: active ? '#F2EFE6' : 'var(--muted)' }}>{s.l}</span>
+                    <span className="font-mono font-bold text-xl leading-none" style={{ color: '#F4C430' }}>×{Number(s.odds).toFixed(2)}</span>
                   </button>
                 )
               })}
@@ -760,8 +760,8 @@ function GroupForm({ match, exactScoreOdds, scorerOdds, availablePoints, userBoo
             {selSpecial && <GainBlock isSpecial />}
             <FeedbackBlock fb={specialFeedback} />
             <button type="button" disabled={!selSpecial || specialLoading} onClick={submitSpecial}
-              className="w-full py-3.5 rounded-xl font-display text-lg tracking-[.08em] transition-all"
-              style={{ background: selSpecial && !specialLoading ? 'linear-gradient(135deg, #F0B429 0%, #FFD060 100%)' : 'var(--bg)', color: selSpecial && !specialLoading ? '#07101E' : 'var(--muted)', border: `1.5px solid ${selSpecial && !specialLoading ? '#F0B429' : 'var(--border)'}` }}
+              className="w-full py-3.5 rounded font-display text-lg tracking-[.08em] transition-all"
+              style={{ background: selSpecial && !specialLoading ? '#F4C430' : 'var(--bg)', color: selSpecial && !specialLoading ? '#111311' : 'var(--muted)', border: `1.5px solid ${selSpecial && !specialLoading ? '#F4C430' : 'var(--border)'}` }}
               onMouseDown={(e: any) => { if (selSpecial && !specialLoading) e.currentTarget.style.transform = 'scale(0.98)' }}
               onMouseUp={(e: any) => { e.currentTarget.style.transform = 'none' }}>
               {specialLoading ? 'Envoi…' : selSpecial ? `PARIER × ${Number(selSpecial.odds).toFixed(2)}` : 'PARIER'}

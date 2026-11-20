@@ -146,14 +146,14 @@ export default function PointsLineChart({
         {/* Horizontal grid lines */}
         {yTicks.map((t, i) => (
           <line key={i} x1={PAD.l} y1={t.y} x2={VB_W - PAD.r} y2={t.y}
-            stroke="#1A2F4A" strokeWidth="1" strokeDasharray="4,4" />
+            stroke="#2E332E" strokeWidth="1" strokeDasharray="4,4" />
         ))}
 
         {/* Y-axis labels */}
         {yTicks.map((t, i) => (
           <text key={i} x={PAD.l - 8} y={t.y + 4}
             textAnchor="end" fontSize="11"
-            fontFamily="'JetBrains Mono',monospace" fill="#4A6280">
+            fontFamily="'JetBrains Mono',monospace" fill="#A9ADA3">
             {fmtVal(t.v)}
           </text>
         ))}
@@ -161,7 +161,7 @@ export default function PointsLineChart({
         {/* X-axis labels */}
         {xLabelIdxs.map(i => (
           <text key={i} x={xFor(i)} y={VB_H - 6}
-            textAnchor="middle" fontSize="11" fill="#4A6280">
+            textAnchor="middle" fontSize="11" fill="#A9ADA3">
             {fmtDate(allDates[i] ?? '')}
           </text>
         ))}
@@ -195,7 +195,7 @@ export default function PointsLineChart({
             {series.map((s, i) => (
               <circle key={i}
                 cx={xFor(hovered.idx)} cy={yFor(hoverVals[i] ?? 0)}
-                r={4} fill={s.color} stroke="#0D1A2E" strokeWidth={2.5}
+                r={4} fill={s.color} stroke="#191C19" strokeWidth={2.5}
               />
             ))}
           </>
@@ -205,7 +205,7 @@ export default function PointsLineChart({
       {/* Tooltip */}
       {hovered && hoverDate && (
         <div
-          className="absolute pointer-events-none z-20 rounded-xl shadow-2xl text-xs"
+          className="absolute pointer-events-none z-20 rounded shadow-2xl text-xs"
           style={{
             background: 'var(--bg-3)',
             border: '1px solid var(--border-2)',
@@ -217,7 +217,7 @@ export default function PointsLineChart({
             minWidth: '110px',
           }}
         >
-          <p className="font-bold mb-1.5 uppercase tracking-widest"
+          <p className="font-bold mb-1.5 uppercase tracking-wide"
             style={{ color: 'var(--muted)', fontSize: '9px' }}>
             {fmtDate(hoverDate)}
           </p>

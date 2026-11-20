@@ -5,13 +5,134 @@ import LiveRefresh from '@/components/LiveRefresh'
 const PHASE_LABEL: Record<string, string> = {
   group: 'Groupes', round_of_32: '32es', round_of_16: '8es', quarter: 'Quarts', semi: 'Demies', final: 'Finale',
 }
+// Couleur du libellé de phase : neutre en groupes, puis on « monte » vers la finale
 const PHASE_COLOR: Record<string, { bg: string; text: string }> = {
-  group:        { bg: 'rgba(74,98,128,.2)',   text: '#4A6280' },
-  round_of_32:  { bg: 'rgba(14,165,233,.12)', text: '#38BDF8' },
-  round_of_16:  { bg: 'rgba(59,130,246,.12)', text: '#60A5FA' },
-  quarter:      { bg: 'rgba(139,92,246,.12)', text: '#A78BFA' },
-  semi:         { bg: 'rgba(249,115,22,.12)', text: '#FB923C' },
-  final:        { bg: 'rgba(240,180,41,.12)', text: '#F0B429' },
+  group:        { bg: 'transparent', text: 'var(--muted)' },
+  round_of_32:  { bg: 'transparent', text: '#8FB0FF' },
+  round_of_16:  { bg: 'transparent', text: '#8FB0FF' },
+  quarter:      { bg: 'transparent', text: '#FF9EA3' },
+  semi:         { bg: 'transparent', text: '#FB923C' },
+  final:        { bg: 'transparent', text: '#F4C430' },
+}
+
+type Status = 'live' | 'done' | 'open' | 'closed'
+
+function StatusTag({ status }: { status: Status }) {
+  if (status === 'live') return (
+    <span className="inline-flex items-center gap-1.5 font-display text-sm leading-none px-1.5 py-1" style={{ background: 'var(--host-red)', color: '#fff', borderRadius: 2 }}>
+      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#fff' }} aria-hidden="true" />Live
+    </span>
+  )
+  const map = {
+    done:   { label: 'Fin',    color: 'var(--muted)', mark: 'var(--border-2)' },
+    open:   { label: 'Ouvert', color: 'var(--green)', mark: 'var(--green)' },
+    closed: { label: 'Fermé',  color: 'var(--red)',   mark: 'var(--red)' },
+  }[status]
+  return (
+    <span className="inline-flex items-center gap-1.5 font-display text-sm leading-none" style={{ color: map.color }}>
+      <span className="w-2 h-2" style={{ background: map.mark }} aria-hidden="true" />{map.label}
+    </span>
+  )
+}
+
+function Team({ name, align = 'left' }: { name: string; align?: 'left' | 'right' }) {
+  const flag = getFlagUrl(name, '40x30')
+  return (
+    <span className={`min-w-0 flex items-center gap-2 font-semibold text-[15px] sm:text-base leading-tight ${align === 'right' ? 'sm:justify-end sm:text-right' : ''}`} style={{ color: 'var(--text)' }}>
+      {flag && <img src={flag} alt="" width={22} height={16} className={`shrink-0 w-[22px] h-4 object-cover ${align === 'right' ? 'sm:order-2' : ''}`} style={{ outline: '1px solid rgba(255,255,255,.12)' }} />}
+      <span className="truncate">{name}</span>
+    </span>
+  )
+}
+
+function Odds({ match }: { match: any }) {
+  const odds = [{ l: '1', v: match.odds_home }, { l: 'X', v: match.odds_draw }, { l: '2', v: match.odds_away }].filter(o => o.v)
+  if (!odds.length) return <span className="font-display text-lg leading-none" style={{ color: 'var(--muted)' }}>VS</span>
+  return (
+    <span className="inline-flex" style={{ border: '1px solid var(--border-2)', borderRadius: 2, background: '#0A0B0A' }}>
+      {odds.map((o, k) => (
+        <span key={o.l} className="flex items-baseline gap-1 px-2 py-1" style={{ borderLeft: k ? '1px solid var(--border)' : undefined }}>
+          <span className="text-[11px] font-semibold" style={{ color: 'var(--muted)' }}>{o.l}</span>
+          <span className="font-mono text-sm font-bold" style={{ color: 'var(--gold)' }}>{Number(o.v).toFixed(2)}</span>
+        </span>
+      ))}
+    </span>
+  )
+}
+
+function Score({ home, away, live }: { home: number; away: number; live: boolean }) {
+  return (
+    <span className="inline-flex items-stretch font-display text-2xl leading-none tabular" style={{ borderRadius: 2, overflow: 'hidden' }} aria-label={`Score ${home} – ${away}`}>
+      <span className="px-2 py-1" style={{ background: live ? 'var(--host-red)' : '#0A0B0A', color: live ? '#fff' : 'var(--gold)' }}>{home}</span>
+      <span className="px-1 py-1" style={{ background: '#0A0B0A', color: 'var(--muted)' }}>–</span>
+      <span className="px-2 py-1" style={{ background: live ? 'var(--host-red)' : '#0A0B0A', color: live ? '#fff' : 'var(--gold)' }}>{away}</span>
+    </span>
+  )
+}
+
+function FixtureRow({ match, status, showDate = false }: { match: any; status: Status; showDate?: boolean }) {
+  const k        = new Date(match.kickoff_at)
+  const time     = k.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })
+  const day      = k.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' })
+  const phaseC   = PHASE_COLOR[match.phase] ?? PHASE_COLOR.group
+  const hasScore = (status === 'live' || status === 'done') && match.final_score_home !== null && match.final_score_home !== undefined
+  const phase    = PHASE_LABEL[match.phase] ?? match.phase
+
+  return (
+    <li>
+      <a
+        href={`/matchs/${match.id}`}
+        className="hover-bg-3 block px-3 sm:px-4 py-3"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
+        {/* Mobile : en-tête + deux lignes d'équipes, score à droite */}
+        <div className="sm:hidden">
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <span className="text-sm">
+              <span className="font-mono font-bold" style={{ color: 'var(--text)' }}>{showDate ? `${day} · ` : ''}{time}</span>
+              <span className="ml-2 font-semibold" style={{ color: phaseC.text }}>{phase}</span>
+            </span>
+            <StatusTag status={status} />
+          </div>
+          <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 items-center">
+            <Team name={match.home_team} />
+            {hasScore ? <span className="font-display text-2xl leading-none tabular w-7 text-center" style={{ color: status === 'live' ? 'var(--red)' : 'var(--gold)' }}>{match.final_score_home}</span> : <span />}
+            <Team name={match.away_team} />
+            {hasScore ? <span className="font-display text-2xl leading-none tabular w-7 text-center" style={{ color: status === 'live' ? 'var(--red)' : 'var(--gold)' }}>{match.final_score_away}</span> : <span />}
+          </div>
+          {!hasScore && <div className="mt-2.5"><Odds match={match} /></div>}
+        </div>
+
+        {/* Desktop : ligne de feuille de match */}
+        <div className="hidden sm:grid grid-cols-[4.5rem_1fr_auto_1fr_5.5rem] items-center gap-4">
+          <span className="leading-tight">
+            {showDate && <span className="block text-xs font-mono" style={{ color: 'var(--muted)' }}>{day}</span>}
+            <span className="block font-mono text-base font-bold" style={{ color: 'var(--text)' }}>{time}</span>
+            <span className="block text-xs font-semibold" style={{ color: phaseC.text }}>{phase}</span>
+          </span>
+          <Team name={match.home_team} align="right" />
+          <span className="flex justify-center min-w-[9.5rem]">
+            {hasScore ? <Score home={match.final_score_home} away={match.final_score_away} live={status === 'live'} /> : <Odds match={match} />}
+          </span>
+          <Team name={match.away_team} />
+          <span className="flex justify-end"><StatusTag status={status} /></span>
+        </div>
+      </a>
+    </li>
+  )
+}
+
+function Block({ title, marker, count, children }: { title: string; marker: string; count?: number; children: React.ReactNode }) {
+  return (
+    <section className="space-y-0">
+      <h2 className="flex items-center gap-2.5 font-display text-xl sm:text-2xl leading-none pb-2" style={{ color: 'var(--text)' }}>
+        <span className="w-3 h-3 shrink-0" style={{ background: marker }} aria-hidden="true" />
+        {title}
+        {count !== undefined && <span className="font-sans text-sm font-semibold normal-case" style={{ color: 'var(--muted)' }}>{count}</span>}
+      </h2>
+      <ul style={{ borderTop: `2px solid ${marker}` }}>{children}</ul>
+    </section>
+  )
 }
 
 function fmt(d: string) {
@@ -59,437 +180,52 @@ export default async function MatchsPage() {
   return (
     <div className="space-y-10 animate-fade-up">
       {hasLiveMatches && <LiveRefresh intervalMs={30000} />}
-      <div className="flex items-baseline gap-4">
-        <h1 className="font-display text-5xl" style={{ color: 'var(--text)', letterSpacing: '.05em' }}>MATCHS</h1>
-        <span className="text-sm" style={{ color: 'var(--muted)' }}>{matches?.length ?? 0} rencontres</span>
-      </div>
+      <header className="section-head justify-between flex-wrap">
+        <h1 className="font-display text-5xl sm:text-6xl leading-none" style={{ color: 'var(--text)' }}>Matchs</h1>
+        <span className="text-sm font-semibold" style={{ color: 'var(--muted)' }}>{matches?.length ?? 0} rencontres · heures de Paris</span>
+      </header>
 
-      {/* ── 8es de finale upcoming en tête ── */}
+      {/* ── Phase éliminatoire à venir en tête ── */}
       {hasKnockout16 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-[.12em] uppercase" style={{ color: '#60A5FA' }}>
-              <span className="w-2 h-2 rounded-full" style={{ background: '#60A5FA' }} />
-              Phase éliminatoire
-            </span>
-            <div className="flex-1 h-px" style={{ background: 'rgba(96,165,250,.2)' }} />
-          </div>
+        <Block title="Phase éliminatoire" marker="#8FB0FF" count={knockout16.length}>
           {knockout16.map((match: any) => {
-            const locked  = new Date() >= new Date(match.bets_locked_at)
-            const hasOdds = match.odds_home || match.odds_draw || match.odds_away
-            return (
-              <a
-                key={match.id}
-                href={`/matchs/${match.id}`}
-                className="hover-bg-3 group relative flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl overflow-hidden"
-                style={{
-                  background: 'var(--bg-2)',
-                  border: '1px solid rgba(96,165,250,.25)',
-                  transition: 'background .15s, border-color .15s',
-                }}
-              >
-                {!locked && (
-                  <div className="absolute left-0 top-0 bottom-0 w-0.5" style={{ background: '#60A5FA' }} />
-                )}
-                <div className="shrink-0 text-center w-10 sm:w-14">
-                  <p className="font-mono text-[10px] leading-tight text-center" style={{ color: 'var(--muted)' }}>
-                    {new Date(match.kickoff_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' })}
-                  </p>
-                  <p className="font-mono text-xs font-semibold" style={{ color: '#60A5FA' }}>
-                    {new Date(match.kickoff_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })}
-                  </p>
-                </div>
-                <div className="flex-1 min-w-0">
-                  {/* Mobile */}
-                  <div className="flex flex-col gap-1 sm:hidden">
-                    <p className="font-semibold text-sm leading-tight flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
-                      {getFlagUrl(match.home_team) && <img src={getFlagUrl(match.home_team)!} alt="" width={18} height={13} className="shrink-0 rounded-sm" />}
-                      <span className="truncate">{match.home_team}</span>
-                    </p>
-                    <div className="flex items-center gap-2 pl-0.5">
-                      {hasOdds ? (
-                        <div className="flex items-center gap-3">
-                          {[{ l: '1', v: match.odds_home }, { l: 'X', v: match.odds_draw }, { l: '2', v: match.odds_away }].map(o => o.v && (
-                            <div key={o.l} className="flex items-baseline gap-1">
-                              <span className="text-[9px]" style={{ color: 'var(--muted)' }}>{o.l}</span>
-                              <span className="font-mono text-xs font-semibold" style={{ color: '#60A5FA' }}>×{Number(o.v).toFixed(2)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="font-display text-sm" style={{ color: 'var(--border-2)' }}>VS</span>
-                      )}
-                    </div>
-                    <p className="font-semibold text-sm leading-tight flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
-                      {getFlagUrl(match.away_team) && <img src={getFlagUrl(match.away_team)!} alt="" width={18} height={13} className="shrink-0 rounded-sm" />}
-                      <span className="truncate">{match.away_team}</span>
-                    </p>
-                  </div>
-                  {/* Desktop */}
-                  <div className="hidden sm:flex items-center justify-between gap-6">
-                    <p className="flex-1 font-semibold text-base leading-tight truncate flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
-                      {getFlagUrl(match.home_team) && <img src={getFlagUrl(match.home_team)!} alt="" width={20} height={15} className="shrink-0 rounded-sm" />}
-                      {match.home_team}
-                    </p>
-                    <div className="shrink-0 flex items-center gap-1">
-                      {hasOdds ? [{ l: '1', v: match.odds_home }, { l: 'X', v: match.odds_draw }, { l: '2', v: match.odds_away }].map(o => o.v && (
-                        <div key={o.l} className="text-center" style={{ minWidth: 44 }}>
-                          <p className="font-mono text-xs font-semibold" style={{ color: '#60A5FA' }}>×{Number(o.v).toFixed(2)}</p>
-                          <p className="text-[9px] tracking-wide" style={{ color: 'var(--muted)' }}>{o.l}</p>
-                        </div>
-                      )) : (
-                        <span className="font-display text-xl" style={{ color: 'var(--border-2)' }}>VS</span>
-                      )}
-                    </div>
-                    <p className="flex-1 font-semibold text-base leading-tight truncate flex items-center justify-end gap-1.5" style={{ color: 'var(--text)' }}>
-                      {match.away_team}
-                      {getFlagUrl(match.away_team) && <img src={getFlagUrl(match.away_team)!} alt="" width={20} height={15} className="shrink-0 rounded-sm" />}
-                    </p>
-                  </div>
-                </div>
-                <div className="shrink-0 flex flex-col items-end gap-1.5">
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: (PHASE_COLOR[match.phase] ?? PHASE_COLOR.round_of_16).bg, color: (PHASE_COLOR[match.phase] ?? PHASE_COLOR.round_of_16).text }}>
-                    {PHASE_LABEL[match.phase] ?? match.phase}
-                  </span>
-                  {!locked ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(96,165,250,.12)', color: '#60A5FA' }}>
-                      <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#60A5FA' }} />OUVERT
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(239,68,68,.1)', color: '#EF4444' }}>
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#EF4444' }} />FERMÉ
-                    </span>
-                  )}
-                </div>
-              </a>
-            )
+            const locked = new Date() >= new Date(match.bets_locked_at)
+            return <FixtureRow key={match.id} match={match} status={locked ? 'closed' : 'open'} showDate />
           })}
-        </div>
+        </Block>
       )}
 
       {/* Matchs LIVE en tête */}
       {hasLiveMatches && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-[.12em] uppercase" style={{ color: '#22C55E' }}>
-              <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#22C55E' }} />
-              En direct
-            </span>
-            <div className="flex-1 h-px" style={{ background: 'rgba(34,197,94,.2)' }} />
-          </div>
-          {liveMatches.map((match: any) => {
-            const phaseC  = PHASE_COLOR[match.phase] ?? PHASE_COLOR.group
-            const hasOdds = match.odds_home || match.odds_draw || match.odds_away
-            return (
-              <a
-                key={match.id}
-                href={`/matchs/${match.id}`}
-                className="hover-bg-3 group relative flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl overflow-hidden"
-                style={{
-                  background: 'var(--bg-2)',
-                  border: '1px solid rgba(34,197,94,.3)',
-                  transition: 'background .15s, border-color .15s',
-                }}
-              >
-                <div className="shrink-0 text-center w-10 sm:w-14">
-                  <p className="font-mono text-xs" style={{ color: 'var(--muted)' }}>
-                    {new Date(match.kickoff_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })}
-                  </p>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col gap-1 sm:hidden">
-                    <p className="font-semibold text-sm leading-tight flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
-                      {getFlagUrl(match.home_team) && <img src={getFlagUrl(match.home_team)!} alt="" width={18} height={13} className="shrink-0 rounded-sm" />}
-                      <span className="truncate">{match.home_team}</span>
-                    </p>
-                    <span className="font-display text-lg leading-none flex items-center gap-1.5" style={{ color: '#22C55E' }}>
-                      <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />
-                      {match.final_score_home} – {match.final_score_away}
-                    </span>
-                    <p className="font-semibold text-sm leading-tight flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
-                      {getFlagUrl(match.away_team) && <img src={getFlagUrl(match.away_team)!} alt="" width={18} height={13} className="shrink-0 rounded-sm" />}
-                      <span className="truncate">{match.away_team}</span>
-                    </p>
-                  </div>
-                  <div className="hidden sm:flex items-center justify-between gap-6">
-                    <p className="flex-1 font-semibold text-base leading-tight truncate flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
-                      {getFlagUrl(match.home_team) && <img src={getFlagUrl(match.home_team)!} alt="" width={20} height={15} className="shrink-0 rounded-sm" />}
-                      {match.home_team}
-                    </p>
-                    <div className="shrink-0 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />
-                      <span className="font-display text-2xl" style={{ color: '#22C55E' }}>{match.final_score_home}</span>
-                      <span className="font-display text-lg" style={{ color: 'var(--muted)' }}>–</span>
-                      <span className="font-display text-2xl" style={{ color: '#22C55E' }}>{match.final_score_away}</span>
-                    </div>
-                    <p className="flex-1 font-semibold text-base leading-tight truncate flex items-center justify-end gap-1.5" style={{ color: 'var(--text)' }}>
-                      {match.away_team}
-                      {getFlagUrl(match.away_team) && <img src={getFlagUrl(match.away_team)!} alt="" width={20} height={15} className="shrink-0 rounded-sm" />}
-                    </p>
-                  </div>
-                </div>
-                <div className="shrink-0 flex flex-col items-end gap-1.5">
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: phaseC.bg, color: phaseC.text }}>
-                    {PHASE_LABEL[match.phase] ?? match.phase}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,.12)', color: '#22C55E' }}>
-                    <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />LIVE
-                  </span>
-                </div>
-              </a>
-            )
-          })}
-        </div>
+        <Block title="En direct" marker="var(--host-red)" count={liveMatches.length}>
+          {liveMatches.map((match: any) => <FixtureRow key={match.id} match={match} status="live" />)}
+        </Block>
       )}
 
       {/* Matchs à venir dans les 3h */}
       {soonMatches.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-[.12em] uppercase" style={{ color: '#F0B429' }}>
-              <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#F0B429' }} />
-              À venir
-            </span>
-            <div className="flex-1 h-px" style={{ background: 'rgba(240,180,41,.2)' }} />
-          </div>
+        <Block title="À venir" marker="var(--gold)" count={soonMatches.length}>
           {soonMatches.map((match: any) => {
-            const phaseC  = PHASE_COLOR[match.phase] ?? PHASE_COLOR.group
-            const hasOdds = match.odds_home || match.odds_draw || match.odds_away
-            const locked  = new Date() >= new Date(match.bets_locked_at)
-            return (
-              <a
-                key={match.id}
-                href={`/matchs/${match.id}`}
-                className="hover-bg-3 group relative flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl overflow-hidden"
-                style={{
-                  background: 'var(--bg-2)',
-                  border: '1px solid rgba(240,180,41,.25)',
-                  transition: 'background .15s, border-color .15s',
-                }}
-              >
-                {!locked && (
-                  <div className="absolute left-0 top-0 bottom-0 w-0.5" style={{ background: '#F0B429' }} />
-                )}
-                <div className="shrink-0 text-center w-10 sm:w-14">
-                  <p className="font-mono text-xs font-semibold" style={{ color: '#F0B429' }}>
-                    {new Date(match.kickoff_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })}
-                  </p>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col gap-1 sm:hidden">
-                    <p className="font-semibold text-sm leading-tight flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
-                      {getFlagUrl(match.home_team) && <img src={getFlagUrl(match.home_team)!} alt="" width={18} height={13} className="shrink-0 rounded-sm" />}
-                      <span className="truncate">{match.home_team}</span>
-                    </p>
-                    <div className="flex items-center gap-2 pl-0.5">
-                      {hasOdds ? (
-                        <div className="flex items-center gap-3">
-                          {[{ l: '1', v: match.odds_home }, { l: 'X', v: match.odds_draw }, { l: '2', v: match.odds_away }].map(o => o.v && (
-                            <div key={o.l} className="flex items-baseline gap-1">
-                              <span className="text-[9px]" style={{ color: 'var(--muted)' }}>{o.l}</span>
-                              <span className="font-mono text-xs font-semibold" style={{ color: '#F0B429' }}>×{Number(o.v).toFixed(2)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="font-display text-sm" style={{ color: 'var(--border-2)' }}>VS</span>
-                      )}
-                    </div>
-                    <p className="font-semibold text-sm leading-tight flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
-                      {getFlagUrl(match.away_team) && <img src={getFlagUrl(match.away_team)!} alt="" width={18} height={13} className="shrink-0 rounded-sm" />}
-                      <span className="truncate">{match.away_team}</span>
-                    </p>
-                  </div>
-                  <div className="hidden sm:flex items-center justify-between gap-6">
-                    <p className="flex-1 font-semibold text-base leading-tight truncate flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
-                      {getFlagUrl(match.home_team) && <img src={getFlagUrl(match.home_team)!} alt="" width={20} height={15} className="shrink-0 rounded-sm" />}
-                      {match.home_team}
-                    </p>
-                    <div className="shrink-0 flex items-center gap-1">
-                      {hasOdds ? [{ l: '1', v: match.odds_home }, { l: 'X', v: match.odds_draw }, { l: '2', v: match.odds_away }].map(o => o.v && (
-                        <div key={o.l} className="text-center" style={{ minWidth: 44 }}>
-                          <p className="font-mono text-xs font-semibold" style={{ color: '#F0B429' }}>×{Number(o.v).toFixed(2)}</p>
-                          <p className="text-[9px] tracking-wide" style={{ color: 'var(--muted)' }}>{o.l}</p>
-                        </div>
-                      )) : (
-                        <span className="font-display text-xl" style={{ color: 'var(--border-2)' }}>VS</span>
-                      )}
-                    </div>
-                    <p className="flex-1 font-semibold text-base leading-tight truncate flex items-center justify-end gap-1.5" style={{ color: 'var(--text)' }}>
-                      {match.away_team}
-                      {getFlagUrl(match.away_team) && <img src={getFlagUrl(match.away_team)!} alt="" width={20} height={15} className="shrink-0 rounded-sm" />}
-                    </p>
-                  </div>
-                </div>
-                <div className="shrink-0 flex flex-col items-end gap-1.5">
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: phaseC.bg, color: phaseC.text }}>
-                    {PHASE_LABEL[match.phase] ?? match.phase}
-                  </span>
-                  {!locked ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(240,180,41,.12)', color: '#F0B429' }}>
-                      <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#F0B429' }} />OUVERT
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(239,68,68,.1)', color: '#EF4444' }}>
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#EF4444' }} />FERMÉ
-                    </span>
-                  )}
-                </div>
-              </a>
-            )
+            const locked = new Date() >= new Date(match.bets_locked_at)
+            return <FixtureRow key={match.id} match={match} status={locked ? 'closed' : 'open'} />
           })}
-        </div>
+        </Block>
       )}
 
       {Object.keys(grouped).length === 0 && !hasLiveMatches && soonMatches.length === 0 && (
-        <div className="rounded-2xl p-14 text-center" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+        <div className="py-14 px-6 text-center" style={{ border: '1px dashed var(--border-2)' }}>
           <p style={{ color: 'var(--muted)' }}>Aucun match disponible pour le moment.</p>
         </div>
       )}
 
       {Object.entries(grouped).map(([date, dayMatches]) => (
-        <div key={date} className="space-y-3">
-          {/* Day header */}
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold tracking-[.12em] uppercase" style={{ color: 'var(--muted)' }}>{date}</span>
-            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-          </div>
-
+        <Block key={date} title={date} marker="var(--border-2)" count={dayMatches!.length}>
           {dayMatches!.map((match: any) => {
-            const locked   = match.status !== 'upcoming' || new Date() >= new Date(match.bets_locked_at)
-            const isLive   = match.status === 'live'
-            const isDone   = match.status === 'finished'
-            const phaseC   = PHASE_COLOR[match.phase] ?? PHASE_COLOR.group
-            const hasOdds  = match.odds_home || match.odds_draw || match.odds_away
-
-            return (
-              <a
-                key={match.id}
-                href={`/matchs/${match.id}`}
-                className="hover-bg-3 group relative flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl overflow-hidden"
-                style={{
-                  background: 'var(--bg-2)',
-                  border: `1px solid ${isLive ? 'rgba(34,197,94,.3)' : 'var(--border)'}`,
-                  transition: 'background .15s, border-color .15s',
-                }}
-              >
-                {/* Left gold accent for non-locked */}
-                {!locked && !isDone && (
-                  <div className="absolute left-0 top-0 bottom-0 w-0.5" style={{ background: '#F0B429' }} />
-                )}
-
-                {/* Time */}
-                <div className="shrink-0 text-center w-10 sm:w-14">
-                  <p className="font-mono text-xs" style={{ color: 'var(--muted)' }}>
-                    {new Date(match.kickoff_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })}
-                  </p>
-                </div>
-
-                {/* Teams */}
-                <div className="flex-1 min-w-0">
-
-                  {/* ── Mobile: vertical stack ── */}
-                  <div className="flex flex-col gap-1 sm:hidden">
-                    <p className="font-semibold text-sm leading-tight flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
-                      {getFlagUrl(match.home_team) && <img src={getFlagUrl(match.home_team)!} alt="" width={18} height={13} className="shrink-0 rounded-sm" />}
-                      <span className="truncate">{match.home_team}</span>
-                    </p>
-
-                    <div className="flex items-center gap-2 pl-0.5">
-                      {(isDone || isLive) && match.final_score_home !== null ? (
-                        <span className="font-display text-lg leading-none flex items-center gap-1.5" style={{ color: isLive ? '#22C55E' : 'var(--text)' }}>
-                          {isLive && <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />}
-                          {match.final_score_home} – {match.final_score_away}
-                        </span>
-                      ) : hasOdds ? (
-                        <div className="flex items-center gap-3">
-                          {[
-                            { l: '1', v: match.odds_home },
-                            { l: 'X', v: match.odds_draw },
-                            { l: '2', v: match.odds_away },
-                          ].map(o => o.v && (
-                            <div key={o.l} className="flex items-baseline gap-1">
-                              <span className="text-[9px]" style={{ color: 'var(--muted)' }}>{o.l}</span>
-                              <span className="font-mono text-xs font-semibold" style={{ color: '#F0B429' }}>×{Number(o.v).toFixed(2)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="font-display text-sm" style={{ color: 'var(--border-2)' }}>VS</span>
-                      )}
-                    </div>
-
-                    <p className="font-semibold text-sm leading-tight flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
-                      {getFlagUrl(match.away_team) && <img src={getFlagUrl(match.away_team)!} alt="" width={18} height={13} className="shrink-0 rounded-sm" />}
-                      <span className="truncate">{match.away_team}</span>
-                    </p>
-                  </div>
-
-                  {/* ── Desktop: horizontal layout ── */}
-                  <div className="hidden sm:flex items-center justify-between gap-6">
-                    <p className="flex-1 font-semibold text-base leading-tight truncate flex items-center gap-1.5" style={{ color: 'var(--text)' }}>
-                      {getFlagUrl(match.home_team) && <img src={getFlagUrl(match.home_team)!} alt="" width={20} height={15} className="shrink-0 rounded-sm" />}
-                      {match.home_team}
-                    </p>
-
-                    {(isDone || isLive) && match.final_score_home !== null ? (
-                      <div className="shrink-0 flex items-center gap-2">
-                        {isLive && <span className="w-2 h-2 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />}
-                        <span className="font-display text-2xl" style={{ color: isLive ? '#22C55E' : 'var(--text)' }}>{match.final_score_home}</span>
-                        <span className="font-display text-lg" style={{ color: 'var(--muted)' }}>–</span>
-                        <span className="font-display text-2xl" style={{ color: isLive ? '#22C55E' : 'var(--text)' }}>{match.final_score_away}</span>
-                      </div>
-                    ) : (
-                      <div className="shrink-0 flex items-center gap-1">
-                        {hasOdds ? [
-                          { l: '1', v: match.odds_home },
-                          { l: 'X', v: match.odds_draw },
-                          { l: '2', v: match.odds_away },
-                        ].map(o => o.v && (
-                          <div key={o.l} className="text-center" style={{ minWidth: 44 }}>
-                            <p className="font-mono text-xs font-semibold" style={{ color: '#F0B429' }}>×{Number(o.v).toFixed(2)}</p>
-                            <p className="text-[9px] tracking-wide" style={{ color: 'var(--muted)' }}>{o.l}</p>
-                          </div>
-                        )) : (
-                          <span className="font-display text-xl" style={{ color: 'var(--border-2)' }}>VS</span>
-                        )}
-                      </div>
-                    )}
-
-                    <p className="flex-1 font-semibold text-base leading-tight truncate flex items-center justify-end gap-1.5" style={{ color: 'var(--text)' }}>
-                      {match.away_team}
-                      {getFlagUrl(match.away_team) && <img src={getFlagUrl(match.away_team)!} alt="" width={20} height={15} className="shrink-0 rounded-sm" />}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Phase badge + LED */}
-                <div className="shrink-0 flex flex-col items-end gap-1.5">
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: phaseC.bg, color: phaseC.text }}>
-                    {PHASE_LABEL[match.phase] ?? match.phase}
-                  </span>
-                  {isLive ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,.12)', color: '#22C55E' }}>
-                      <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />LIVE
-                    </span>
-                  ) : isDone ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(100,116,139,.1)', color: 'var(--muted)' }}>
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--border-2)' }} />FIN
-                    </span>
-                  ) : !locked ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,.12)', color: '#22C55E' }}>
-                      <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: '#22C55E' }} />OUVERT
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(239,68,68,.1)', color: '#EF4444' }}>
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#EF4444' }} />FERMÉ
-                    </span>
-                  )}
-                </div>
-              </a>
-            )
+            const locked = match.status !== 'upcoming' || new Date() >= new Date(match.bets_locked_at)
+            const status: Status = match.status === 'live' ? 'live' : match.status === 'finished' ? 'done' : !locked ? 'open' : 'closed'
+            return <FixtureRow key={match.id} match={match} status={status} />
           })}
-        </div>
+        </Block>
       ))}
     </div>
   )

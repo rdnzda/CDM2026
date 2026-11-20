@@ -40,7 +40,7 @@ export default async function DuelPage() {
         </h1>
         <p className="text-sm" style={{ color: 'var(--muted)' }}>
           Défie un autre joueur — mise max 20% de ton solde.{' '}
-          <span className="font-mono font-semibold" style={{ color: '#F0B429' }}>
+          <span className="font-mono font-semibold" style={{ color: '#F4C430' }}>
             {available.toLocaleString('fr-FR')} pts
           </span>{' '}
           disponibles.
